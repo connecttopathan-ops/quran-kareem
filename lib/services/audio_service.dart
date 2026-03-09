@@ -55,8 +55,21 @@ class AudioService extends ChangeNotifier {
 
   Future<void> togglePlayPause() async { _isPlaying = !_isPlaying; notifyListeners(); }
   Future<void> stop() async { _nowPlaying = null; _isPlaying = false; notifyListeners(); }
-  Future<void> nextVerse() async {}
-  Future<void> previousVerse() async {}
+  Future<void> nextVerse() async {
+    if (_nowPlaying == null) return;
+    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
+      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
+      notifyListeners();
+    }
+  }
+
+  Future<void> previousVerse() async {
+    if (_nowPlaying == null) return;
+    if (_nowPlaying!.verseNumber > 1) {
+      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
+      notifyListeners();
+    }
+  }
 
   Future<void> setReciter(String id) async {
     _reciterId = id;

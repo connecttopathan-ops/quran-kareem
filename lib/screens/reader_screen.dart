@@ -20,7 +20,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   void initState() {
     super.initState();
-    if (context.read<AppState>().keepScreenOn) 
+    if (context.read<AppState>().keepScreenOn) {
+      // Screen wake lock would be applied here when wakelock_plus is added
+    }
   }
 
   @override

@@ -1,3 +1,9 @@
+class VerseTranslation {
+  final String transliteration;
+  final String translation;
+  const VerseTranslation({required this.transliteration, required this.translation});
+}
+
 class Surah {
   final int number;
   final String nameArabic;
@@ -16,13 +22,16 @@ class Surah {
     required this.revelationType,
     required this.juz,
   });
+
+  String get nameEnglish => nameTranslation;
+  String get type => revelationType;
 }
 
 class Verse {
   final int number;
   final String arabic;
   final String transliteration;
-  final Map<String, String> translations;
+  final Map<String, VerseTranslation> translations;
 
   const Verse({
     required this.number,
@@ -32,5 +41,5 @@ class Verse {
   });
 
   String translation(String langCode) =>
-      translations[langCode] ?? translations['en'] ?? '';
+      translations[langCode]?.translation ?? translations['en']?.translation ?? '';
 }

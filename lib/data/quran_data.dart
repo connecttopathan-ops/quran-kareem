@@ -124,8 +124,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
     transliteration: "Bismillaahir Rahmaanir Raheem",
     translations: {
-      'en': 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
-      'ur': 'اللہ کے نام سے جو بڑا مہربان، نہایت رحم کرنے والا ہے',
+      'en': VerseTranslation(
+        transliteration: "Bismillaahir Rahmaanir Raheem",
+        translation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Bismillaahir Rahmaanir Raheem",
+        translation: 'اللہ کے نام سے جو بڑا مہربان، نہایت رحم کرنے والا ہے',
+      ),
     },
   ),
   Verse(
@@ -133,8 +139,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ',
     transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
     translations: {
-      'en': '[All] praise is [due] to Allah, Lord of the worlds -',
-      'ur': 'سب تعریف اللہ کے لئے ہے جو تمام جہانوں کا پالنے والا ہے',
+      'en': VerseTranslation(
+        transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
+        translation: '[All] praise is [due] to Allah, Lord of the worlds -',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
+        translation: 'سب تعریف اللہ کے لئے ہے جو تمام جہانوں کا پالنے والا ہے',
+      ),
     },
   ),
   Verse(
@@ -142,8 +154,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
     transliteration: "Ar-Rahmaanir-Raheem",
     translations: {
-      'en': 'The Entirely Merciful, the Especially Merciful,',
-      'ur': 'بڑا مہربان، نہایت رحم کرنے والا',
+      'en': VerseTranslation(
+        transliteration: "Ar-Rahmaanir-Raheem",
+        translation: 'The Entirely Merciful, the Especially Merciful,',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Ar-Rahmaanir-Raheem",
+        translation: 'بڑا مہربان، نہایت رحم کرنے والا',
+      ),
     },
   ),
   Verse(
@@ -151,8 +169,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'مَٰلِكِ يَوۡمِ ٱلدِّينِ',
     transliteration: "Maaliki Yawmid-Deen",
     translations: {
-      'en': 'Sovereign of the Day of Recompense.',
-      'ur': 'روزِ جزا کا مالک',
+      'en': VerseTranslation(
+        transliteration: "Maaliki Yawmid-Deen",
+        translation: 'Sovereign of the Day of Recompense.',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Maaliki Yawmid-Deen",
+        translation: 'روزِ جزا کا مالک',
+      ),
     },
   ),
   Verse(
@@ -160,8 +184,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ',
     transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
     translations: {
-      'en': 'It is You we worship and You we ask for help.',
-      'ur': 'ہم تیری ہی عبادت کرتے ہیں اور تجھ ہی سے مدد مانگتے ہیں',
+      'en': VerseTranslation(
+        transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
+        translation: 'It is You we worship and You we ask for help.',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
+        translation: 'ہم تیری ہی عبادت کرتے ہیں اور تجھ ہی سے مدد مانگتے ہیں',
+      ),
     },
   ),
   Verse(
@@ -169,8 +199,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ',
     transliteration: "Ihdinas-Siraatal-Mustaqeem",
     translations: {
-      'en': 'Guide us to the straight path -',
-      'ur': 'ہمیں سیدھا راستہ دکھا',
+      'en': VerseTranslation(
+        transliteration: "Ihdinas-Siraatal-Mustaqeem",
+        translation: 'Guide us to the straight path -',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Ihdinas-Siraatal-Mustaqeem",
+        translation: 'ہمیں سیدھا راستہ دکھا',
+      ),
     },
   ),
   Verse(
@@ -178,8 +214,14 @@ const List<Verse> kFatihahVerses = [
     arabic: 'صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ',
     transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
     translations: {
-      'en': 'The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.',
-      'ur': 'ان لوگوں کا راستہ جن پر تو نے انعام فرمایا، نہ ان کا جن پر غضب ہوا اور نہ گمراہوں کا',
+      'en': VerseTranslation(
+        transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
+        translation: 'The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.',
+      ),
+      'ur': VerseTranslation(
+        transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
+        translation: 'ان لوگوں کا راستہ جن پر تو نے انعام فرمایا، نہ ان کا جن پر غضب ہوا اور نہ گمراہوں کا',
+      ),
     },
   ),
 ];
@@ -194,7 +236,17 @@ List<Verse> getVerses(int surahNumber) {
       number: i + 1,
       arabic: 'آيَةٌ ${i + 1}',
       transliteration: 'Verse ${i + 1}',
-      translations: {'en': 'Translation coming soon for verse ${i + 1}'},
+      translations: {
+        'en': VerseTranslation(
+          transliteration: 'Verse ${i + 1}',
+          translation: 'Translation coming soon for verse ${i + 1}',
+        ),
+      },
     ),
   );
 }
+
+// Map of surah number -> verses, covering all 114 surahs
+final Map<int, List<Verse>> kQuranData = {
+  for (final s in kSurahs) s.number: getVerses(s.number),
+};
