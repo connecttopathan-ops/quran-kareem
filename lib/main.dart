@@ -37,7 +37,7 @@ class QuranApp extends StatelessWidget {
                 state.isDarkMode ? Brightness.dark : Brightness.light,
           ));
           return MaterialApp(
-            title: 'Quran Kareem',
+            title: 'Get Quran',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

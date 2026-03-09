@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../services/location_service.dart';
@@ -9,6 +10,7 @@ import '../widgets/q_icons.dart';
 import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
 import 'settings_screen.dart';
+import 'reader_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +28,56 @@ class _HomeScreenState extends State<HomeScreen> {
     _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
+    // Record app open for streak tracking
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AppState>().recordAppOpen();
+        _checkFirstLaunchLocation();
+      }
+    });
+  }
+
+  Future<void> _checkFirstLaunchLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final asked = prefs.getBool('locationPermissionAsked') ?? false;
+    if (!asked && mounted) {
+      await prefs.setBool('locationPermissionAsked', true);
+      _showLocationPermissionDialog();
+    }
+  }
+
+  void _showLocationPermissionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Prayer Times', style: TextStyle(color: context.text, fontFamily: 'serif')),
+        content: Text(
+          'Allow Get Quran to access your location to automatically calculate accurate prayer times for your area.',
+          style: TextStyle(color: context.textDim, fontSize: 13, fontFamily: 'sans-serif'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Skip', style: TextStyle(color: context.textDim)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.gold,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<LocationService>().fetchLocation();
+            },
+            child: const Text('Allow Location'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -774,48 +826,48 @@ class _ContinueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Continue Reading'.toUpperCase(),
-          style: TextStyle(fontSize: 8, letterSpacing: 2.5,
-              color: context.textDim, fontFamily: 'sans-serif')),
-      const SizedBox(height: 6),
-      Container(
-        padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
-        decoration: BoxDecoration(color: context.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.border)),
-        child: Row(children: [
-          Container(width: 36, height: 36,
-            decoration: BoxDecoration(color: AppColors.goldDim.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(9),
+    return Consumer<AppState>(builder: (context, state, _) {
+      final surahNumber = state.lastSurahNumber;
+      final surahName = state.lastSurahName;
+      final surah = kSurahs.firstWhere(
+        (s) => s.number == surahNumber,
+        orElse: () => kSurahs.first,
+      );
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Continue Reading'.toUpperCase(),
+            style: TextStyle(fontSize: 8, letterSpacing: 2.5,
+                color: context.textDim, fontFamily: 'sans-serif')),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => ReaderScreen(surah: surah),
+          )),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+            decoration: BoxDecoration(color: context.surface,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: context.border)),
-            child: Center(child: QIcon.book(size: 16, color: AppColors.gold))),
-          const SizedBox(width: 11),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Al-Baqarah',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
-            Text('Ayah 142 \u00b7 2:142',
-                style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
-          ])),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text('49%', style: TextStyle(fontFamily: 'serif', fontSize: 14,
-                color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-            const SizedBox(height: 4),
-            Container(width: 48, height: 3,
-                decoration: BoxDecoration(color: context.border, borderRadius: BorderRadius.circular(2)),
-                child: FractionallySizedBox(widthFactor: 0.49,
-                    alignment: Alignment.centerLeft,
-                    child: Container(color: AppColors.gold))),
-          ]),
-        ]),
-      ),
-    ]);
+            child: Row(children: [
+              Container(width: 36, height: 36,
+                decoration: BoxDecoration(color: AppColors.goldDim.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(color: context.border)),
+                child: Center(child: QIcon.book(size: 16, color: AppColors.gold))),
+              const SizedBox(width: 11),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(surahName,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
+                Text('Surah ${surah.number} · ${surah.verses} verses',
+                    style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
+              ])),
+              Icon(Icons.chevron_right, size: 18, color: context.textDim),
+            ]),
+          ),
+        ),
+      ]);
+    });
   }
 }
-
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-// DAILY AYAH
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _DailyAyah extends StatelessWidget {
   const _DailyAyah();
 
@@ -832,12 +884,12 @@ class _DailyAyah extends StatelessWidget {
             ? const Color(0xFF3a2e10) : const Color(0xFFd4b870)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('\u2726  Ayah of the Day  \u2726'.toUpperCase(),
+        Text('✦  Ayah of the Day  ✦'.toUpperCase(),
             style: TextStyle(fontSize: 7, letterSpacing: 2,
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark,
                 fontFamily: 'sans-serif')),
         const SizedBox(height: 8),
-        Text('\u0648\u064e\u0645\u064e\u0646 \u064a\u064e\u062a\u064e\u0648\u064e\u0643\u064e\u0651\u0644\u0652 \u0639\u064e\u0644\u064e\u0649 \u0671\u0644\u0644\u064e\u0651\u0647\u0650 \u0641\u064e\u0647\u064f\u0648\u064e \u062d\u064e\u0633\u0652\u0628\u064f\u0647\u064f\u06e5',
+        Text('وَمَن يَتَوَكَّلْ عَلَى ٱللَّهِ فَهُوَ حَسْبُهُۥ',
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 18, height: 2,
@@ -846,18 +898,30 @@ class _DailyAyah extends StatelessWidget {
         Text("Wa man yatawakkal 'alal-laahi fahuwa hasbuh",
             style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic,
                 color: context.isDark ? const Color(0xFF888888) : const Color(0xFF806840))),
+        const SizedBox(height: 6),
+        // English translation
+        Text(
+          '"And whoever relies upon Allah — then He is sufficient for him."',
+          style: TextStyle(fontSize: 12, fontFamily: 'sans-serif',
+              color: context.isDark ? const Color(0xFFb0a080) : const Color(0xFF5a4020)),
+        ),
         const SizedBox(height: 4),
-        Text('Surah At-Talaq \u00b7 65:3',
+        // Urdu translation
+        Text(
+          'اور جو شخص اللہ پر بھروسہ کرے، وہ اس کے لیے کافی ہے۔',
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.right,
+          style: TextStyle(fontFamily: 'Scheherazade', fontSize: 14, height: 1.8,
+              color: context.isDark ? const Color(0xFF908070) : const Color(0xFF4A3A20)),
+        ),
+        const SizedBox(height: 6),
+        Text('Surah At-Talaq · 65:3',
             style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
       ]),
     );
   }
 }
-
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-// POPULAR SURAHS
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _PopularSurahs extends StatelessWidget {
   const _PopularSurahs();
 
@@ -879,55 +943,58 @@ class _PopularSurahs extends StatelessWidget {
         childAspectRatio: 2.4,
         crossAxisSpacing: 7,
         mainAxisSpacing: 7,
-        children: surahs.map((s) => Container(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-          decoration: BoxDecoration(color: context.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: context.border)),
-          child: Row(children: [
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Surah ${s.number}',
-                    style: TextStyle(fontSize: 7, fontFamily: 'sans-serif', color: context.textDim)),
-                Text(s.nameTransliteration,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.text)),
-                Text('${s.verses} verses',
-                    style: TextStyle(fontSize: 8, fontFamily: 'sans-serif', color: context.textDim)),
-              ],
-            )),
-            Text(s.nameArabic,
-                style: TextStyle(fontFamily: 'Scheherazade', fontSize: 16,
-                    color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-          ]),
+        children: surahs.map((s) => GestureDetector(
+          onTap: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => ReaderScreen(surah: s),
+          )),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            decoration: BoxDecoration(color: context.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: context.border)),
+            child: Row(children: [
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Surah ${s.number}',
+                      style: TextStyle(fontSize: 7, fontFamily: 'sans-serif', color: context.textDim)),
+                  Text(s.nameTransliteration,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.text)),
+                  Text('${s.verses} verses',
+                      style: TextStyle(fontSize: 8, fontFamily: 'sans-serif', color: context.textDim)),
+                ],
+              )),
+              Text(s.nameArabic,
+                  style: TextStyle(fontFamily: 'Scheherazade', fontSize: 16,
+                      color: context.isDark ? AppColors.gold : AppColors.goldDark)),
+            ]),
+          ),
         )).toList(),
       ),
     ]);
   }
 }
-
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-// STATS
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _Stats extends StatelessWidget {
   const _Stats();
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Your Progress'.toUpperCase(),
-          style: TextStyle(fontSize: 8, letterSpacing: 2.5,
-              color: context.textDim, fontFamily: 'sans-serif')),
-      const SizedBox(height: 6),
-      Row(children: [
-        _Stat(context, '7', 'Day Streak'),
-        const SizedBox(width: 7),
-        _Stat(context, '12', 'Surahs'),
-        const SizedBox(width: 7),
-        _Stat(context, '248', 'Verses'),
-      ]),
-    ]);
+    return Consumer<AppState>(builder: (context, state, _) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Your Progress'.toUpperCase(),
+            style: TextStyle(fontSize: 8, letterSpacing: 2.5,
+                color: context.textDim, fontFamily: 'sans-serif')),
+        const SizedBox(height: 6),
+        Row(children: [
+          _Stat(context, '${state.dayStreak}', 'Day Streak'),
+          const SizedBox(width: 7),
+          _Stat(context, '${state.surahsRead}', 'Surahs'),
+          const SizedBox(width: 7),
+          _Stat(context, '${state.versesRead}', 'Verses'),
+        ]),
+      ]);
+    });
   }
 
   Widget _Stat(BuildContext ctx, String v, String l) => Expanded(
@@ -944,10 +1011,6 @@ class _Stats extends StatelessWidget {
     ),
   );
 }
-
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-// SEARCH PLACEHOLDER
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _SearchPlaceholder extends StatelessWidget {
   const _SearchPlaceholder();
 

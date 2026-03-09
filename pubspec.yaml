@@ -1,5 +1,5 @@
 name: quran_kareem
-description: Quran Kareem - A beautiful Quran app
+description: Get Quran - A beautiful Quran app
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -13,6 +13,8 @@ dependencies:
   shared_preferences: ^2.2.2
   http: ^1.1.0
   provider: ^6.1.1
+  audioplayers: ^6.0.0
+  geolocator: ^11.0.0
 
 flutter:
   uses-material-design: true

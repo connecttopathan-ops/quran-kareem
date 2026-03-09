@@ -1,28 +1,55 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/quran_data.dart';
 
 class Reciter {
   final String id, name, arabicName, style;
   const Reciter(this.id, this.name, this.arabicName, this.style);
   static const List<Reciter> all = [
-    Reciter('ar.alafasy',           'Mishary Rashid Alafasy',    '\u0645\u0634\u0627\u0631\u064a \u0631\u0627\u0634\u062f \u0627\u0644\u0639\u0641\u0627\u0633\u064a',   'Murattal'),
-    Reciter('ar.abdurrahmaansudais','Abdul Rahman Al-Sudais',    '\u0639\u0628\u062f \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0633\u062f\u064a\u0633',    'Murattal'),
-    Reciter('ar.abdulbasitmurattal','Abdul Basit (Murattal)',     '\u0639\u0628\u062f \u0627\u0644\u0628\u0627\u0633\u0637 \u0639\u0628\u062f \u0627\u0644\u0635\u0645\u062f', 'Murattal'),
-    Reciter('ar.abdulbasitmujawwad','Abdul Basit (Mujawwad)',     '\u0639\u0628\u062f \u0627\u0644\u0628\u0627\u0633\u0637 \u0639\u0628\u062f \u0627\u0644\u0635\u0645\u062f', 'Mujawwad'),
-    Reciter('ar.husary',            'Mahmoud Khalil Al-Husary',  '\u0645\u062d\u0645\u0648\u062f \u062e\u0644\u064a\u0644 \u0627\u0644\u062d\u0635\u0631\u064a',    'Murattal'),
-    Reciter('ar.minshawi',          'Mohamed Siddiq Al-Minshawi','\u0645\u062d\u0645\u062f \u0635\u062f\u064a\u0642 \u0627\u0644\u0645\u0646\u0634\u0627\u0648\u064a',   'Murattal'),
+    Reciter('ar.alafasy',           'Mishary Rashid Alafasy',    'مشاري راشد العفاسي',   'Murattal'),
+    Reciter('ar.abdurrahmaansudais','Abdul Rahman Al-Sudais',    'عبد الرحمن السديس',    'Murattal'),
+    Reciter('ar.abdulbasitmurattal','Abdul Basit (Murattal)',     'عبد الباسط عبد الصمد', 'Murattal'),
+    Reciter('ar.abdulbasitmujawwad','Abdul Basit (Mujawwad)',     'عبد الباسط عبد الصمد', 'Mujawwad'),
+    Reciter('ar.husary',            'Mahmoud Khalil Al-Husary',  'محمود خليل الحصري',    'Murattal'),
+    Reciter('ar.minshawi',          'Mohamed Siddiq Al-Minshawi','محمد صديق المنشاوي',   'Murattal'),
   ];
   static Reciter byId(String id) => all.firstWhere((r) => r.id == id, orElse: () => all[0]);
 }
 
 class NowPlaying {
-  final int surahNumber, verseNumber, totalVerses;
+  final int surahNumber, verseNumber, totalVerses, surahVerseOffset;
   final String surahName;
-  const NowPlaying({required this.surahNumber, required this.surahName, required this.verseNumber, required this.totalVerses});
-  NowPlaying copyWith({int? verseNumber}) => NowPlaying(surahNumber: surahNumber, surahName: surahName, verseNumber: verseNumber ?? this.verseNumber, totalVerses: totalVerses);
+  const NowPlaying({
+    required this.surahNumber,
+    required this.surahName,
+    required this.verseNumber,
+    required this.totalVerses,
+    required this.surahVerseOffset,
+  });
+  NowPlaying copyWith({int? verseNumber}) => NowPlaying(
+    surahNumber: surahNumber,
+    surahName: surahName,
+    verseNumber: verseNumber ?? this.verseNumber,
+    totalVerses: totalVerses,
+    surahVerseOffset: surahVerseOffset,
+  );
+
+  int get absoluteVerseNumber => surahVerseOffset + verseNumber;
+}
+
+/// Compute the cumulative verse offset before [surahNumber].
+int surahVerseOffset(int surahNumber) {
+  int offset = 0;
+  for (final s in kSurahs) {
+    if (s.number >= surahNumber) break;
+    offset += s.verses;
+  }
+  return offset;
 }
 
 class AudioService extends ChangeNotifier {
+  final AudioPlayer _player = AudioPlayer();
   String _reciterId = 'ar.alafasy';
   NowPlaying? _nowPlaying;
   bool _isPlaying = false, _isLoading = false;
@@ -38,7 +65,19 @@ class AudioService extends ChangeNotifier {
   double get playbackSpeed => _playbackSpeed;
   bool get hasAudio => _nowPlaying != null;
 
-  AudioService() { _loadPrefs(); }
+  AudioService() {
+    _loadPrefs();
+    _player.onPlayerStateChanged.listen((state) {
+      final playing = state == PlayerState.playing;
+      if (_isPlaying != playing) {
+        _isPlaying = playing;
+        notifyListeners();
+      }
+    });
+    _player.onPlayerComplete.listen((_) {
+      _autoNextVerse();
+    });
+  }
 
   Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
@@ -47,19 +86,80 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> playVerse({required int surahNumber, required String surahName, required int verseNumber, required int totalVerses}) async {
-    _nowPlaying = NowPlaying(surahNumber: surahNumber, surahName: surahName, verseNumber: verseNumber, totalVerses: totalVerses);
-    _isPlaying = true;
+  String _audioUrl(int absoluteVerse) =>
+      'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
+
+  Future<void> playVerse({
+    required int surahNumber,
+    required String surahName,
+    required int verseNumber,
+    required int totalVerses,
+  }) async {
+    _error = null;
+    final offset = surahVerseOffset(surahNumber);
+    _nowPlaying = NowPlaying(
+      surahNumber: surahNumber,
+      surahName: surahName,
+      verseNumber: verseNumber,
+      totalVerses: totalVerses,
+      surahVerseOffset: offset,
+    );
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _player.stop();
+      await _player.setPlaybackRate(_playbackSpeed);
+      await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      _isLoading = false;
+      _isPlaying = true;
+    } catch (e) {
+      _isLoading = false;
+      _isPlaying = false;
+      _error = 'Failed to play audio';
+    }
     notifyListeners();
   }
 
-  Future<void> togglePlayPause() async { _isPlaying = !_isPlaying; notifyListeners(); }
-  Future<void> stop() async { _nowPlaying = null; _isPlaying = false; notifyListeners(); }
+  Future<void> togglePlayPause() async {
+    if (_nowPlaying == null) return;
+    if (_isPlaying) {
+      await _player.pause();
+    } else {
+      await _player.resume();
+    }
+  }
+
+  Future<void> stop() async {
+    await _player.stop();
+    _nowPlaying = null;
+    _isPlaying = false;
+    notifyListeners();
+  }
+
+  Future<void> _autoNextVerse() async {
+    if (_nowPlaying == null) return;
+    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
+      final next = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
+      _nowPlaying = next;
+      notifyListeners();
+      try {
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (_) {}
+    } else {
+      _isPlaying = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> nextVerse() async {
     if (_nowPlaying == null) return;
     if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
       notifyListeners();
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (_) {}
     }
   }
 
@@ -68,6 +168,10 @@ class AudioService extends ChangeNotifier {
     if (_nowPlaying!.verseNumber > 1) {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
       notifyListeners();
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (_) {}
     }
   }
 
@@ -75,6 +179,13 @@ class AudioService extends ChangeNotifier {
     _reciterId = id;
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
+    // Restart current verse with new reciter
+    if (_nowPlaying != null) {
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (_) {}
+    }
     notifyListeners();
   }
 
@@ -82,8 +193,16 @@ class AudioService extends ChangeNotifier {
     _playbackSpeed = speed;
     final p = await SharedPreferences.getInstance();
     await p.setDouble('playbackSpeed', speed);
+    await _player.setPlaybackRate(speed);
     notifyListeners();
   }
 
-  bool isVersePlayingNow(int surah, int verse) => _isPlaying && _nowPlaying?.surahNumber == surah && _nowPlaying?.verseNumber == verse;
+  bool isVersePlayingNow(int surah, int verse) =>
+      _isPlaying && _nowPlaying?.surahNumber == surah && _nowPlaying?.verseNumber == verse;
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
 }
