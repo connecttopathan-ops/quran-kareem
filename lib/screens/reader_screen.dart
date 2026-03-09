@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../models/app_state.dart';
 import '../models/surah.dart';
-import '../data/quran_data.dart';
+import '../models/language.dart';
 import '../services/audio_service.dart';
+import '../services/quran_service.dart';
 import '../widgets/q_icons.dart';
 import '../theme/app_theme.dart';
 
@@ -23,12 +24,112 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (context.read<AppState>().keepScreenOn) {
       // Screen wake lock would be applied here when wakelock_plus is added
     }
+    // Fetch real verse data if not already cached
+    context.read<QuranService>().loadSurah(widget.surah.number);
   }
 
   @override
   void dispose() {
     
     super.dispose();
+  }
+
+  void _openLanguagePicker(AppState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return Container(
+          decoration: BoxDecoration(
+            color: context.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: context.border),
+          ),
+          padding: EdgeInsets.fromLTRB(
+              16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text('Translation Language',
+                  style: TextStyle(
+                      color: context.text,
+                      fontSize: 17,
+                      fontFamily: 'serif',
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 320,
+                child: ListView.builder(
+                  itemCount: kLanguages.length,
+                  itemBuilder: (ctx, i) {
+                    final lang = kLanguages[i];
+                    final selected = state.langCode == lang.code;
+                    return GestureDetector(
+                      onTap: () {
+                        state.setLanguage(lang.code);
+                        Navigator.pop(ctx);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? AppColors.goldDim.withOpacity(0.1)
+                              : context.surface2,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selected ? AppColors.gold : context.border,
+                            width: selected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Row(children: [
+                          Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(lang.name,
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: selected
+                                              ? AppColors.gold
+                                              : context.text,
+                                          fontWeight: selected
+                                              ? FontWeight.w600
+                                              : FontWeight.normal)),
+                                  Text(lang.nativeName,
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: context.textDim,
+                                          fontFamily: 'sans-serif')),
+                                ]),
+                          ),
+                          if (selected) QIcon.check(size: 16, color: AppColors.gold),
+                        ]),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _openSettings() {
@@ -69,6 +170,30 @@ class _ReaderScreenState extends State<ReaderScreen> {
               icon: QIcon.bookmark(size: 22, color: context.textDim),
               onPressed: () {},
             ),
+            // Language selector
+            GestureDetector(
+              onTap: () => _openLanguagePicker(state),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: context.border),
+                  color: context.surface2,
+                ),
+                child: Center(
+                  child: Text(
+                    state.langCode.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'sans-serif',
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             IconButton(
               icon: QIcon.tune(size: 22, color: AppColors.gold),
               onPressed: _openSettings,
@@ -85,20 +210,56 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Widget _buildBody(AppState state) {
-    final verses = kQuranData[widget.surah.number] ?? [];
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
-      itemCount: verses.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) return _SurahHeader(surah: widget.surah);
-        final verse = verses[index - 1];
-        return _VerseCard(
-          verse: verse,
-          surah: widget.surah,
-          state: state,
-        );
-      },
-    );
+    return Consumer<QuranService>(builder: (context, quranService, _) {
+      final verses = quranService.getVerses(widget.surah.number);
+      final loading = quranService.isLoading(widget.surah.number);
+      return Stack(children: [
+        ListView.builder(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
+          itemCount: verses.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) return _SurahHeader(surah: widget.surah);
+            final verse = verses[index - 1];
+            return _VerseCard(
+              verse: verse,
+              surah: widget.surah,
+              state: state,
+            );
+          },
+        ),
+        if (loading)
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: context.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: context.border),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 1.5, color: AppColors.gold),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Loading verses…',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ]),
+              ),
+            ),
+          ),
+      ]);
+    });
   }
 }
 
@@ -314,7 +475,7 @@ class _VerseCard extends StatelessWidget {
                 border: Border(top: BorderSide(color: context.border)),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('ROMAN URDU',
+                Text(state.currentLanguage.name.toUpperCase(),
                     style: TextStyle(fontSize: 7, letterSpacing: 2,
                         color: AppColors.goldDim, fontFamily: 'sans-serif')),
                 const SizedBox(height: 3),
@@ -472,9 +633,10 @@ class _DisplayTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(16, 14, 16,
-          MediaQuery.of(context).viewInsets.bottom + 28),
+          MediaQuery.of(context).viewInsets.bottom +
+              MediaQuery.of(context).padding.bottom + 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _SheetLabel('THEME'),
         const SizedBox(height: 8),
@@ -530,9 +692,10 @@ class _TextTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(16, 14, 16,
-          MediaQuery.of(context).viewInsets.bottom + 28),
+          MediaQuery.of(context).viewInsets.bottom +
+              MediaQuery.of(context).padding.bottom + 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _SheetLabel('ARABIC TEXT SIZE'),
         const SizedBox(height: 6),
@@ -589,9 +752,10 @@ class _AudioTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AudioService>(builder: (context, audio, _) {
-      return Padding(
+      return SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(16, 14, 16,
-            MediaQuery.of(context).viewInsets.bottom + 28),
+            MediaQuery.of(context).viewInsets.bottom +
+                MediaQuery.of(context).padding.bottom + 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Now playing card
           if (audio.nowPlaying != null) ...[

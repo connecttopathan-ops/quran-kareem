@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Location {
@@ -8,6 +10,26 @@ class Location {
 }
 
 Future<List<Location>> locationFromAddress(String address) async {
+  try {
+    final uri = Uri.parse(
+      'https://nominatim.openstreetmap.org/search'
+      '?q=${Uri.encodeComponent(address)}&format=json&limit=5',
+    );
+    final response = await http.get(uri, headers: {
+      'User-Agent': 'QuranKareem/1.0',
+      'Accept-Language': 'en',
+    }).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final results = jsonDecode(response.body) as List;
+      return results
+          .map((item) => Location(
+                latitude: double.parse(item['lat'] as String),
+                longitude: double.parse(item['lon'] as String),
+              ))
+          .toList();
+    }
+  } catch (_) {}
   return [];
 }
 
