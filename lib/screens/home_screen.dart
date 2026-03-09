@@ -93,7 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
         final screens = [
           const _HomeTab(),
           const SurahListScreen(),
-          const _SearchPlaceholder(),
           const SettingsScreen(),
         ];
         return Scaffold(
@@ -118,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   items: [
                     BottomNavigationBarItem(icon: QIcon.home(size: 24), label: 'Home'),
                     BottomNavigationBarItem(icon: QIcon.book(size: 24), label: 'Quran'),
-                    BottomNavigationBarItem(icon: QIcon.search(size: 24), label: 'Search'),
                     BottomNavigationBarItem(icon: QIcon.settings(size: 24), label: 'Settings'),
                   ],
                 ),
@@ -1010,24 +1008,4 @@ class _Stats extends StatelessWidget {
       ]),
     ),
   );
-}
-class _SearchPlaceholder extends StatelessWidget {
-  const _SearchPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.bg,
-      body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          QIcon.search(size: 48, color: context.textDim),
-          const SizedBox(height: 12),
-          Text('Search', style: TextStyle(color: context.textDim, fontSize: 16)),
-          const SizedBox(height: 6),
-          Text('Coming soon', style: TextStyle(color: context.textDim, fontSize: 12,
-              fontFamily: 'sans-serif')),
-        ]),
-      ),
-    );
-  }
 }

@@ -90,11 +90,22 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch real verse data if not already cached
-    context.read<QuranService>().loadSurah(widget.surah.number);
-    // Record surah opened for Continue Reading & stats
+    _loadContent();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
+  }
+
+  Future<void> _loadContent() async {
+    if (!mounted) return;
+    final quranService = context.read<QuranService>();
+    final appState = context.read<AppState>();
+    await quranService.loadSurah(widget.surah.number);
+    if (!mounted) return;
+    final code = appState.langCode;
+    if (code != 'en' && code != 'ur') {
+      quranService.loadTranslation(
+          widget.surah.number, code, appState.currentLanguage.editionId);
+    }
   }
 
   @override
@@ -689,13 +700,18 @@ class _ReaderSettingsSheetState extends State<_ReaderSettingsSheet>
             ),
           ),
           const SizedBox(height: 4),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: [
-              _DisplayTab(state: state),
-              _TextTab(state: state),
-              const _AudioTab(),
-            ][_tabs.index],
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: [
+                _DisplayTab(state: state),
+                _TextTab(state: state),
+                const _AudioTab(),
+              ][_tabs.index],
+            ),
           ),
         ]),
       );
