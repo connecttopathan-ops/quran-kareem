@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace "com.example.quran_kareem"
-    compileSdk flutter.compileSdkVersion
+    compileSdk 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -21,7 +21,7 @@ android {
     defaultConfig {
         applicationId "com.example.quran_kareem"
         minSdk 21
-        targetSdk flutter.targetSdkVersion
+        targetSdk 35
         versionCode flutter.versionCode
         versionName flutter.versionName
     }
