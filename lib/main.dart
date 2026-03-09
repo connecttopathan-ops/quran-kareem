@@ -1,0 +1,49 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'models/app_state.dart';
+import 'services/location_service.dart';
+import 'services/audio_service.dart';
+import 'screens/home_screen.dart';
+import 'theme/app_theme.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+  ));
+  runApp(const QuranApp());
+}
+
+class QuranApp extends StatelessWidget {
+  const QuranApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppState()),
+        ChangeNotifierProvider(create: (_) => LocationService()),
+        ChangeNotifierProvider(create: (_) => AudioService()),
+      ],
+      child: Consumer<AppState>(
+        builder: (context, state, _) {
+          SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+            statusBarIconBrightness:
+                state.isDarkMode ? Brightness.light : Brightness.dark,
+            statusBarBrightness:
+                state.isDarkMode ? Brightness.dark : Brightness.light,
+          ));
+          return MaterialApp(
+            title: 'Quran Kareem',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: state.themeMode,
+            home: const HomeScreen(),
+          );
+        },
+      ),
+    );
+  }
+}
