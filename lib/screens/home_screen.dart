@@ -11,6 +11,7 @@ import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
 import 'settings_screen.dart';
 import 'reader_screen.dart';
+import 'language_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,15 +40,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _checkFirstLaunchLocation() async {
     final prefs = await SharedPreferences.getInstance();
-    final asked = prefs.getBool('locationPermissionAsked') ?? false;
-    if (!asked && mounted) {
+
+    // 1. Location permission (first launch)
+    final locationAsked = prefs.getBool('locationPermissionAsked') ?? false;
+    if (!locationAsked && mounted) {
       await prefs.setBool('locationPermissionAsked', true);
-      _showLocationPermissionDialog();
+      await _showLocationPermissionDialog();
+    }
+
+    // 2. Language selection screen (first launch, after location)
+    final langSelected = prefs.getBool('language_selected') ?? false;
+    if (!langSelected && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const LanguageSelectionScreen(),
+            fullscreenDialog: true),
+      );
     }
   }
 
-  void _showLocationPermissionDialog() {
-    showDialog(
+  Future<void> _showLocationPermissionDialog() async {
+    await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(

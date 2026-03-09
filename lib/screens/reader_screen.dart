@@ -99,13 +99,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (!mounted) return;
     final quranService = context.read<QuranService>();
     final appState = context.read<AppState>();
-    await quranService.loadSurah(widget.surah.number);
-    if (!mounted) return;
-    final code = appState.langCode;
-    if (code != 'en' && code != 'ur') {
-      quranService.loadTranslation(
-          widget.surah.number, code, appState.currentLanguage.editionId);
-    }
+    // loadSurah now fetches Arabic + transliteration + the user's language
+    // in a single 3-edition call, and handles translation loading internally.
+    await quranService.loadSurah(widget.surah.number,
+        langCode: appState.langCode);
   }
 
   @override
@@ -414,9 +411,11 @@ class _VerseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final langData = verse.translations[state.langCode] ??
-        verse.translations['en'] ??
-        const VerseTranslation(transliteration: '', translation: '');
+    // verse.transliteration is always the Roman Arabic (from en.transliteration).
+    final translit = verse.transliteration;
+    // Translation in the user's selected language; fall back to English.
+    final translation = verse.translations[state.langCode]?.translation ??
+        verse.translations['en']?.translation ?? '';
 
     return Consumer<AudioService>(builder: (context, audio, _) {
       final isThisPlaying = audio.isVersePlayingNow(surah.number, verse.number);
@@ -534,8 +533,8 @@ class _VerseCard extends StatelessWidget {
             ),
           ),
 
-          // Transliteration
-          if (state.showTranslit && langData.transliteration.isNotEmpty)
+          // Roman Arabic transliteration — always shown when toggle is on
+          if (state.showTranslit && translit.isNotEmpty)
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
               decoration: BoxDecoration(
@@ -545,7 +544,7 @@ class _VerseCard extends StatelessWidget {
                     style: TextStyle(fontSize: 7, letterSpacing: 2,
                         color: AppColors.goldDim, fontFamily: 'sans-serif')),
                 const SizedBox(height: 3),
-                Text(langData.transliteration,
+                Text(translit,
                     style: TextStyle(fontFamily: 'serif',
                         fontSize: state.translitFontSize,
                         fontStyle: FontStyle.italic,
@@ -553,8 +552,8 @@ class _VerseCard extends StatelessWidget {
               ]),
             ),
 
-          // Translation
-          if (state.showTranslation && langData.translation.isNotEmpty)
+          // Translation in the user's selected language — always shown when toggle is on
+          if (state.showTranslation)
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               decoration: BoxDecoration(
@@ -562,16 +561,32 @@ class _VerseCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
                 border: Border(top: BorderSide(color: _RC.border(state.readerTheme))),
               ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(state.currentLanguage.name.toUpperCase(),
-                    style: TextStyle(fontSize: 7, letterSpacing: 2,
-                        color: AppColors.goldDim, fontFamily: 'sans-serif')),
-                const SizedBox(height: 3),
-                Text(langData.translation,
-                    style: TextStyle(fontFamily: 'serif',
-                        fontSize: state.translationFontSize,
-                        color: _RC.translation(state.readerTheme), height: 1.6)),
-              ]),
+              child: Column(
+                crossAxisAlignment: state.currentLanguage.isRtl
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Text(state.currentLanguage.name.toUpperCase(),
+                      style: TextStyle(fontSize: 7, letterSpacing: 2,
+                          color: AppColors.goldDim, fontFamily: 'sans-serif')),
+                  const SizedBox(height: 3),
+                  translation.isNotEmpty
+                      ? Text(translation,
+                          textDirection: state.currentLanguage.isRtl
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
+                          style: TextStyle(fontFamily: 'serif',
+                              fontSize: state.translationFontSize,
+                              color: _RC.translation(state.readerTheme),
+                              height: 1.6))
+                      : Text('Loading translation…',
+                          style: TextStyle(
+                              fontSize: state.translationFontSize,
+                              fontStyle: FontStyle.italic,
+                              color: _RC.textDim(state.readerTheme),
+                              fontFamily: 'sans-serif')),
+                ],
+              ),
             ),
         ]),
       );
