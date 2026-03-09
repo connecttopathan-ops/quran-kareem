@@ -47,6 +47,22 @@ class QIcon {
       _icon(Icons.nightlight_outlined, size, color);
   static Widget sun({double size = 24, Color? color}) =>
       _icon(Icons.wb_sunny_outlined, size, color);
+  static Widget back({double size = 24, Color? color}) =>
+      _icon(Icons.arrow_back_ios, size, color);
+  static Widget tune({double size = 24, Color? color}) =>
+      _icon(Icons.tune, size, color);
+  static Widget more({double size = 24, Color? color}) =>
+      _icon(Icons.more_horiz, size, color);
+  static Widget listMode({double size = 24, Color? color}) =>
+      _icon(Icons.view_list_outlined, size, color);
+  static Widget pageMode({double size = 24, Color? color}) =>
+      _icon(Icons.menu_book_outlined, size, color);
+  static Widget focusMode({double size = 24, Color? color}) =>
+      _icon(Icons.center_focus_strong_outlined, size, color);
+  static Widget minus({double size = 24, Color? color}) =>
+      _icon(Icons.remove, size, color);
+  static Widget plus({double size = 24, Color? color}) =>
+      _icon(Icons.add, size, color);
 
   static Widget _icon(IconData data, double size, Color? color) =>
       Icon(data, size: size, color: color);
