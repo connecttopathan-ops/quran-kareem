@@ -18,6 +18,7 @@ class Language {
 
 const List<Language> kLanguages = [
   // ── GLOBAL ────────────────────────────────────────────────────────────────
+  Language(code: 'ur-roman', name: 'Roman Urdu',  nativeName: 'Roman Urdu',        editionId: 'ur.junagarhi',     group: 'Global'),
   Language(code: 'en',       name: 'English',     nativeName: 'English',          editionId: 'en.asad',          group: 'Global'),
   Language(code: 'zh',       name: 'Chinese',     nativeName: '中文',              editionId: 'zh.majian',        group: 'Global'),
   Language(code: 'hi',       name: 'Hindi',       nativeName: 'हिन्दी',            editionId: 'hi.hindi',         group: 'Global'),
@@ -32,7 +33,6 @@ const List<Language> kLanguages = [
   Language(code: 'tr',       name: 'Turkish',     nativeName: 'Türkçe',            editionId: 'tr.ates',          group: 'Global'),
   Language(code: 'fa',       name: 'Persian',     nativeName: 'فارسی',             editionId: 'fa.ansarian',      isRtl: true, group: 'Global'),
   Language(code: 'ms',       name: 'Malay',       nativeName: 'Bahasa Melayu',     editionId: 'ms.basmeih',       group: 'Global'),
-  Language(code: 'ur-roman', name: 'Roman Urdu',  nativeName: 'Roman Urdu',        editionId: 'ur.junagarhi',     group: 'Global'),
 
   // ── EUROPE ────────────────────────────────────────────────────────────────
   Language(code: 'de',       name: 'German',      nativeName: 'Deutsch',           editionId: 'de.bubenheim',     group: 'Europe'),

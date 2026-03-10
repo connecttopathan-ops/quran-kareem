@@ -306,12 +306,14 @@ class QuranService extends ChangeNotifier {
       }
 
       // ── Fall back to alquran.cloud ─────────────────────────────────────────
+      // ur-roman must only come from the fawazahmed0 Latin-script edition;
+      // never fall back to a Urdu-script edition.
+      if (texts == null && langCode == 'ur-roman') return;
+
       if (texts == null) {
-        final fallbackEdition =
-            langCode == 'ur-roman' ? 'ur.junagarhi' : editionId;
         final uri = Uri.parse(
           'https://api.alquran.cloud/v1/surah/$surahNumber/editions/'
-          '$fallbackEdition',
+          '$editionId',
         );
         final response =
             await http.get(uri).timeout(const Duration(seconds: 15));
