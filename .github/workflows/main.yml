@@ -2,7 +2,7 @@ name: Build Quran App APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, claude/check-missing-items-4JdPM ]
   workflow_dispatch:
 
 jobs:
@@ -20,16 +20,15 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
-      - uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.3'
       - run: flutter pub get
+      - name: Generate launcher icons
+        run: flutter pub run flutter_launcher_icons
       - name: Create local.properties
         run: |
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-      - name: Generate Gradle wrapper
-        working-directory: android
-        run: gradle wrapper --gradle-version 8.3 --distribution-type all
+          echo "flutter.buildMode=debug" >> android/local.properties
+          echo "flutter.versionName=1.0.0" >> android/local.properties
+          echo "flutter.versionCode=1" >> android/local.properties
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:

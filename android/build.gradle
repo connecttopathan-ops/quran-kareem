@@ -8,6 +8,18 @@ allprojects {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+    // Provide flutter properties for older plugins that reference flutter.compileSdkVersion
+    // (e.g. geolocator_android-4.6.2). Exclude :app — it gets the real flutter extension
+    // from dev.flutter.flutter-gradle-plugin.
+    if (project.name != "app") {
+        project.ext.set("flutter", [
+            compileSdkVersion: 35,
+            targetSdkVersion : 35,
+            ndkVersion       : "26.3.11579264",
+            versionCode      : 1,
+            versionName      : "1.0.0"
+        ])
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

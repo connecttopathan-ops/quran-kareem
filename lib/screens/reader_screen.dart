@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_state.dart';
 import '../models/surah.dart';
@@ -8,6 +9,75 @@ import '../services/audio_service.dart';
 import '../services/quran_service.dart';
 import '../widgets/q_icons.dart';
 import '../theme/app_theme.dart';
+
+
+// ── Reader Theme Colors helper ─────────────────────────────────────────────
+class _RC {
+  static Color bg(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFFFFFFFF);
+      case ReaderTheme.paper: return const Color(0xFFFDF3E0);
+      case ReaderTheme.dark:  return const Color(0xFF111111);
+    }
+  }
+  static Color surface(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFFF9F9F9);
+      case ReaderTheme.paper: return const Color(0xFFF5EDD8);
+      case ReaderTheme.dark:  return const Color(0xFF1A1A1A);
+    }
+  }
+  static Color surface2(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFFEEEEEE);
+      case ReaderTheme.paper: return const Color(0xFFEDE3C8);
+      case ReaderTheme.dark:  return const Color(0xFF131313);
+    }
+  }
+  static Color text(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFF1A1208);
+      case ReaderTheme.paper: return const Color(0xFF2A1E0E);
+      case ReaderTheme.dark:  return const Color(0xFFF5EDD8);
+    }
+  }
+  static Color textDim(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFF9A8060);
+      case ReaderTheme.paper: return const Color(0xFF806840);
+      case ReaderTheme.dark:  return const Color(0xFF706050);
+    }
+  }
+  static Color arabic(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFF1A0E00);
+      case ReaderTheme.paper: return const Color(0xFF1A0E00);
+      case ReaderTheme.dark:  return const Color(0xFFF0E8D4);
+    }
+  }
+  static Color translit(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFF5A4A30);
+      case ReaderTheme.paper: return const Color(0xFF5A4A30);
+      case ReaderTheme.dark:  return const Color(0xFF8A7A60);
+    }
+  }
+  static Color translation(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFF4A3A20);
+      case ReaderTheme.paper: return const Color(0xFF4A3A20);
+      case ReaderTheme.dark:  return const Color(0xFF908070);
+    }
+  }
+  static Color border(ReaderTheme t) {
+    switch (t) {
+      case ReaderTheme.warm:  return const Color(0xFFD4C090);
+      case ReaderTheme.paper: return const Color(0xFFD4C090);
+      case ReaderTheme.dark:  return const Color(0xFF2A2010);
+    }
+  }
+  static bool isDark(ReaderTheme t) => t == ReaderTheme.dark;
+}
 
 class ReaderScreen extends StatefulWidget {
   final Surah surah;
@@ -18,19 +88,54 @@ class ReaderScreen extends StatefulWidget {
 }
 
 class _ReaderScreenState extends State<ReaderScreen> {
+  bool _isBookmarked = false;
+
   @override
   void initState() {
     super.initState();
-    if (context.read<AppState>().keepScreenOn) {
-      // Screen wake lock would be applied here when wakelock_plus is added
+    _loadContent();
+    _loadBookmark();
+    context.read<AppState>().recordSurahOpened(
+      widget.surah.number, widget.surah.nameTransliteration);
+  }
+
+  Future<void> _loadContent() async {
+    if (!mounted) return;
+    final quranService = context.read<QuranService>();
+    final appState = context.read<AppState>();
+    await quranService.loadSurah(widget.surah.number,
+        langCode: appState.langCode);
+  }
+
+  Future<void> _loadBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getBool('bookmarked_surah_${widget.surah.number}') ?? false;
+    if (mounted) setState(() => _isBookmarked = saved);
+  }
+
+  Future<void> _toggleBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final newValue = !_isBookmarked;
+    await prefs.setBool('bookmarked_surah_${widget.surah.number}', newValue);
+    if (!mounted) return;
+    setState(() => _isBookmarked = newValue);
+    if (newValue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bookmark saved',
+            style: const TextStyle(fontFamily: 'sans-serif', fontSize: 13),
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
-    // Fetch real verse data if not already cached
-    context.read<QuranService>().loadSurah(widget.surah.number);
   }
 
   @override
   void dispose() {
-    
     super.dispose();
   }
 
@@ -80,6 +185,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     return GestureDetector(
                       onTap: () {
                         state.setLanguage(lang.code);
+                        // Lazy-load translation for this language if not en/ur
+                        if (lang.code != 'en' && lang.code != 'ur') {
+                          context.read<QuranService>().loadTranslation(
+                            widget.surah.number, lang.code, lang.editionId);
+                        }
                         Navigator.pop(ctx);
                       },
                       child: AnimatedContainer(
@@ -147,10 +257,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (context, state, _) {
+      final rt = state.readerTheme;
       return Scaffold(
-        backgroundColor: context.bg,
+        backgroundColor: _RC.bg(rt),
         appBar: AppBar(
-          backgroundColor: context.bg,
+          backgroundColor: _RC.bg(rt),
           elevation: 0,
           leading: IconButton(
             icon: QIcon.back(size: 22, color: context.textDim),
@@ -158,17 +269,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
           ),
           title: Column(children: [
             Text(widget.surah.nameTransliteration,
-                style: TextStyle(color: context.text, fontSize: 16,
+                style: TextStyle(color: _RC.text(rt), fontSize: 16,
                     fontFamily: 'serif', fontWeight: FontWeight.w600)),
             Text(widget.surah.nameEnglish,
-                style: TextStyle(color: context.textDim, fontSize: 11,
+                style: TextStyle(color: _RC.textDim(rt), fontSize: 11,
                     fontFamily: 'sans-serif')),
           ]),
           centerTitle: true,
           actions: [
             IconButton(
-              icon: QIcon.bookmark(size: 22, color: context.textDim),
-              onPressed: () {},
+              icon: _isBookmarked
+                  ? Icon(Icons.bookmark, size: 22, color: AppColors.gold)
+                  : QIcon.bookmark(size: 22, color: context.textDim),
+              onPressed: _toggleBookmark,
             ),
             // Language selector
             GestureDetector(
@@ -201,7 +314,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
-            child: Container(height: 1, color: context.border),
+            child: Container(height: 1, color: _RC.border(rt)),
           ),
         ),
         body: _buildBody(state),
@@ -218,7 +331,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
           itemCount: verses.length + 1,
           itemBuilder: (context, index) {
-            if (index == 0) return _SurahHeader(surah: widget.surah);
+            if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
             final verse = verses[index - 1];
             return _VerseCard(
               verse: verse,
@@ -266,27 +379,29 @@ class _ReaderScreenState extends State<ReaderScreen> {
 // \u2500\u2500 Surah Header \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _SurahHeader extends StatelessWidget {
   final Surah surah;
-  const _SurahHeader({required this.surah});
+  final ReaderTheme readerTheme;
+  const _SurahHeader({required this.surah, required this.readerTheme});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = _RC.isDark(readerTheme);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: context.isDark
+          colors: isDark
               ? [const Color(0xFF1a1508), const Color(0xFF0e0b04)]
               : [const Color(0xFFf5e8cc), const Color(0xFFeddba8)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.isDark
+        border: Border.all(color: isDark
             ? const Color(0xFF3a2e10) : AppColors.lightBorder2),
       ),
       child: Column(children: [
         Text(surah.nameArabic,
             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 28,
-                color: context.isDark ? AppColors.goldLight : AppColors.goldDark)),
+                color: isDark ? AppColors.goldLight : AppColors.goldDark)),
         const SizedBox(height: 6),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           _chip(context, surah.type),
@@ -308,12 +423,12 @@ class _SurahHeader extends StatelessWidget {
   Widget _chip(BuildContext ctx, String text) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     decoration: BoxDecoration(
-      color: ctx.isDark ? AppColors.goldDim.withOpacity(0.12) : AppColors.goldFaint.withOpacity(0.5),
+      color: _RC.isDark(readerTheme) ? AppColors.goldDim.withOpacity(0.12) : AppColors.goldFaint.withOpacity(0.5),
       borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: ctx.isDark ? AppColors.goldDim : AppColors.lightBorder2),
+      border: Border.all(color: _RC.isDark(readerTheme) ? AppColors.goldDim : AppColors.lightBorder2),
     ),
     child: Text(text, style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
-        color: ctx.isDark ? AppColors.goldDim : AppColors.goldDark)),
+        color: _RC.isDark(readerTheme) ? AppColors.goldDim : AppColors.goldDark)),
   );
 }
 
@@ -326,9 +441,11 @@ class _VerseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final langData = verse.translations[state.langCode] ??
-        verse.translations['en'] ??
-        const VerseTranslation(transliteration: '', translation: '');
+    // verse.transliteration is always the Roman Arabic (from en.transliteration).
+    final translit = verse.transliteration;
+    // Translation in the user's selected language; fall back to English.
+    final translation = verse.translations[state.langCode]?.translation ??
+        verse.translations['en']?.translation ?? '';
 
     return Consumer<AudioService>(builder: (context, audio, _) {
       final isThisPlaying = audio.isVersePlayingNow(surah.number, verse.number);
@@ -340,10 +457,10 @@ class _VerseCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: context.surface,
+          color: _RC.surface(state.readerTheme),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isThisPlaying ? AppColors.gold : context.border,
+            color: isThisPlaying ? AppColors.gold : _RC.border(state.readerTheme),
             width: isThisPlaying ? 1.5 : 1,
           ),
         ),
@@ -353,10 +470,10 @@ class _VerseCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: isThisPlaying
-                  ? AppColors.goldDim.withOpacity(context.isDark ? 0.15 : 0.1)
-                  : context.surface2,
+                  ? AppColors.goldDim.withOpacity(_RC.isDark(state.readerTheme) ? 0.15 : 0.1)
+                  : _RC.surface2(state.readerTheme),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-              border: Border(bottom: BorderSide(color: context.border)),
+              border: Border(bottom: BorderSide(color: _RC.border(state.readerTheme))),
             ),
             child: Row(children: [
               // Verse number badge
@@ -366,11 +483,11 @@ class _VerseCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: isThisPlaying
                       ? AppColors.gold.withOpacity(0.15)
-                      : (context.isDark
+                      : (_RC.isDark(state.readerTheme)
                           ? AppColors.goldDim.withOpacity(0.15)
                           : AppColors.goldFaint.withOpacity(0.5)),
                   border: Border.all(
-                      color: isThisPlaying ? AppColors.gold : (context.isDark
+                      color: isThisPlaying ? AppColors.gold : (_RC.isDark(state.readerTheme)
                           ? AppColors.goldDim : AppColors.lightBorder2)),
                 ),
                 child: Center(child: Text('${verse.number}',
@@ -380,7 +497,7 @@ class _VerseCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text('${surah.number}:${verse.number}',
                   style: TextStyle(fontSize: 10, letterSpacing: 1,
-                      color: context.textDim, fontFamily: 'sans-serif')),
+                      color: _RC.textDim(state.readerTheme), fontFamily: 'sans-serif')),
 
               // Now playing indicator
               if (isThisPlaying) ...[
@@ -409,9 +526,9 @@ class _VerseCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     color: isThisPlaying
                         ? AppColors.gold
-                        : context.surface,
+                        : _RC.surface(state.readerTheme),
                     border: Border.all(
-                        color: isThisPlaying ? AppColors.gold : context.border),
+                        color: isThisPlaying ? AppColors.gold : _RC.border(state.readerTheme)),
                   ),
                   child: Center(
                     child: isThisLoading
@@ -420,7 +537,7 @@ class _VerseCard extends StatelessWidget {
                                 strokeWidth: 1.5, color: Colors.white))
                         : isThisPlaying
                             ? QIcon.pause(size: 11, color: Colors.white)
-                            : QIcon.play(size: 11, color: context.textDim),
+                            : QIcon.play(size: 11, color: _RC.textDim(state.readerTheme)),
                   ),
                 ),
               ),
@@ -431,7 +548,7 @@ class _VerseCard extends StatelessWidget {
 
           // Arabic text
           Container(
-            color: context.surface2,
+            color: _RC.surface2(state.readerTheme),
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Text(
               verse.arabic,
@@ -440,50 +557,66 @@ class _VerseCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Scheherazade',
                 fontSize: state.arabicFontSize,
-                color: context.arabic,
+                color: _RC.arabic(state.readerTheme),
                 height: 2.0,
               ),
             ),
           ),
 
-          // Transliteration
-          if (state.showTranslit && langData.transliteration.isNotEmpty)
+          // Roman Arabic transliteration — always shown when toggle is on
+          if (state.showTranslit && translit.isNotEmpty)
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
               decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: context.border))),
+                  border: Border(top: BorderSide(color: _RC.border(state.readerTheme)))),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('ROMAN ARABIC',
                     style: TextStyle(fontSize: 7, letterSpacing: 2,
                         color: AppColors.goldDim, fontFamily: 'sans-serif')),
                 const SizedBox(height: 3),
-                Text(langData.transliteration,
+                Text(translit,
                     style: TextStyle(fontFamily: 'serif',
                         fontSize: state.translitFontSize,
                         fontStyle: FontStyle.italic,
-                        color: context.translit, height: 1.6)),
+                        color: _RC.translit(state.readerTheme), height: 1.6)),
               ]),
             ),
 
-          // Translation
-          if (state.showTranslation && langData.translation.isNotEmpty)
+          // Translation in the user's selected language — always shown when toggle is on
+          if (state.showTranslation)
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               decoration: BoxDecoration(
-                color: context.surface2,
+                color: _RC.surface2(state.readerTheme),
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
-                border: Border(top: BorderSide(color: context.border)),
+                border: Border(top: BorderSide(color: _RC.border(state.readerTheme))),
               ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(state.currentLanguage.name.toUpperCase(),
-                    style: TextStyle(fontSize: 7, letterSpacing: 2,
-                        color: AppColors.goldDim, fontFamily: 'sans-serif')),
-                const SizedBox(height: 3),
-                Text(langData.translation,
-                    style: TextStyle(fontFamily: 'serif',
-                        fontSize: state.translationFontSize,
-                        color: context.urduText, height: 1.6)),
-              ]),
+              child: Column(
+                crossAxisAlignment: state.currentLanguage.isRtl
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  Text(state.currentLanguage.name.toUpperCase(),
+                      style: TextStyle(fontSize: 7, letterSpacing: 2,
+                          color: AppColors.goldDim, fontFamily: 'sans-serif')),
+                  const SizedBox(height: 3),
+                  translation.isNotEmpty
+                      ? Text(translation,
+                          textDirection: state.currentLanguage.isRtl
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
+                          style: TextStyle(fontFamily: 'serif',
+                              fontSize: state.translationFontSize,
+                              color: _RC.translation(state.readerTheme),
+                              height: 1.6))
+                      : Text('Loading translation…',
+                          style: TextStyle(
+                              fontSize: state.translationFontSize,
+                              fontStyle: FontStyle.italic,
+                              color: _RC.textDim(state.readerTheme),
+                              fontFamily: 'sans-serif')),
+                ],
+              ),
             ),
         ]),
       );
@@ -612,13 +745,18 @@ class _ReaderSettingsSheetState extends State<_ReaderSettingsSheet>
             ),
           ),
           const SizedBox(height: 4),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: [
-              _DisplayTab(state: state),
-              _TextTab(state: state),
-              const _AudioTab(),
-            ][_tabs.index],
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: [
+                _DisplayTab(state: state),
+                _TextTab(state: state),
+                const _AudioTab(),
+              ][_tabs.index],
+            ),
           ),
         ]),
       );

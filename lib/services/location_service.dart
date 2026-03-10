@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,7 +17,7 @@ Future<List<Location>> locationFromAddress(String address) async {
       '?q=${Uri.encodeComponent(address)}&format=json&limit=5',
     );
     final response = await http.get(uri, headers: {
-      'User-Agent': 'QuranKareem/1.0',
+      'User-Agent': 'GetQuran/1.0',
       'Accept-Language': 'en',
     }).timeout(const Duration(seconds: 10));
 
@@ -31,6 +32,31 @@ Future<List<Location>> locationFromAddress(String address) async {
     }
   } catch (_) {}
   return [];
+}
+
+Future<String> _reverseGeocode(double lat, double lng) async {
+  try {
+    final uri = Uri.parse(
+      'https://nominatim.openstreetmap.org/reverse'
+      '?lat=$lat&lon=$lng&format=json',
+    );
+    final response = await http.get(uri, headers: {
+      'User-Agent': 'GetQuran/1.0',
+      'Accept-Language': 'en',
+    }).timeout(const Duration(seconds: 8));
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final address = json['address'] as Map<String, dynamic>?;
+      if (address != null) {
+        return address['city'] as String? ??
+            address['town'] as String? ??
+            address['village'] as String? ??
+            address['county'] as String? ??
+            'My Location';
+      }
+    }
+  } catch (_) {}
+  return 'My Location';
 }
 
 class PrayerTimes {
@@ -87,16 +113,52 @@ class LocationService extends ChangeNotifier {
   }
 
   Future<void> fetchLocation() async {
-    _loading = true; notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _loading = false;
-    _error = 'Location access unavailable. Please set city manually.';
+    _loading = true;
+    _error = null;
     notifyListeners();
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _error = 'Location services disabled. Please enable GPS.';
+        _loading = false;
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        _error = 'Location permission denied. Please set city manually.';
+        _loading = false;
+        notifyListeners();
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      final cityName = await _reverseGeocode(position.latitude, position.longitude);
+      await setManualLocation(position.latitude, position.longitude, cityName);
+    } catch (e) {
+      _error = 'Could not get location. Please set city manually.';
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> setManualLocation(double lat, double lng, String city) async {
     _prayerTimes = _calc(lat, lng, city);
     _error = null;
+    _loading = false;
     final p = await SharedPreferences.getInstance();
     await p.setDouble('lat', lat);
     await p.setDouble('lng', lng);

@@ -1,5 +1,5 @@
 name: quran_kareem
-description: Quran Kareem - A beautiful Quran app
+description: Get Quran - A beautiful Quran app
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -13,6 +13,23 @@ dependencies:
   shared_preferences: ^2.2.2
   http: ^1.1.0
   provider: ^6.1.1
+  audioplayers: ^6.1.0
+  geolocator: ^13.0.0
+  flutter_compass: ^0.8.0
+  webview_flutter: ^4.4.2
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#0C0C12"
+  adaptive_icon_foreground: "assets/icon/icon_fg.png"
+  min_sdk_android: 21
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/
