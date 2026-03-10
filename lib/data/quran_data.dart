@@ -117,136 +117,21 @@ const List<Surah> kSurahs = [
   Surah(number: 114, nameArabic: 'النَّاس', nameTransliteration: 'An-Nas', nameTranslation: 'The Mankind', verses: 6, revelationType: 'Meccan', juz: 30),
 ];
 
-// Al-Fatihah verses (full data for Surah 1)
-const List<Verse> kFatihahVerses = [
-  Verse(
-    number: 1,
-    arabic: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
-    transliteration: "Bismillaahir Rahmaanir Raheem",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Bismillaahir Rahmaanir Raheem",
-        translation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Bismillaahir Rahmaanir Raheem",
-        translation: 'اللہ کے نام سے جو بڑا مہربان، نہایت رحم کرنے والا ہے',
-      ),
-    },
-  ),
-  Verse(
-    number: 2,
-    arabic: 'ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ',
-    transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
-        translation: '[All] praise is [due] to Allah, Lord of the worlds -',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Alhamdu lillaahi Rabbil 'aalameen",
-        translation: 'سب تعریف اللہ کے لئے ہے جو تمام جہانوں کا پالنے والا ہے',
-      ),
-    },
-  ),
-  Verse(
-    number: 3,
-    arabic: 'ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
-    transliteration: "Ar-Rahmaanir-Raheem",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Ar-Rahmaanir-Raheem",
-        translation: 'The Entirely Merciful, the Especially Merciful,',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Ar-Rahmaanir-Raheem",
-        translation: 'بڑا مہربان، نہایت رحم کرنے والا',
-      ),
-    },
-  ),
-  Verse(
-    number: 4,
-    arabic: 'مَٰلِكِ يَوۡمِ ٱلدِّينِ',
-    transliteration: "Maaliki Yawmid-Deen",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Maaliki Yawmid-Deen",
-        translation: 'Sovereign of the Day of Recompense.',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Maaliki Yawmid-Deen",
-        translation: 'روزِ جزا کا مالک',
-      ),
-    },
-  ),
-  Verse(
-    number: 5,
-    arabic: 'إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ',
-    transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
-        translation: 'It is You we worship and You we ask for help.',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Iyyaaka na'budu wa lyyaaka nasta'een",
-        translation: 'ہم تیری ہی عبادت کرتے ہیں اور تجھ ہی سے مدد مانگتے ہیں',
-      ),
-    },
-  ),
-  Verse(
-    number: 6,
-    arabic: 'ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ',
-    transliteration: "Ihdinas-Siraatal-Mustaqeem",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Ihdinas-Siraatal-Mustaqeem",
-        translation: 'Guide us to the straight path -',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Ihdinas-Siraatal-Mustaqeem",
-        translation: 'ہمیں سیدھا راستہ دکھا',
-      ),
-    },
-  ),
-  Verse(
-    number: 7,
-    arabic: 'صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ',
-    transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
-    translations: {
-      'en': VerseTranslation(
-        transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
-        translation: 'The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.',
-      ),
-      'ur': VerseTranslation(
-        transliteration: "Siraatal-lazeena an'amta 'alaihim ghayril-maghdoobi 'alaihim wa lad-daaalleen",
-        translation: 'ان لوگوں کا راستہ جن پر تو نے انعام فرمایا، نہ ان کا جن پر غضب ہوا اور نہ گمراہوں کا',
-      ),
-    },
-  ),
-];
-
-List<Verse> getVerses(int surahNumber) {
-  if (surahNumber == 1) return kFatihahVerses;
-  // For other surahs, return placeholder
+// Returns placeholder verses for every surah; real data is fetched from the API.
+List<Verse> _placeholderVerses(int surahNumber) {
   final surah = kSurahs.firstWhere((s) => s.number == surahNumber);
   return List.generate(
     surah.verses,
     (i) => Verse(
       number: i + 1,
-      arabic: 'آيَةٌ ${i + 1}',
-      transliteration: 'Verse ${i + 1}',
-      translations: {
-        'en': VerseTranslation(
-          transliteration: 'Verse ${i + 1}',
-          translation: 'Translation coming soon for verse ${i + 1}',
-        ),
-      },
+      arabic: '\u﴿${i + 1}\u﴾',
+      transliteration: '',
+      translations: {},
     ),
   );
 }
 
 // Map of surah number -> verses, covering all 114 surahs
 final Map<int, List<Verse>> kQuranData = {
-  for (final s in kSurahs) s.number: getVerses(s.number),
+  for (final s in kSurahs) s.number: _placeholderVerses(s.number),
 };

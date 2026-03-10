@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_state.dart';
 import '../models/surah.dart';
@@ -87,10 +88,13 @@ class ReaderScreen extends StatefulWidget {
 }
 
 class _ReaderScreenState extends State<ReaderScreen> {
+  bool _isBookmarked = false;
+
   @override
   void initState() {
     super.initState();
     _loadContent();
+    _loadBookmark();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
   }
@@ -99,15 +103,39 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (!mounted) return;
     final quranService = context.read<QuranService>();
     final appState = context.read<AppState>();
-    // loadSurah now fetches Arabic + transliteration + the user's language
-    // in a single 3-edition call, and handles translation loading internally.
     await quranService.loadSurah(widget.surah.number,
         langCode: appState.langCode);
   }
 
+  Future<void> _loadBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getBool('bookmarked_surah_${widget.surah.number}') ?? false;
+    if (mounted) setState(() => _isBookmarked = saved);
+  }
+
+  Future<void> _toggleBookmark() async {
+    final prefs = await SharedPreferences.getInstance();
+    final newValue = !_isBookmarked;
+    await prefs.setBool('bookmarked_surah_${widget.surah.number}', newValue);
+    if (!mounted) return;
+    setState(() => _isBookmarked = newValue);
+    if (newValue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bookmark saved',
+            style: const TextStyle(fontFamily: 'sans-serif', fontSize: 13),
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
-    
     super.dispose();
   }
 
@@ -250,8 +278,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: QIcon.bookmark(size: 22, color: context.textDim),
-              onPressed: () {},
+              icon: _isBookmarked
+                  ? Icon(Icons.bookmark, size: 22, color: AppColors.gold)
+                  : QIcon.bookmark(size: 22, color: context.textDim),
+              onPressed: _toggleBookmark,
             ),
             // Language selector
             GestureDetector(

@@ -12,6 +12,8 @@ import 'surah_list_screen.dart';
 import 'settings_screen.dart';
 import 'reader_screen.dart';
 import 'language_selection_screen.dart';
+import 'qibla_screen.dart';
+import 'sponsor_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -301,15 +303,36 @@ class _HomeTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.goldDim.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(11),
-                      border: Border.all(color: context.border),
+                  // Qibla compass button
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const QiblaScreen())),
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.goldDim.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: context.border),
+                      ),
+                      child: Center(child: Icon(Icons.explore_outlined,
+                          size: 18, color: AppColors.gold)),
                     ),
-                    child: Center(child: Text('\u263d',
-                        style: TextStyle(fontSize: 20, color: AppColors.gold))),
+                  ),
+                  const SizedBox(width: 8),
+                  // Sponsor button
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SponsorScreen())),
+                    child: Container(
+                      width: 36, height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.goldDim.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: context.border),
+                      ),
+                      child: Center(child: Icon(Icons.favorite_outline,
+                          size: 18, color: AppColors.gold)),
+                    ),
                   ),
                 ],
               ),
@@ -366,7 +389,7 @@ class _CalPrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = DateTime.now().toLocal();
     final h = _toHijri(now);
     const hMonths = ['','Muharram','Safar',"Rabi' Al-Awwal","Rabi' Al-Thani",
         "Jumada Al-Awwal","Jumada Al-Thani",'Rajab',"Sha'ban",
@@ -568,11 +591,11 @@ class _PrayerGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prayers = [
-      ('Fajr', pt.fajrStr),
-      ('Dhuhr', pt.dhuhrStr),
-      ('Asr', pt.asrStr),
-      ('Maghrib', pt.maghribStr),
-      ('Isha', pt.ishaStr),
+      ('Fajr',   pt.fajrStr,   '2S+2F'),
+      ('Dhuhr',  pt.dhuhrStr,  '4S+4F\n+2S'),
+      ('Asr',    pt.asrStr,    '4S+4F'),
+      ('Maghrib',pt.maghribStr,'3F+2S'),
+      ('Isha',   pt.ishaStr,   '4F+2S\n+1W'),
     ];
     final next = pt.nextPrayerName;
     final rem = pt.timeUntilNext;
@@ -613,9 +636,11 @@ class _PrayerGrid extends StatelessWidget {
                                 ? (context.isDark ? AppColors.goldLight : AppColors.goldDark)
                                 : context.text)),
                     const SizedBox(height: 2),
-                    Container(width: 4, height: 4,
-                        decoration: BoxDecoration(shape: BoxShape.circle,
-                            color: isNext ? AppColors.gold : context.border)),
+                    Text(p.$3,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 6, fontFamily: 'sans-serif',
+                            height: 1.3,
+                            color: isNext ? AppColors.goldDim : context.textDim.withOpacity(0.6))),
                   ],
                 ),
               ),
