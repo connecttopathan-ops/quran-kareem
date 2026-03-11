@@ -21,6 +21,8 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - name: Download bundled translations
+        run: python3 scripts/download_translations.py
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
       - name: Create local.properties

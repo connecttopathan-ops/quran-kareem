@@ -7,6 +7,7 @@ import '../models/surah.dart';
 import '../models/language.dart';
 import '../services/audio_service.dart';
 import '../services/quran_service.dart';
+import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
 import '../theme/app_theme.dart';
 
@@ -102,9 +103,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Future<void> _loadContent() async {
     if (!mounted) return;
     final quranService = context.read<QuranService>();
+    final translService = context.read<TranslationService>();
     final appState = context.read<AppState>();
-    await quranService.loadSurah(widget.surah.number,
-        langCode: appState.langCode);
+    await Future.wait([
+      quranService.loadSurah(widget.surah.number, langCode: appState.langCode),
+      translService.loadSurahTranslation(appState.langCode, widget.surah.number),
+    ]);
   }
 
   Future<void> _loadBookmark() async {
@@ -185,11 +189,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     return GestureDetector(
                       onTap: () {
                         state.setLanguage(lang.code);
-                        // Lazy-load translation for this language if not en/ur
-                        if (lang.code != 'en' && lang.code != 'ur') {
-                          context.read<QuranService>().loadTranslation(
-                            widget.surah.number, lang.code, lang.editionId);
-                        }
+                        context.read<TranslationService>().loadSurahTranslation(
+                            lang.code, widget.surah.number);
                         Navigator.pop(ctx);
                       },
                       child: AnimatedContainer(
@@ -324,54 +325,63 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Widget _buildBody(AppState state) {
     return Consumer<QuranService>(builder: (context, quranService, _) {
-      final verses = quranService.getVerses(widget.surah.number);
-      final loading = quranService.isLoading(widget.surah.number);
-      return Stack(children: [
-        ListView.builder(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
-          itemCount: verses.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
-            final verse = verses[index - 1];
-            return _VerseCard(
-              verse: verse,
-              surah: widget.surah,
-              state: state,
-            );
-          },
-        ),
-        if (loading)
-          Positioned(
-            top: 8,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: context.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: context.border),
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 1.5, color: AppColors.gold),
+      return Consumer<TranslationService>(builder: (context, translService, _) {
+        final verses = quranService.getVerses(widget.surah.number);
+        final loading = quranService.isLoading(widget.surah.number);
+        final downloading = translService.isDownloading;
+        return Stack(children: [
+          ListView.builder(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
+            itemCount: verses.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
+              final verse = verses[index - 1];
+              return _VerseCard(
+                verse: verse,
+                surah: widget.surah,
+                state: state,
+                translText: translService.getText(
+                    state.langCode, widget.surah.number, verse.number),
+              );
+            },
+          ),
+          if (loading || downloading)
+            Positioned(
+              top: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: context.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: context.border),
                   ),
-                  const SizedBox(width: 8),
-                  Text('Loading verses…',
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 1.5, color: AppColors.gold),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      downloading
+                          ? 'Downloading translation for first use…'
+                          : 'Loading verses…',
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
-                          fontFamily: 'sans-serif')),
-                ]),
+                          fontFamily: 'sans-serif'),
+                    ),
+                  ]),
+                ),
               ),
             ),
-          ),
-      ]);
+        ]);
+      });
     });
   }
 }
@@ -437,15 +447,24 @@ class _VerseCard extends StatelessWidget {
   final Verse verse;
   final Surah surah;
   final AppState state;
-  const _VerseCard({required this.verse, required this.surah, required this.state});
+  /// Pre-resolved translation text from [TranslationService] (preferred).
+  final String? translText;
+  const _VerseCard({
+    required this.verse,
+    required this.surah,
+    required this.state,
+    this.translText,
+  });
 
   @override
   Widget build(BuildContext context) {
     // verse.transliteration is always the Roman Arabic (from en.transliteration).
     final translit = verse.transliteration;
-    // Translation in the user's selected language; fall back to English.
-    final translation = verse.translations[state.langCode]?.translation ??
-        verse.translations['en']?.translation ?? '';
+    // Prefer TranslationService text (bundled or cached), then QuranService.
+    final translation = translText?.isNotEmpty == true
+        ? translText!
+        : (verse.translations[state.langCode]?.translation ??
+            verse.translations['en']?.translation ?? '');
 
     return Consumer<AudioService>(builder: (context, audio, _) {
       final isThisPlaying = audio.isVersePlayingNow(surah.number, verse.number);

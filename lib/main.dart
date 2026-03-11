@@ -5,6 +5,7 @@ import 'models/app_state.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
 import 'services/quran_service.dart';
+import 'services/translation_service.dart';
 import 'screens/home_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -27,6 +28,7 @@ class QuranApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationService()),
         ChangeNotifierProvider(create: (_) => AudioService()),
         ChangeNotifierProvider(create: (_) => QuranService()),
+        ChangeNotifierProvider(create: (_) => TranslationService()),
       ],
       child: Consumer<AppState>(
         builder: (context, state, _) {
