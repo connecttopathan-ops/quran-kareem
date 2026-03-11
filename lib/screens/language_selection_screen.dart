@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
-import '../services/quran_service.dart';
-import '../services/translation_service.dart';
 import '../theme/app_theme.dart';
 import '../data/first_verse_translations.dart';
 
@@ -18,50 +16,17 @@ class LanguageSelectionScreen extends StatefulWidget {
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   String _selectedCode = 'ur-roman';
-  bool _downloading = false;
-  int _downloadProgress = 0;
-  bool _downloadComplete = false;
 
   Language get _selectedLang =>
       kLanguages.firstWhere((l) => l.code == _selectedCode);
 
-  Future<void> _startDownloadAndConfirm() async {
-    if (_downloadComplete) {
-      Navigator.pop(context);
-      return;
-    }
-
-    // Save language preference
+  Future<void> _confirm() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('language_selected', true);
     await prefs.setString('langCode', _selectedCode);
-    if (mounted) context.read<AppState>().setLanguage(_selectedCode);
-
-    // Bundled languages (ur-roman, en, ur, hi, ar) ship with the app —
-    // no download needed, navigate immediately.
-    if (kBundledLangs.contains(_selectedCode)) {
-      if (mounted) Navigator.pop(context);
-      return;
-    }
-
-    setState(() {
-      _downloading = true;
-      _downloadProgress = 0;
-      _downloadComplete = false;
-    });
-
-    await context.read<QuranService>().downloadAllSurahs(
-      _selectedCode,
-      onProgress: (completed) {
-        if (mounted) setState(() => _downloadProgress = completed);
-      },
-    );
-
     if (mounted) {
-      setState(() {
-        _downloading = false;
-        _downloadComplete = true;
-      });
+      context.read<AppState>().setLanguage(_selectedCode);
+      Navigator.pop(context);
     }
   }
 
@@ -146,13 +111,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   final isRtl = lang.isRtl;
 
                   return GestureDetector(
-                    onTap: _downloading
-                        ? null
-                        : () => setState(() {
-                              _selectedCode = lang.code;
-                              _downloadComplete = false;
-                              _downloadProgress = 0;
-                            }),
+                    onTap: () => setState(() => _selectedCode = lang.code),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 150),
                       margin: const EdgeInsets.only(bottom: 8),
@@ -251,82 +210,23 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               ),
             ),
 
-            // ── Download progress ────────────────────────────────────────────
-            if (_downloading || _downloadComplete)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_downloading) ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Downloading ${_selectedLang.name} translations...'
-                              ' $_downloadProgress / 114',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: context.textDim,
-                                fontFamily: 'sans-serif',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: _downloadProgress / 114,
-                          backgroundColor: context.border,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.gold),
-                          minHeight: 4,
-                        ),
-                      ),
-                    ],
-                    if (_downloadComplete)
-                      Row(
-                        children: [
-                          Icon(Icons.check_circle,
-                              size: 14, color: AppColors.gold),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Download complete',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.gold,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'sans-serif',
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-
             // ── Continue button ──────────────────────────────────────────────
             Padding(
               padding: EdgeInsets.fromLTRB(
                   16, 8, 16, MediaQuery.of(context).padding.bottom + 16),
               child: ElevatedButton(
-                onPressed: _downloading ? null : _startDownloadAndConfirm,
+                onPressed: _confirm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gold,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      AppColors.goldDim.withOpacity(0.4),
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: Text(
-                  _downloadComplete ? 'Continue to App' : 'Continue',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                child: const Text(
+                  'Continue',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

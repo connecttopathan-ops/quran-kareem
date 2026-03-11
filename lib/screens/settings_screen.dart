@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
-import '../services/quran_service.dart';
-import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -92,8 +90,6 @@ class SettingsScreen extends StatelessWidget {
                           activeColor: AppColors.gold,
                         ),
                       ),
-                      _SectionHeader('Downloaded Languages'),
-                      const _DownloadedLanguagesSection(),
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
@@ -108,139 +104,6 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-// ── Downloaded Languages Section ─────────────────────────────────────────────
-
-class _DownloadedLanguagesSection extends StatefulWidget {
-  const _DownloadedLanguagesSection();
-
-  @override
-  State<_DownloadedLanguagesSection> createState() =>
-      _DownloadedLanguagesSectionState();
-}
-
-class _DownloadedLanguagesSectionState
-    extends State<_DownloadedLanguagesSection> {
-  List<String> _downloaded = [];
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _reload();
-  }
-
-  Future<void> _reload() async {
-    final list = await QuranService.getDownloadedLanguages();
-    if (mounted) setState(() { _downloaded = list; _loaded = true; });
-  }
-
-  Future<void> _delete(String langCode) async {
-    await QuranService.deleteLanguageCache(langCode);
-    await _reload();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_loaded) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: context.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: context.border),
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 20, height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    if (_downloaded.isEmpty) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: context.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: context.border),
-        ),
-        child: Text(
-          'No languages downloaded yet.',
-          style: TextStyle(
-            fontSize: 13,
-            color: context.textDim,
-            fontFamily: 'sans-serif',
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      children: _downloaded.map((code) {
-        final lang = kLanguages.firstWhere(
-          (l) => l.code == code,
-          orElse: () => Language(
-              code: code, name: code, nativeName: code, editionId: ''),
-        );
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: context.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: context.border),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.download_done,
-                  size: 16, color: AppColors.gold),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(lang.name,
-                        style: TextStyle(fontSize: 14, color: context.text)),
-                    Text('114 surahs cached',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: context.textDim,
-                            fontFamily: 'sans-serif')),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => _delete(code),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: context.surface2,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: context.border),
-                  ),
-                  child: Text(
-                    'Delete',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textDim,
-                      fontFamily: 'sans-serif',
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
     );
   }
 }
@@ -373,14 +236,7 @@ class _LanguageSelector extends StatelessWidget {
                     ))
                 .toList(),
             onChanged: (code) {
-              if (code != null) {
-                state.setLanguage(code);
-                // Background download only for non-bundled languages.
-                // Bundled langs (ur-roman, en, ur, hi, ar) load from asset.
-                if (!kBundledLangs.contains(code)) {
-                  context.read<QuranService>().downloadAllSurahs(code);
-                }
-              }
+              if (code != null) state.setLanguage(code);
             },
           ),
         ],

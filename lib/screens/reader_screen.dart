@@ -328,7 +328,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
       return Consumer<TranslationService>(builder: (context, translService, _) {
         final verses = quranService.getVerses(widget.surah.number);
         final loading = quranService.isLoading(widget.surah.number);
-        final downloading = translService.isDownloading;
         return Stack(children: [
           ListView.builder(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
@@ -345,7 +344,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               );
             },
           ),
-          if (loading || downloading)
+          if (loading)
             Positioned(
               top: 8,
               left: 0,
@@ -627,17 +626,7 @@ class _VerseCard extends StatelessWidget {
                         style: TextStyle(fontFamily: 'serif',
                             fontSize: state.translationFontSize,
                             color: _RC.translation(state.readerTheme),
-                            height: 1.6))
-                  // Only show "Loading…" for non-bundled languages that are
-                  // being fetched from the network. Bundled langs (ur-roman,
-                  // en, ur, hi, ar) load from asset — never show this.
-                  else if (!kBundledLangs.contains(state.langCode))
-                    Text('Loading translation…',
-                        style: TextStyle(
-                            fontSize: state.translationFontSize,
-                            fontStyle: FontStyle.italic,
-                            color: _RC.textDim(state.readerTheme),
-                            fontFamily: 'sans-serif')),
+                            height: 1.6)),
                 ],
               ),
             ),
