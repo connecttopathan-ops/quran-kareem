@@ -14,6 +14,7 @@ import 'reader_screen.dart';
 import 'language_selection_screen.dart';
 import 'qibla_screen.dart';
 import 'sponsor_screen.dart';
+import 'duas_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -341,16 +342,18 @@ class _HomeTab extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(13, 12, 13, 24),
-                children: const [
-                  _CalPrayerCard(),
-                  SizedBox(height: 12),
-                  _ContinueCard(),
-                  SizedBox(height: 12),
-                  _DailyAyah(),
-                  SizedBox(height: 12),
-                  _PopularSurahs(),
-                  SizedBox(height: 12),
-                  _Stats(),
+                children: [
+                  const _CalPrayerCard(),
+                  const SizedBox(height: 12),
+                  const _QuickActionsCard(),
+                  const SizedBox(height: 12),
+                  const _ContinueCard(),
+                  const SizedBox(height: 12),
+                  const _DailyAyah(),
+                  const SizedBox(height: 12),
+                  const _PopularSurahs(),
+                  const SizedBox(height: 12),
+                  const _Stats(),
                 ],
               ),
             ),
@@ -584,80 +587,285 @@ class _PrayerSection extends StatelessWidget {
   }
 }
 
-class _PrayerGrid extends StatelessWidget {
+// Rakah breakdown data
+const _kRakahRows = {
+  'Fajr':    [('Sunnah', 2), ('Fard', 2)],
+  'Dhuhr':   [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2)],
+  'Asr':     [('Sunnah', 4), ('Fard', 4)],
+  'Maghrib': [('Fard', 3), ('Sunnah', 2)],
+  'Isha':    [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2), ('Witr', 3)],
+};
+const _kRakahTotal = {
+  'Fajr': 4, 'Dhuhr': 10, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
+};
+
+class _PrayerGrid extends StatefulWidget {
   final PrayerTimes pt;
   const _PrayerGrid({required this.pt});
 
   @override
-  Widget build(BuildContext context) {
-    final prayers = [
-      ('Fajr',   pt.fajrStr,   '2S+2F'),
-      ('Dhuhr',  pt.dhuhrStr,  '4S+4F\n+2S'),
-      ('Asr',    pt.asrStr,    '4S+4F'),
-      ('Maghrib',pt.maghribStr,'3F+2S'),
-      ('Isha',   pt.ishaStr,   '4F+2S\n+1W'),
-    ];
-    final next = pt.nextPrayerName;
-    final rem = pt.timeUntilNext;
-    final countdown = rem.inHours > 0
-        ? '${rem.inHours}h ${rem.inMinutes % 60}m'
-        : '${rem.inMinutes}m';
+  State<_PrayerGrid> createState() => _PrayerGridState();
+}
 
-    return Column(
-      children: [
-        Row(
-          children: prayers.map((p) {
-            final isNext = p.$1 == next;
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: isNext
-                      ? AppColors.goldDim.withOpacity(context.isDark ? 0.18 : 0.12)
-                      : context.surface2,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: isNext ? AppColors.gold : context.border,
-                      width: isNext ? 1.2 : 1),
-                ),
-                child: Column(
+class _PrayerGridState extends State<_PrayerGrid>
+    with SingleTickerProviderStateMixin {
+  int? _tappedIndex;
+  late AnimationController _blinkCtrl;
+  late Animation<double> _blinkAnim;
+  Timer? _countdownTimer;
+  late DateTime _targetTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
+
+    _blinkCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _blinkAnim = Tween<double>(begin: 1.0, end: 0.15).animate(
+      CurvedAnimation(parent: _blinkCtrl, curve: Curves.easeInOut),
+    );
+    _blinkCtrl.repeat(reverse: true);
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didUpdateWidget(_PrayerGrid old) {
+    super.didUpdateWidget(old);
+    if (old.pt != widget.pt) {
+      _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
+    }
+  }
+
+  @override
+  void dispose() {
+    _blinkCtrl.dispose();
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  Widget _buildPopup(BuildContext context, String prayerName) {
+    final rows = _kRakahRows[prayerName] ?? [];
+    final total = _kRakahTotal[prayerName] ?? 0;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(prayerName.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  color: AppColors.gold,
+                  fontFamily: 'sans-serif',
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          ...rows.map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(p.$1,
-                        style: TextStyle(fontSize: 7, fontFamily: 'sans-serif',
-                            fontWeight: isNext ? FontWeight.w700 : FontWeight.normal,
-                            color: isNext
-                                ? (context.isDark ? AppColors.gold : AppColors.goldDark)
-                                : context.textDim)),
-                    const SizedBox(height: 3),
-                    Text(p.$2.replaceAll(' AM', '').replaceAll(' PM', ''),
-                        style: TextStyle(fontFamily: 'serif', fontSize: 11,
-                            color: isNext
-                                ? (context.isDark ? AppColors.goldLight : AppColors.goldDark)
-                                : context.text)),
-                    const SizedBox(height: 2),
-                    Text(p.$3,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 6, fontFamily: 'sans-serif',
-                            height: 1.3,
-                            color: isNext ? AppColors.goldDim : context.textDim.withOpacity(0.6))),
+                    Text(r.$1,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: context.textDim,
+                            fontFamily: 'sans-serif')),
+                    Text('${r.$2}',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: context.text,
+                            fontFamily: 'sans-serif')),
                   ],
                 ),
+              )),
+          Divider(height: 14, color: context.border),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      fontFamily: 'sans-serif',
+                      fontWeight: FontWeight.w700)),
+              Text('$total',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      fontFamily: 'sans-serif',
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prayers = [
+      ('Fajr',    widget.pt.fajrStr,    4),
+      ('Dhuhr',   widget.pt.dhuhrStr,   10),
+      ('Asr',     widget.pt.asrStr,     8),
+      ('Maghrib', widget.pt.maghribStr, 5),
+      ('Isha',    widget.pt.ishaStr,    13),
+    ];
+    final next = widget.pt.nextPrayerName;
+
+    final rem = _targetTime.difference(DateTime.now());
+    final remClamped = rem.isNegative ? Duration.zero : rem;
+    final h = remClamped.inHours;
+    final m = remClamped.inMinutes % 60;
+    final s = remClamped.inSeconds % 60;
+    final countdown = '${h}h ${m}m ${s}s';
+
+    return GestureDetector(
+      onTap: () {
+        if (_tappedIndex != null) setState(() => _tappedIndex = null);
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Column(
+        children: [
+          // Popup shown above prayer row
+          if (_tappedIndex != null) ...[
+            _buildPopup(context, prayers[_tappedIndex!].$1),
+            const SizedBox(height: 6),
+          ],
+          // Prayer cards row
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: List.generate(5, (i) {
+                final p = prayers[i];
+                final isActive = p.$1 == next;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(
+                        () => _tappedIndex = _tappedIndex == i ? null : i),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: context.surface2,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color:
+                              isActive ? AppColors.gold : context.border,
+                          width: isActive ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(p.$1,
+                              style: TextStyle(
+                                  fontSize: 7,
+                                  fontFamily: 'sans-serif',
+                                  fontWeight: isActive
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                  color: isActive
+                                      ? (context.isDark
+                                          ? AppColors.gold
+                                          : AppColors.goldDark)
+                                      : context.textDim)),
+                          const SizedBox(height: 3),
+                          Text(
+                              p.$2
+                                  .replaceAll(' AM', '')
+                                  .replaceAll(' PM', ''),
+                              style: TextStyle(
+                                  fontFamily: 'serif',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: isActive
+                                      ? (context.isDark
+                                          ? AppColors.goldLight
+                                          : AppColors.goldDark)
+                                      : context.text)),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: context.textDim.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('${p.$3} rak.',
+                                style: TextStyle(
+                                    fontSize: 9,
+                                    fontFamily: 'sans-serif',
+                                    color: context.textDim)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Hint text
+          Text(
+            '✦ Tap a prayer to see full rakah breakdown ✦',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 9,
+                fontFamily: 'sans-serif',
+                color: context.textDim.withOpacity(0.7)),
+          ),
+          const SizedBox(height: 8),
+          // Next prayer row with blinking dot
+          Row(children: [
+            FadeTransition(
+              opacity: _blinkAnim,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: AppColors.gold),
               ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 8),
-        Row(children: [
-          Container(width: 5, height: 5,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
-          const SizedBox(width: 6),
-          Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-          Text(next, style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
-              color: AppColors.gold, fontWeight: FontWeight.w700)),
-          Text(' in $countdown', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-        ]),
-      ],
+            ),
+            const SizedBox(width: 6),
+            Text('Next: ',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: context.textDim)),
+            Text(next,
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w700)),
+            Text(' in $countdown',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w700)),
+          ]),
+        ],
+      ),
     );
   }
 }
@@ -1012,6 +1220,86 @@ class _PopularSurahs extends StatelessWidget {
     ]);
   }
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// QUICK ACTIONS CARD
+// ─────────────────────────────────────────────────────────────────────────────
+class _QuickActionsCard extends StatelessWidget {
+  const _QuickActionsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = [
+      (
+        icon: Icon(Icons.explore_outlined, size: 26, color: AppColors.gold),
+        label: 'Qibla',
+        subtitle: 'Find direction',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
+      ),
+      (
+        icon: Icon(Icons.menu_book_outlined, size: 26, color: AppColors.gold),
+        label: 'Duas',
+        subtitle: 'Daily supplications',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const DuasScreen())),
+      ),
+      (
+        icon: Icon(Icons.favorite_outline, size: 26, color: AppColors.gold),
+        label: 'Support Us',
+        subtitle: 'Keep app free',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: Row(
+        children: actions.map((a) {
+          return Expanded(
+            child: GestureDetector(
+              onTap: a.onTap,
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                decoration: BoxDecoration(
+                  color: context.surface2,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    a.icon,
+                    const SizedBox(height: 4),
+                    Text(a.label,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: context.text)),
+                    const SizedBox(height: 2),
+                    Text(a.subtitle,
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontFamily: 'sans-serif',
+                            color: context.textDim),
+                        textAlign: TextAlign.center),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
 class _Stats extends StatelessWidget {
   const _Stats();
 

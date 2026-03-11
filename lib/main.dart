@@ -7,6 +7,7 @@ import 'services/audio_service.dart';
 import 'services/quran_service.dart';
 import 'services/translation_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/duas_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -45,6 +46,9 @@ class QuranApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
             home: const HomeScreen(),
+            routes: {
+              '/duas': (context) => const DuasScreen(),
+            },
           );
         },
       ),
