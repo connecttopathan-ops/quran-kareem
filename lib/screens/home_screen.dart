@@ -377,15 +377,9 @@ class _CalPrayerCard extends StatelessWidget {
 
     return Consumer<LocationService>(
       builder: (context, loc, _) {
-        // Use location longitude to derive approximate local date for the user's timezone.
-        final pt = loc.prayerTimes;
-        final DateTime now;
-        if (pt != null) {
-          final tzHours = (pt.lng / 15).round();
-          now = DateTime.now().toUtc().add(Duration(hours: tzHours));
-        } else {
-          now = DateTime.now().toLocal();
-        }
+        // Always use device local time — the device timezone is more accurate
+        // than a longitude-based approximation.
+        final now = DateTime.now();
         final h = _toHijri(now);
 
         return Container(
@@ -1241,42 +1235,46 @@ class _QuickActionsCard extends StatelessWidget {
         border: Border.all(color: context.border),
       ),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-      child: Row(
-        children: actions.map((a) {
-          return Expanded(
-            child: GestureDetector(
-              onTap: a.onTap,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: context.surface2,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.border),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    a.icon,
-                    const SizedBox(height: 4),
-                    Text(a.label,
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: context.text)),
-                    const SizedBox(height: 2),
-                    Text(a.subtitle,
-                        style: TextStyle(
-                            fontSize: 9,
-                            fontFamily: 'sans-serif',
-                            color: context.textDim),
-                        textAlign: TextAlign.center),
-                  ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: actions.map((a) {
+            return Expanded(
+              child: GestureDetector(
+                onTap: a.onTap,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: context.surface2,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      a.icon,
+                      const SizedBox(height: 4),
+                      Text(a.label,
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: context.text),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 2),
+                      Text(a.subtitle,
+                          style: TextStyle(
+                              fontSize: 9,
+                              fontFamily: 'sans-serif',
+                              color: context.textDim),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
