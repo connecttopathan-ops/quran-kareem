@@ -21,7 +21,9 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
-      - name: Download bundled translations
+      - name: Download ur-roman translation (kanz-ul-imaan, works in CI)
+        run: python3 scripts/download_ur_roman.py
+      - name: Download other bundled translations (en/ur/hi/ar from fawazahmed0)
         run: python3 scripts/download_translations.py
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons

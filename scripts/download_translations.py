@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Download the 5 bundled Quran translations from fawazahmed0 CDN.
+Download 4 bundled Quran translations (en, ur, hi, ar) from fawazahmed0 CDN.
+NOTE: ur-roman is downloaded separately via scripts/download_ur_roman.py
+      from the kanz-ul-imaan-quran-api (GitHub raw), which works in CI.
 Run from the project root: python3 scripts/download_translations.py
 
 Produces assets/translations/{lang}.json with structure:
@@ -13,8 +15,9 @@ import time
 import urllib.request
 import urllib.error
 
+# ur-roman is intentionally excluded — it comes from kanz-ul-imaan via
+# download_ur_roman.py and is committed directly to the repo.
 EDITIONS = {
-    'ur-roman': 'urd-maududi-la',
     'ur':       'urd-maududi',
     'en':       'eng-muhammadali',
     'hi':       'hin-muhammadali',

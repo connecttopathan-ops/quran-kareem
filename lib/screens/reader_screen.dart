@@ -619,21 +619,25 @@ class _VerseCard extends StatelessWidget {
                       style: TextStyle(fontSize: 7, letterSpacing: 2,
                           color: AppColors.goldDim, fontFamily: 'sans-serif')),
                   const SizedBox(height: 3),
-                  translation.isNotEmpty
-                      ? Text(translation,
-                          textDirection: state.currentLanguage.isRtl
-                              ? TextDirection.rtl
-                              : TextDirection.ltr,
-                          style: TextStyle(fontFamily: 'serif',
-                              fontSize: state.translationFontSize,
-                              color: _RC.translation(state.readerTheme),
-                              height: 1.6))
-                      : Text('Loading translation…',
-                          style: TextStyle(
-                              fontSize: state.translationFontSize,
-                              fontStyle: FontStyle.italic,
-                              color: _RC.textDim(state.readerTheme),
-                              fontFamily: 'sans-serif')),
+                  if (translation.isNotEmpty)
+                    Text(translation,
+                        textDirection: state.currentLanguage.isRtl
+                            ? TextDirection.rtl
+                            : TextDirection.ltr,
+                        style: TextStyle(fontFamily: 'serif',
+                            fontSize: state.translationFontSize,
+                            color: _RC.translation(state.readerTheme),
+                            height: 1.6))
+                  // Only show "Loading…" for non-bundled languages that are
+                  // being fetched from the network. Bundled langs (ur-roman,
+                  // en, ur, hi, ar) load from asset — never show this.
+                  else if (!kBundledLangs.contains(state.langCode))
+                    Text('Loading translation…',
+                        style: TextStyle(
+                            fontSize: state.translationFontSize,
+                            fontStyle: FontStyle.italic,
+                            color: _RC.textDim(state.readerTheme),
+                            fontFamily: 'sans-serif')),
                 ],
               ),
             ),

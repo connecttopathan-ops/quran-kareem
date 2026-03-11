@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -12,32 +13,44 @@ const kBundledLangs = {'ur-roman', 'ur', 'en', 'hi', 'ar'};
 /// Manages per-verse translation text, separate from the Arabic+metadata
 /// loading done by [QuranService].
 ///
-/// * Bundled languages (ur-roman, ur, en, hi, ar): loaded instantly from
-///   rootBundle at first access; no network required.
-/// * All other languages: checked in SharedPreferences first (populated by
-///   the bulk pre-download flow), then fetched on demand from fawazahmed0.
+/// * Bundled languages (ur-roman, ur, en, hi, ar): loaded eagerly at
+///   construction from rootBundle — zero network, zero API calls.
+/// * All other languages: checked in SharedPreferences first, then fetched
+///   on demand from fawazahmed0 with a "Downloading…" banner.
 class TranslationService extends ChangeNotifier {
-  // langCode → surahNumber → verseNumber → text
+  // langCode → surahNumber → verseNumber → text  (in-memory cache)
   final Map<String, Map<int, Map<int, String>>> _cache = {};
 
-  // Tracks which (langCode, surahNumber) pairs are loaded or in flight.
+  // Tracks which (langCode_surahNumber) keys have been through loadSurahTranslation.
   final Set<String> _loaded   = {};
   final Set<String> _fetching = {};
 
   bool _isDownloading = false;
 
-  /// True while a first-time network fetch is in progress for a non-bundled
-  /// language. The reader shows a banner when this is true.
+  /// True only while a first-time network fetch is running for a
+  /// non-bundled language. Never true for ur-roman or other bundled langs.
   bool get isDownloading => _isDownloading;
 
   bool isBundled(String langCode) => kBundledLangs.contains(langCode);
 
-  /// Returns the translated text for a verse, or null if not yet loaded.
+  /// Sync lookup — returns null only until the asset has been parsed.
+  /// For bundled langs this will be non-null almost immediately after
+  /// construction (loading starts in the constructor).
   String? getText(String langCode, int surahNumber, int verseNumber) =>
       _cache[langCode]?[surahNumber]?[verseNumber];
 
-  /// Ensure translations for [surahNumber] in [langCode] are available.
-  /// Safe to call multiple times; no-ops once loaded.
+  TranslationService() {
+    // Preload ALL bundled languages immediately so getText() returns data
+    // the instant the reader screen opens — no async gap, no "Loading…".
+    for (final lang in kBundledLangs) {
+      unawaited(_ensureBundledLoaded(lang));
+    }
+  }
+
+  // ── Public API ───────────────────────────────────────────────────────────────
+
+  /// Ensure translations for [surahNumber] in [langCode] are in [_cache].
+  /// For bundled langs this is essentially a no-op after construction.
   Future<void> loadSurahTranslation(String langCode, int surahNumber) async {
     final key = '${langCode}_$surahNumber';
     if (_loaded.contains(key) || _fetching.contains(key)) return;
@@ -45,6 +58,7 @@ class TranslationService extends ChangeNotifier {
 
     try {
       if (isBundled(langCode)) {
+        // Just ensure the full asset is parsed (usually already done).
         await _ensureBundledLoaded(langCode);
       } else {
         await _loadNonBundled(langCode, surahNumber);
@@ -58,9 +72,10 @@ class TranslationService extends ChangeNotifier {
 
   // ── Bundled ──────────────────────────────────────────────────────────────────
 
-  /// Load the full asset file for [langCode] into memory (done once per lang).
+  /// Parse the full asset file for [langCode] once and cache all surahs.
+  /// Subsequent calls are instant (guarded by containsKey check).
   Future<void> _ensureBundledLoaded(String langCode) async {
-    if (_cache.containsKey(langCode)) return; // already parsed
+    if (_cache.containsKey(langCode)) return;
     try {
       final raw = await rootBundle.loadString(
           'assets/translations/$langCode.json');
@@ -77,17 +92,17 @@ class TranslationService extends ChangeNotifier {
         langMap[surah] = verseMap;
       });
       _cache[langCode] = langMap;
-    } catch (_) {
-      // Asset missing or malformed (e.g. placeholder {}): use empty map so we
-      // don't retry endlessly and fall back to QuranService's network load.
+    } catch (e) {
+      // Asset missing or placeholder {} — use empty map so we don't retry.
       _cache[langCode] = {};
     }
+    notifyListeners();
   }
 
   // ── Non-bundled ──────────────────────────────────────────────────────────────
 
   Future<void> _loadNonBundled(String langCode, int surahNumber) async {
-    // 1. Check SharedPreferences (written by QuranService.downloadAllSurahs)
+    // 1. SharedPreferences cache (written by QuranService.downloadAllSurahs)
     final prefs = await SharedPreferences.getInstance();
     final spKey = 'translation_cache_${langCode}_$surahNumber';
     final cached = prefs.getString(spKey);
@@ -97,7 +112,7 @@ class TranslationService extends ChangeNotifier {
       return;
     }
 
-    // 2. Fetch from fawazahmed0 CDN
+    // 2. Fetch from fawazahmed0 CDN (first-time only)
     final fawazEdition = QuranService.kFawazEditions[langCode];
     if (fawazEdition == null) return;
 
@@ -108,14 +123,14 @@ class TranslationService extends ChangeNotifier {
         'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1'
         '/editions/$fawazEdition/$surahNumber.json',
       );
-      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+      final response =
+          await http.get(uri).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final chapter = data['chapter'] as List?;
         if (chapter != null) {
-          final texts = chapter
-              .map((v) => (v['text'] as String? ?? ''))
-              .toList();
+          final texts =
+              chapter.map((v) => (v['text'] as String? ?? '')).toList();
           await prefs.setString(spKey, jsonEncode(texts));
           _applyTextList(langCode, surahNumber, texts);
         }
