@@ -367,9 +367,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      downloading
-                          ? 'Downloading translation for first use…'
-                          : 'Loading verses…',
+                      'Loading verses…',
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
