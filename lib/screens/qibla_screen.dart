@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -62,8 +63,8 @@ class _QiblaScreenState extends State<QiblaScreen>
   bool _isTilted = false;
   StreamSubscription<AccelerometerEvent>? _accelSub;
 
-  // Compass accuracy (from flutter_compass)
-  CompassAccuracy? _accuracy;
+  // 2=high, 1=medium, 0=low — derived from heading buffer variance
+  int _accuracyLevel = 1;
 
   // Haptic "on target" guard
   bool _hapticFired = false;
@@ -138,11 +139,22 @@ class _QiblaScreenState extends State<QiblaScreen>
   }
 
   void _onCompassEvent(CompassEvent event) {
-    _accuracy = event.accuracy;
     final h = event.heading ?? 0.0;
     _headingBuffer.add(h);
     if (_headingBuffer.length > 10) _headingBuffer.removeAt(0);
     _smoothHeading = _circularMean(_headingBuffer);
+
+    // Derive accuracy from heading variance
+    if (_headingBuffer.length >= 3) {
+      final mean = _smoothHeading;
+      double variance = 0;
+      for (final a in _headingBuffer) {
+        final d = ((a - mean + 540) % 360) - 180;
+        variance += d * d;
+      }
+      variance /= _headingBuffer.length;
+      _accuracyLevel = variance < 9 ? 2 : variance < 36 ? 1 : 0;
+    }
   }
 
   @override
@@ -163,7 +175,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                 fontFamily: 'serif',
                 fontWeight: FontWeight.w600)),
         centerTitle: true,
-        actions: [_AccuracyIndicator(accuracy: _accuracy)],
+        actions: [_AccuracyIndicator(level: _accuracyLevel)],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: context.border),
@@ -484,16 +496,16 @@ class _NoLocation extends StatelessWidget {
 // ── Accuracy indicator ─────────────────────────────────────────────────────────
 
 class _AccuracyIndicator extends StatelessWidget {
-  final CompassAccuracy? accuracy;
-  const _AccuracyIndicator({required this.accuracy});
+  final int level; // 2=high, 1=medium, 0=low
+  const _AccuracyIndicator({required this.level});
 
   @override
   Widget build(BuildContext context) {
-    final (label, icon, color) = switch (accuracy) {
-      CompassAccuracy.high => ('High', '✅', Colors.green),
-      CompassAccuracy.medium => ('Medium', '⚠️', Colors.orange),
-      _ => ('Low', '❌', Colors.red),
-    };
+    final (label, icon, color) = level == 2
+        ? ('High', '✅', Colors.green)
+        : level == 1
+            ? ('Medium', '⚠️', Colors.orange)
+            : ('Low', '❌', Colors.red);
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Row(
@@ -560,7 +572,7 @@ class _RosePainter extends CustomPainter {
                 color: label == 'N' ? gold : dim,
                 fontSize: 11,
                 fontWeight: FontWeight.w700)),
-        textDirection: TextDirection.ltr,
+        textDirection: ui.TextDirection.ltr,
       )..layout();
       final pos = center +
           Offset(sin(angle), -cos(angle)) * (radius - 34) -
