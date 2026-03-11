@@ -1,0 +1,21 @@
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.g.dart
+
+# Android secrets (generated in CI from GitHub Secrets)
+android/key.properties
+android/app/*.jks
+android/app/*.jks.b64
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
