@@ -11,7 +11,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.example.quran_kareem"
+    namespace "co.getquran.app"
     compileSdk 35
     ndkVersion "26.3.11579264"
 
@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.quran_kareem"
+        applicationId "co.getquran.app"
         minSdk 21
         targetSdk 35
         versionCode flutter.versionCode
