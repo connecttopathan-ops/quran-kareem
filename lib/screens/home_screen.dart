@@ -304,37 +304,6 @@ class _HomeTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Qibla compass button
-                  GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const QiblaScreen())),
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldDim.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: context.border),
-                      ),
-                      child: Center(child: Icon(Icons.explore_outlined,
-                          size: 18, color: AppColors.gold)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Sponsor button
-                  GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const SponsorScreen())),
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldDim.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: context.border),
-                      ),
-                      child: Center(child: Icon(Icons.favorite_outline,
-                          size: 18, color: AppColors.gold)),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -392,8 +361,6 @@ class _CalPrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now().toLocal();
-    final h = _toHijri(now);
     const hMonths = ['','Muharram','Safar',"Rabi' Al-Awwal","Rabi' Al-Thani",
         "Jumada Al-Awwal","Jumada Al-Thani",'Rajab',"Sha'ban",
         'Ramadan','Shawwal',"Dhul-Qi'dah",'Dhul-Hijjah'];
@@ -408,7 +375,20 @@ class _CalPrayerCard extends StatelessWidget {
       return n.toString().split('').map((c) => d[int.parse(c)]).join();
     }
 
-    return Container(
+    return Consumer<LocationService>(
+      builder: (context, loc, _) {
+        // Use location longitude to derive approximate local date for the user's timezone.
+        final pt = loc.prayerTimes;
+        final DateTime now;
+        if (pt != null) {
+          final tzHours = (pt.lng / 15).round();
+          now = DateTime.now().toUtc().add(Duration(hours: tzHours));
+        } else {
+          now = DateTime.now().toLocal();
+        }
+        final h = _toHijri(now);
+
+        return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
@@ -418,7 +398,7 @@ class _CalPrayerCard extends StatelessWidget {
         children: [
           // Calendar
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 11),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 7),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: context.isDark
@@ -436,26 +416,26 @@ class _CalPrayerCard extends StatelessWidget {
                           color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
                   const SizedBox(height: 1),
                   Text('${h['d']}',
-                      style: TextStyle(fontFamily: 'serif', fontSize: 34, height: 1,
+                      style: TextStyle(fontFamily: 'serif', fontSize: 32, height: 1,
                           color: context.isDark ? AppColors.warmWhite : const Color(0xFF2a1e08))),
                   Text(hMonths[h['m']!],
-                      style: TextStyle(fontFamily: 'serif', fontSize: 13,
+                      style: TextStyle(fontFamily: 'serif', fontSize: 16,
                           fontStyle: FontStyle.italic,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
                   Text('${h['y']} AH',
-                      style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
+                      style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                 ]),
                 const Spacer(),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   Text(toAI(h['d']!),
-                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 34, height: 1,
+                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 30, height: 1,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
                   Text(hMonthsAr[h['m']!],
-                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 13,
+                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 15,
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                   Text('${wdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}',
-                      style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
+                      style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? const Color(0xFF5a5040) : const Color(0xFF9a7030))),
                 ]),
               ],
@@ -474,7 +454,9 @@ class _CalPrayerCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+      );
+    },
+  );
   }
 }
 
@@ -764,13 +746,13 @@ class _PrayerGridState extends State<_PrayerGrid>
                       padding: const EdgeInsets.symmetric(
                           vertical: 8, horizontal: 2),
                       decoration: BoxDecoration(
-                        color: context.surface2,
+                        color: isActive
+                            ? AppColors.gold
+                            : AppColors.gold.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color:
-                              isActive ? AppColors.gold : context.border,
-                          width: isActive ? 2 : 1,
-                        ),
+                        border: isActive
+                            ? null
+                            : Border.all(color: context.border),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -783,9 +765,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                       ? FontWeight.w700
                                       : FontWeight.normal,
                                   color: isActive
-                                      ? (context.isDark
-                                          ? AppColors.gold
-                                          : AppColors.goldDark)
+                                      ? Colors.white
                                       : context.textDim)),
                           const SizedBox(height: 3),
                           Text(
@@ -797,23 +777,25 @@ class _PrayerGridState extends State<_PrayerGrid>
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: isActive
-                                      ? (context.isDark
-                                          ? AppColors.goldLight
-                                          : AppColors.goldDark)
+                                      ? Colors.white
                                       : context.text)),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: context.textDim.withOpacity(0.1),
+                              color: isActive
+                                  ? Colors.white.withOpacity(0.25)
+                                  : context.textDim.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text('${p.$3} rak.',
                                 style: TextStyle(
                                     fontSize: 9,
                                     fontFamily: 'sans-serif',
-                                    color: context.textDim)),
+                                    color: isActive
+                                        ? Colors.white
+                                        : context.textDim)),
                           ),
                         ],
                       ),
@@ -1244,9 +1226,9 @@ class _QuickActionsCard extends StatelessWidget {
             context, MaterialPageRoute(builder: (_) => const DuasScreen())),
       ),
       (
-        icon: Icon(Icons.favorite_outline, size: 26, color: AppColors.gold),
-        label: 'Support Us',
-        subtitle: 'Keep app free',
+        icon: Icon(Icons.volunteer_activism, size: 26, color: AppColors.gold),
+        label: 'Sponsor Quran',
+        subtitle: 'Free Quran distribution',
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
       ),
