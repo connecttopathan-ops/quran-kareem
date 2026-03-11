@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
 import '../services/quran_service.dart';
+import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -374,10 +375,11 @@ class _LanguageSelector extends StatelessWidget {
             onChanged: (code) {
               if (code != null) {
                 state.setLanguage(code);
-                // Background download for the newly selected language
-                context
-                    .read<QuranService>()
-                    .downloadAllSurahs(code);
+                // Background download only for non-bundled languages.
+                // Bundled langs (ur-roman, en, ur, hi, ar) load from asset.
+                if (!kBundledLangs.contains(code)) {
+                  context.read<QuranService>().downloadAllSurahs(code);
+                }
               }
             },
           ),

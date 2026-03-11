@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'quran_service.dart';
 
 /// The 5 languages whose translations are bundled as local assets.
-const _kBundledLangs = {'ur-roman', 'ur', 'en', 'hi', 'ar'};
+/// No network calls are ever made for these — they load from rootBundle.
+const kBundledLangs = {'ur-roman', 'ur', 'en', 'hi', 'ar'};
 
 /// Manages per-verse translation text, separate from the Arabic+metadata
 /// loading done by [QuranService].
@@ -29,7 +30,7 @@ class TranslationService extends ChangeNotifier {
   /// language. The reader shows a banner when this is true.
   bool get isDownloading => _isDownloading;
 
-  bool isBundled(String langCode) => _kBundledLangs.contains(langCode);
+  bool isBundled(String langCode) => kBundledLangs.contains(langCode);
 
   /// Returns the translated text for a verse, or null if not yet loaded.
   String? getText(String langCode, int surahNumber, int verseNumber) =>

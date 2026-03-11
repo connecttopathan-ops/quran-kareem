@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
 import '../services/quran_service.dart';
+import '../services/translation_service.dart';
 import '../theme/app_theme.dart';
 import '../data/first_verse_translations.dart';
 
@@ -26,7 +27,6 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
   Future<void> _startDownloadAndConfirm() async {
     if (_downloadComplete) {
-      // Second tap after download — navigate
       Navigator.pop(context);
       return;
     }
@@ -36,6 +36,13 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     await prefs.setBool('language_selected', true);
     await prefs.setString('langCode', _selectedCode);
     if (mounted) context.read<AppState>().setLanguage(_selectedCode);
+
+    // Bundled languages (ur-roman, en, ur, hi, ar) ship with the app —
+    // no download needed, navigate immediately.
+    if (kBundledLangs.contains(_selectedCode)) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
 
     setState(() {
       _downloading = true;
