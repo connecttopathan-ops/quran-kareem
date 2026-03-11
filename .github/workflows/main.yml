@@ -1,4 +1,4 @@
-name: Build Quran App APK
+name: Build Quran App AAB
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK
+    name: Build Android AAB
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,9 +43,9 @@ jobs:
           echo "flutter.buildMode=release" >> android/local.properties
           echo "flutter.versionName=1.0.0" >> android/local.properties
           echo "flutter.versionCode=1" >> android/local.properties
-      - run: flutter build apk --release
+      - run: flutter build appbundle --release
       - uses: actions/upload-artifact@v4
         with:
-          name: quran-kareem-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: quran-kareem-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 90
