@@ -85,7 +85,8 @@ class _RC {
 class ReaderScreen extends StatefulWidget {
   final Surah surah;
   final int initialAyah;
-  const ReaderScreen({super.key, required this.surah, this.initialAyah = 1});
+  final bool autoPlay;
+  const ReaderScreen({super.key, required this.surah, this.initialAyah = 1, this.autoPlay = false});
 
   @override
   State<ReaderScreen> createState() => _ReaderScreenState();
@@ -96,6 +97,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   late ScrollController _scrollController;
   final Map<int, GlobalKey> _ayahKeys = {};
   Timer? _saveTimer;
+  StreamSubscription<int>? _surahCompleteSubscription;
 
   @override
   void initState() {
@@ -106,6 +108,18 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _loadBookmark();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
+    _surahCompleteSubscription =
+        context.read<AudioService>().onSurahComplete.listen(_onSurahComplete);
+  }
+
+  void _onSurahComplete(int nextSurahNumber) {
+    if (!mounted || nextSurahNumber > 114) return;
+    final nextSurah = kSurahs[nextSurahNumber - 1];
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (_) => ReaderScreen(surah: nextSurah, initialAyah: 1, autoPlay: true)),
+    );
   }
 
   void _onScroll() {
@@ -122,22 +136,38 @@ class _ReaderScreenState extends State<ReaderScreen> {
       quranService.loadSurah(widget.surah.number, langCode: appState.langCode),
       translService.loadSurahTranslation(appState.langCode, widget.surah.number),
     ]);
-    if (mounted && widget.initialAyah > 1) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToAyah(widget.initialAyah);
-      });
-    }
-  }
+    if (!mounted) return;
 
-  void _scrollToAyah(int ayahNumber) {
-    final key = _ayahKeys[ayahNumber];
-    if (key?.currentContext != null) {
-      Scrollable.ensureVisible(
-        key!.currentContext!,
-        duration: const Duration(milliseconds: 300),
-        alignment: 0.0,
-      );
+    // Pre-populate GlobalKeys for all ayahs before the postFrameCallback fires
+    final verses = quranService.getVerses(widget.surah.number);
+    for (final verse in verses) {
+      _ayahKeys.putIfAbsent(verse.number, () => GlobalKey());
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        if (widget.initialAyah > 1 && _ayahKeys.containsKey(widget.initialAyah)) {
+          final key = _ayahKeys[widget.initialAyah];
+          if (key?.currentContext != null) {
+            Scrollable.ensureVisible(
+              key!.currentContext!,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              alignment: 0.0,
+            );
+          }
+        }
+        if (widget.autoPlay && mounted) {
+          context.read<AudioService>().playVerse(
+            surahNumber: widget.surah.number,
+            surahName: widget.surah.nameTransliteration,
+            verseNumber: 1,
+            totalVerses: widget.surah.verses,
+          );
+        }
+      });
+    });
   }
 
   Future<void> _saveReadingProgress() async {
@@ -217,6 +247,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   @override
   void dispose() {
+    _surahCompleteSubscription?.cancel();
     _saveTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
