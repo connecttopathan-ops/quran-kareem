@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import '../theme/app_theme.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -25,8 +25,10 @@ class _PrayerNotificationSettingsScreenState
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _audioPlayer!.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _playingId = null);
+    _audioPlayer!.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        if (mounted) setState(() => _playingId = null);
+      }
     });
     _loadPrefs();
   }
@@ -56,7 +58,10 @@ class _PrayerNotificationSettingsScreenState
     }
     await _audioPlayer!.stop();
     try {
-      await _audioPlayer!.play(AssetSource(assetPath));
+      await _audioPlayer!.setAudioSource(
+        AudioSource.uri(Uri.parse('asset:///assets/$assetPath')),
+      );
+      await _audioPlayer!.play();
       setState(() => _playingId = id);
     } catch (_) {
       if (mounted) {
