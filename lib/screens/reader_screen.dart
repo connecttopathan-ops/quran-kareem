@@ -127,6 +127,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _saveTimer = Timer(const Duration(seconds: 1), _saveReadingProgress);
   }
 
+  static const double _estimatedAyahHeight = 120.0;
+
+  void _scrollToAyah(int ayahNumber) {
+    if (_scrollController.hasClients && ayahNumber > 1) {
+      final offset = (ayahNumber - 1) * _estimatedAyahHeight;
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   Future<void> _loadContent() async {
     if (!mounted) return;
     final quranService = context.read<QuranService>();
@@ -145,19 +158,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 300), () {
         if (!mounted) return;
-        if (widget.initialAyah > 1 && _ayahKeys.containsKey(widget.initialAyah)) {
-          final key = _ayahKeys[widget.initialAyah];
-          if (key?.currentContext != null) {
-            Scrollable.ensureVisible(
-              key!.currentContext!,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeInOut,
-              alignment: 0.0,
-            );
-          }
-        }
+        _scrollToAyah(widget.initialAyah);
         if (widget.autoPlay && mounted) {
           context.read<AudioService>().playVerse(
             surahNumber: widget.surah.number,

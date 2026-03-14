@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter/foundation.dart';
@@ -55,8 +54,6 @@ int surahVerseOffset(int surahNumber) {
 
 class AudioService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
-  ConcatenatingAudioSource? _playlist;
-  int _playlistBaseVerse = 1;
 
   String _reciterId = 'ar.alafasy';
   NowPlaying? _nowPlaying;
@@ -79,17 +76,6 @@ class AudioService extends ChangeNotifier {
   AudioService() {
     _loadPrefs();
 
-    // Track current playlist index to update nowPlaying verse and preload ahead
-    _player.currentIndexStream.listen((index) async {
-      if (index == null || _nowPlaying == null) return;
-      final newVerse = _playlistBaseVerse + index;
-      if (_nowPlaying!.verseNumber != newVerse) {
-        _nowPlaying = _nowPlaying!.copyWith(verseNumber: newVerse);
-        notifyListeners();
-      }
-      await _maybeExtendPlaylist(index);
-    });
-
     _player.playerStateStream.listen((state) {
       final playing = state.playing &&
           state.processingState != ProcessingState.completed;
@@ -98,7 +84,7 @@ class AudioService extends ChangeNotifier {
         notifyListeners();
       }
       if (state.processingState == ProcessingState.completed) {
-        _handlePlaylistComplete();
+        _handleVerseComplete();
       }
     });
   }
@@ -113,43 +99,23 @@ class AudioService extends ChangeNotifier {
   String _audioUrl(int absoluteVerse) =>
       'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
 
-  AudioSource _buildSource(int absoluteVerse, int surahNumber, int verseNumber, String surahName) {
-    return AudioSource.uri(
-      Uri.parse(_audioUrl(absoluteVerse)),
-      tag: MediaItem(
-        id: 'ayah_$absoluteVerse',
-        title: '$surahName — Ayah $verseNumber',
-        artist: 'Get Quran',
-        album: 'Holy Quran · $surahName',
-        displayTitle: '$surahName — Ayah $verseNumber',
-        displaySubtitle: 'Get Quran',
-      ),
-    );
-  }
-
-  Future<void> _maybeExtendPlaylist(int currentIndex) async {
-    if (_playlist == null || _nowPlaying == null) return;
-    const preloadAhead = 2;
-    final lastPlaylistVerse = _playlistBaseVerse + _playlist!.length - 1;
-    final targetLastVerse = min(
-      _playlistBaseVerse + currentIndex + preloadAhead,
-      _nowPlaying!.totalVerses,
-    );
-    if (lastPlaylistVerse < targetLastVerse) {
-      for (int v = lastPlaylistVerse + 1; v <= targetLastVerse; v++) {
-        final abs = _nowPlaying!.surahVerseOffset + v;
-        await _playlist!.add(_buildSource(abs, _nowPlaying!.surahNumber, v, _nowPlaying!.surahName));
-      }
-    }
-  }
-
-  void _handlePlaylistComplete() {
+  void _handleVerseComplete() {
     if (_nowPlaying == null) return;
-    _isPlaying = false;
-    if (_nowPlaying!.surahNumber < 114) {
-      _surahCompleteController.add(_nowPlaying!.surahNumber + 1);
+    final current = _nowPlaying!;
+    if (current.verseNumber < current.totalVerses) {
+      playVerse(
+        surahNumber: current.surahNumber,
+        surahName: current.surahName,
+        verseNumber: current.verseNumber + 1,
+        totalVerses: current.totalVerses,
+      );
+    } else {
+      _isPlaying = false;
+      if (current.surahNumber < 114) {
+        _surahCompleteController.add(current.surahNumber + 1);
+      }
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> playVerse({
@@ -165,7 +131,6 @@ class AudioService extends ChangeNotifier {
 
     _error = null;
     final offset = surahVerseOffset(surahNumber);
-    _playlistBaseVerse = verseNumber;
     _nowPlaying = NowPlaying(
       surahNumber: surahNumber,
       surahName: surahName,
@@ -178,22 +143,25 @@ class AudioService extends ChangeNotifier {
 
     try {
       await _player.stop();
-
-      // Build initial playlist: current + next 2 ayahs (or fewer near end)
-      const initialLoad = 3;
-      final endVerse = min(verseNumber + initialLoad - 1, totalVerses);
-      final children = <AudioSource>[];
-      for (int v = verseNumber; v <= endVerse; v++) {
-        children.add(_buildSource(offset + v, surahNumber, v, surahName));
-      }
-      _playlist = ConcatenatingAudioSource(children: children);
-
-      await _player.setAudioSource(_playlist!, initialIndex: 0);
+      final absoluteVerse = offset + verseNumber;
+      final source = AudioSource.uri(
+        Uri.parse(_audioUrl(absoluteVerse)),
+        tag: MediaItem(
+          id: 'ayah_$absoluteVerse',
+          title: '$surahName — Ayah $verseNumber',
+          artist: 'Get Quran',
+          album: 'Holy Quran · $surahName',
+          displayTitle: '$surahName — Ayah $verseNumber',
+          displaySubtitle: 'Get Quran',
+        ),
+      );
+      await _player.setAudioSource(source);
       await _player.setSpeed(_playbackSpeed);
       await _player.play();
       _isLoading = false;
       _isPlaying = true;
     } catch (e) {
+      debugPrint('Audio play error: $e');
       _isLoading = false;
       _isPlaying = false;
       _error = 'Failed to play audio';
@@ -214,44 +182,31 @@ class AudioService extends ChangeNotifier {
     await _player.stop();
     _nowPlaying = null;
     _isPlaying = false;
-    _playlist = null;
     notifyListeners();
   }
 
   Future<void> nextVerse() async {
     if (_nowPlaying == null) return;
-    final currentVerse = _nowPlaying!.verseNumber;
-    if (currentVerse >= _nowPlaying!.totalVerses) return;
-    final nextVerse = currentVerse + 1;
-    final nextIndex = nextVerse - _playlistBaseVerse;
-    if (_playlist != null && nextIndex >= 0 && nextIndex < _playlist!.length) {
-      await _player.seek(Duration.zero, index: nextIndex);
-    } else {
-      await playVerse(
-        surahNumber: _nowPlaying!.surahNumber,
-        surahName: _nowPlaying!.surahName,
-        verseNumber: nextVerse,
-        totalVerses: _nowPlaying!.totalVerses,
-      );
-    }
+    final current = _nowPlaying!;
+    if (current.verseNumber >= current.totalVerses) return;
+    await playVerse(
+      surahNumber: current.surahNumber,
+      surahName: current.surahName,
+      verseNumber: current.verseNumber + 1,
+      totalVerses: current.totalVerses,
+    );
   }
 
   Future<void> previousVerse() async {
     if (_nowPlaying == null) return;
-    final currentVerse = _nowPlaying!.verseNumber;
-    if (currentVerse <= 1) return;
-    final prevVerse = currentVerse - 1;
-    final prevIndex = prevVerse - _playlistBaseVerse;
-    if (_playlist != null && prevIndex >= 0 && prevIndex < _playlist!.length) {
-      await _player.seek(Duration.zero, index: prevIndex);
-    } else {
-      await playVerse(
-        surahNumber: _nowPlaying!.surahNumber,
-        surahName: _nowPlaying!.surahName,
-        verseNumber: prevVerse,
-        totalVerses: _nowPlaying!.totalVerses,
-      );
-    }
+    final current = _nowPlaying!;
+    if (current.verseNumber <= 1) return;
+    await playVerse(
+      surahNumber: current.surahNumber,
+      surahName: current.surahName,
+      verseNumber: current.verseNumber - 1,
+      totalVerses: current.totalVerses,
+    );
   }
 
   Future<void> setReciter(String id) async {
