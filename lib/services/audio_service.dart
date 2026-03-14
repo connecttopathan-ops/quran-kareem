@@ -1,5 +1,4 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
@@ -92,15 +91,7 @@ class AudioService extends ChangeNotifier {
       'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
 
   AudioSource _buildSource(int absoluteVerse, int surahNumber, int verseNumber, String surahName) {
-    return AudioSource.uri(
-      Uri.parse(_audioUrl(absoluteVerse)),
-      tag: MediaItem(
-        id: 'surah_${surahNumber}_ayah_$verseNumber',
-        title: '$surahName — Ayah $verseNumber',
-        artist: 'Get Quran',
-        album: 'Holy Quran · $surahName',
-      ),
-    );
+    return AudioSource.uri(Uri.parse(_audioUrl(absoluteVerse)));
   }
 
   Future<void> playVerse({

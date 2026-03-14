@@ -32,18 +32,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <service android:name="com.ryanheise.just_audio.AudioService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback"/>
-        <service android:name="com.ryanheise.audioservice.AudioServiceBackground"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback"/>
-        <receiver android:name="com.ryanheise.audioservice.MediaButtonReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON"/>
-            </intent-filter>
-        </receiver>
         <receiver android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
         <receiver android:exported="true"
