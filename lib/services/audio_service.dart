@@ -1,4 +1,5 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
@@ -67,15 +68,16 @@ class AudioService extends ChangeNotifier {
 
   AudioService() {
     _loadPrefs();
-    _player.onPlayerStateChanged.listen((state) {
-      final playing = state == PlayerState.playing;
+    _player.playerStateStream.listen((state) {
+      final playing = state.playing &&
+          state.processingState != ProcessingState.completed;
       if (_isPlaying != playing) {
         _isPlaying = playing;
         notifyListeners();
       }
-    });
-    _player.onPlayerComplete.listen((_) {
-      _autoNextVerse();
+      if (state.processingState == ProcessingState.completed) {
+        _autoNextVerse();
+      }
     });
   }
 
@@ -88,6 +90,18 @@ class AudioService extends ChangeNotifier {
 
   String _audioUrl(int absoluteVerse) =>
       'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
+
+  AudioSource _buildSource(int absoluteVerse, int surahNumber, int verseNumber, String surahName) {
+    return AudioSource.uri(
+      Uri.parse(_audioUrl(absoluteVerse)),
+      tag: MediaItem(
+        id: 'surah_${surahNumber}_ayah_$verseNumber',
+        title: '$surahName — Ayah $verseNumber',
+        artist: 'Get Quran',
+        album: 'Holy Quran · $surahName',
+      ),
+    );
+  }
 
   Future<void> playVerse({
     required int surahNumber,
@@ -108,8 +122,14 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
     try {
       await _player.stop();
-      await _player.setPlaybackRate(_playbackSpeed);
-      await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      await _player.setAudioSource(_buildSource(
+        _nowPlaying!.absoluteVerseNumber,
+        surahNumber,
+        verseNumber,
+        surahName,
+      ));
+      await _player.setSpeed(_playbackSpeed);
+      await _player.play();
       _isLoading = false;
       _isPlaying = true;
     } catch (e) {
@@ -125,7 +145,7 @@ class AudioService extends ChangeNotifier {
     if (_isPlaying) {
       await _player.pause();
     } else {
-      await _player.resume();
+      await _player.play();
     }
   }
 
@@ -143,7 +163,13 @@ class AudioService extends ChangeNotifier {
       _nowPlaying = next;
       notifyListeners();
       try {
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _player.setAudioSource(_buildSource(
+          _nowPlaying!.absoluteVerseNumber,
+          _nowPlaying!.surahNumber,
+          _nowPlaying!.verseNumber,
+          _nowPlaying!.surahName,
+        ));
+        await _player.play();
       } catch (_) {}
     } else {
       _isPlaying = false;
@@ -158,7 +184,13 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
       try {
         await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _player.setAudioSource(_buildSource(
+          _nowPlaying!.absoluteVerseNumber,
+          _nowPlaying!.surahNumber,
+          _nowPlaying!.verseNumber,
+          _nowPlaying!.surahName,
+        ));
+        await _player.play();
       } catch (_) {}
     }
   }
@@ -170,7 +202,13 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
       try {
         await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _player.setAudioSource(_buildSource(
+          _nowPlaying!.absoluteVerseNumber,
+          _nowPlaying!.surahNumber,
+          _nowPlaying!.verseNumber,
+          _nowPlaying!.surahName,
+        ));
+        await _player.play();
       } catch (_) {}
     }
   }
@@ -179,11 +217,16 @@ class AudioService extends ChangeNotifier {
     _reciterId = id;
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
-    // Restart current verse with new reciter
     if (_nowPlaying != null) {
       try {
         await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _player.setAudioSource(_buildSource(
+          _nowPlaying!.absoluteVerseNumber,
+          _nowPlaying!.surahNumber,
+          _nowPlaying!.verseNumber,
+          _nowPlaying!.surahName,
+        ));
+        await _player.play();
       } catch (_) {}
     }
     notifyListeners();
@@ -193,7 +236,7 @@ class AudioService extends ChangeNotifier {
     _playbackSpeed = speed;
     final p = await SharedPreferences.getInstance();
     await p.setDouble('playbackSpeed', speed);
-    await _player.setPlaybackRate(speed);
+    await _player.setSpeed(speed);
     notifyListeners();
   }
 

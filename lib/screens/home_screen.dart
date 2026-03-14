@@ -1126,8 +1126,29 @@ class _LocationSheetState extends State<_LocationSheet> {
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // CONTINUE READING
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-class _ContinueCard extends StatelessWidget {
+class _ContinueCard extends StatefulWidget {
   const _ContinueCard();
+
+  @override
+  State<_ContinueCard> createState() => _ContinueCardState();
+}
+
+class _ContinueCardState extends State<_ContinueCard> {
+  int _lastAyah = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastAyah();
+  }
+
+  Future<void> _loadLastAyah() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _lastAyah = prefs.getInt('last_read_ayah') ?? 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1145,7 +1166,7 @@ class _ContinueCard extends StatelessWidget {
         const SizedBox(height: 6),
         GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(
-            builder: (_) => ReaderScreen(surah: surah),
+            builder: (_) => ReaderScreen(surah: surah, initialAyah: _lastAyah),
           )),
           child: Container(
             padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
@@ -1162,7 +1183,7 @@ class _ContinueCard extends StatelessWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(surahName,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
-                Text('Surah ${surah.number} · ${surah.verses} verses',
+                Text('$surahName · Ayah $_lastAyah',
                     style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
               ])),
               Icon(Icons.chevron_right, size: 18, color: context.textDim),

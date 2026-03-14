@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ import '../services/quran_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
 import '../theme/app_theme.dart';
+import '../data/quran_data.dart';
 
 
 // ── Reader Theme Colors helper ─────────────────────────────────────────────
@@ -82,7 +84,8 @@ class _RC {
 
 class ReaderScreen extends StatefulWidget {
   final Surah surah;
-  const ReaderScreen({super.key, required this.surah});
+  final int initialAyah;
+  const ReaderScreen({super.key, required this.surah, this.initialAyah = 1});
 
   @override
   State<ReaderScreen> createState() => _ReaderScreenState();
@@ -90,14 +93,24 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   bool _isBookmarked = false;
+  late ScrollController _scrollController;
+  final Map<int, GlobalKey> _ayahKeys = {};
+  Timer? _saveTimer;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _loadContent();
     _loadBookmark();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
+  }
+
+  void _onScroll() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 1), _saveReadingProgress);
   }
 
   Future<void> _loadContent() async {
@@ -109,6 +122,70 @@ class _ReaderScreenState extends State<ReaderScreen> {
       quranService.loadSurah(widget.surah.number, langCode: appState.langCode),
       translService.loadSurahTranslation(appState.langCode, widget.surah.number),
     ]);
+    if (mounted && widget.initialAyah > 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToAyah(widget.initialAyah);
+      });
+    }
+  }
+
+  void _scrollToAyah(int ayahNumber) {
+    final key = _ayahKeys[ayahNumber];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        alignment: 0.0,
+      );
+    }
+  }
+
+  Future<void> _saveReadingProgress() async {
+    if (!mounted) return;
+    int? currentAyah;
+    double smallestPositiveDy = double.infinity;
+    for (final entry in _ayahKeys.entries) {
+      final renderBox = entry.value.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) continue;
+      final dy = renderBox.localToGlobal(Offset.zero).dy;
+      if (dy >= 0 && dy < smallestPositiveDy) {
+        smallestPositiveDy = dy;
+        currentAyah = entry.key;
+      }
+    }
+    if (currentAyah == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_read_surah', widget.surah.number);
+    await prefs.setInt('last_read_ayah', currentAyah);
+    await prefs.setString('last_read_surah_name', widget.surah.nameTransliteration);
+  }
+
+  void _navigateToSurah(int number) {
+    if (number < 1 || number > 114) return;
+    final surah = kSurahs[number - 1];
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ReaderScreen(surah: surah, initialAyah: 1)),
+    );
+  }
+
+  void _swipeToSurah(int number) {
+    if (number < 1 || number > 114) return;
+    final surah = kSurahs[number - 1];
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Moving to ${surah.nameTransliteration}',
+          style: const TextStyle(fontFamily: 'sans-serif', fontSize: 13),
+        ),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) _navigateToSurah(number);
+    });
   }
 
   Future<void> _loadBookmark() async {
@@ -140,6 +217,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   @override
   void dispose() {
+    _saveTimer?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -255,6 +334,54 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  Widget _buildSurahNav(ReaderTheme rt) {
+    final currentNumber = widget.surah.number;
+    final hasPrev = currentNumber > 1;
+    final hasNext = currentNumber < 114;
+    final prevName = hasPrev ? kSurahs[currentNumber - 2].nameTransliteration : '';
+    final nextName = hasNext ? kSurahs[currentNumber].nameTransliteration : '';
+    return Container(
+      color: _RC.surface(rt),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: (!hasPrev && hasNext)
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.spaceBetween,
+          children: [
+            if (hasPrev)
+              GestureDetector(
+                onTap: () => _navigateToSurah(currentNumber - 1),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.arrow_back_ios, size: 13, color: AppColors.gold),
+                  const SizedBox(width: 4),
+                  Text(prevName,
+                      style: TextStyle(
+                          color: AppColors.gold,
+                          fontFamily: 'sans-serif',
+                          fontSize: 13)),
+                ]),
+              ),
+            if (hasNext)
+              GestureDetector(
+                onTap: () => _navigateToSurah(currentNumber + 1),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text(nextName,
+                      style: TextStyle(
+                          color: AppColors.gold,
+                          fontFamily: 'sans-serif',
+                          fontSize: 13)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 13, color: AppColors.gold),
+                ]),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (context, state, _) {
@@ -318,7 +445,18 @@ class _ReaderScreenState extends State<ReaderScreen> {
             child: Container(height: 1, color: _RC.border(rt)),
           ),
         ),
-        body: _buildBody(state),
+        bottomNavigationBar: _buildSurahNav(rt),
+        body: GestureDetector(
+          onHorizontalDragEnd: (details) {
+            if (details.primaryVelocity == null) return;
+            if (details.primaryVelocity! < -300) {
+              _swipeToSurah(widget.surah.number + 1);
+            } else if (details.primaryVelocity! > 300) {
+              _swipeToSurah(widget.surah.number - 1);
+            }
+          },
+          child: _buildBody(state),
+        ),
       );
     });
   }
@@ -330,12 +468,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
         final loading = quranService.isLoading(widget.surah.number);
         return Stack(children: [
           ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
             itemCount: verses.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
               final verse = verses[index - 1];
+              final ayahKey = _ayahKeys.putIfAbsent(verse.number, () => GlobalKey());
               return _VerseCard(
+                key: ayahKey,
                 verse: verse,
                 surah: widget.surah,
                 state: state,
@@ -447,6 +588,7 @@ class _VerseCard extends StatelessWidget {
   /// Pre-resolved translation text from [TranslationService] (preferred).
   final String? translText;
   const _VerseCard({
+    super.key,
     required this.verse,
     required this.surah,
     required this.state,
