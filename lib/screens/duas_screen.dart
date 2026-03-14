@@ -4,12 +4,13 @@ import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 
 // ═══════════════════════════════════════════════════════════════
-// DATA — placeholder structure; full duas to be populated later
+// DATA — 51 authentic duas across 5 categories
 // Each dua map keys: title, arabic, transliteration, english,
 //   romanUrdu, source, [prophet] (category 1 only)
 // ═══════════════════════════════════════════════════════════════
 
 const List<Map<String, dynamic>> duasCategories = [
+  // ── 1. Duas of the Prophets (24 duas) ──────────────────────
   {
     'id': 'prophets',
     'name': 'Duas of the Prophets',
@@ -17,6 +18,7 @@ const List<Map<String, dynamic>> duasCategories = [
     'watermark': 'الأنبياء',
     'hasProphetSections': true,
     'duas': [
+      // Adam
       {
         'prophet': 'Prophet Adam (عليه السلام)',
         'title': 'Dua of Repentance',
@@ -30,6 +32,7 @@ const List<Map<String, dynamic>> duasCategories = [
             'Ae hamare Rabb, hum ne apne aap par zulm kiya aur agar Tu ne hamen maaf na kiya aur hum par raham na kiya to hum yaqeenan nuqsaan uthaane walon mein se honge.',
         'source': 'Quran 7:23',
       },
+      // Nuh
       {
         'prophet': 'Prophet Nuh (عليه السلام)',
         'title': 'Dua for Help Against Disbelievers',
@@ -53,8 +56,274 @@ const List<Map<String, dynamic>> duasCategories = [
             'Ae mere Rabb, mujhe aur mere walidain ko aur jo bhi mere ghar mein imaan ke saath daakhil ho aur tamaam momin mardon aur momin aurton ko maaf farma.',
         'source': 'Quran 71:28',
       },
+      // Ibrahim
+      {
+        'prophet': 'Prophet Ibrahim (عليه السلام)',
+        'title': 'Dua for a Righteous Child',
+        'arabic': 'رَبِّ هَبْ لِي مِنَ الصَّالِحِينَ',
+        'transliteration': 'Rabbi hab li minas-saliheen',
+        'english': 'My Lord, grant me a child from among the righteous.',
+        'romanUrdu':
+            'Ae mere Rabb, mujhe naik logon mein se (aulaad) ata farma.',
+        'source': 'Quran 37:100',
+      },
+      {
+        'prophet': 'Prophet Ibrahim (عليه السلام)',
+        'title': 'Dua for Acceptance of Worship',
+        'arabic':
+            'رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ',
+        'transliteration':
+            'Rabbana taqabbal minna innaka antas-samee ul-aleem',
+        'english':
+            'Our Lord, accept from us. Indeed You are the Hearing, the Knowing.',
+        'romanUrdu':
+            'Ae hamare Rabb, hum se qabool farma. Beshak Tu hi sunne wala aur jaanne wala hai.',
+        'source': 'Quran 2:127',
+      },
+      {
+        'prophet': 'Prophet Ibrahim (عليه السلام)',
+        'title': 'Dua for a City of Peace',
+        'arabic':
+            'رَبِّ اجْعَلْ هَٰذَا بَلَدًا آمِنًا وَارْزُقْ أَهْلَهُ مِنَ الثَّمَرَاتِ',
+        'transliteration':
+            'Rabbij-al hadha baladan aminan war-zuq ahlahu minat-thamarat',
+        'english':
+            'My Lord, make this a secure city and provide its people with fruits.',
+        'romanUrdu':
+            'Ae mere Rabb, is shahar ko amn wala bana aur iske bashindon ko phalon ka rizq de.',
+        'source': 'Quran 2:126',
+      },
+      {
+        'prophet': 'Prophet Ibrahim (عليه السلام)',
+        'title': 'Dua for Steadfastness in Prayer',
+        'arabic':
+            'رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ',
+        'transliteration':
+            "Rabbij-alni muqimas-salati wa min dhurriyyati rabbana wa taqabbal du'a",
+        'english':
+            'My Lord, make me an establisher of prayer, and from my descendants. Our Lord, and accept my supplication.',
+        'romanUrdu':
+            'Ae mere Rabb, mujhe namaaz qaim karne wala bana aur meri aulaad ko bhi. Ae hamare Rabb, aur meri dua qabool farma.',
+        'source': 'Quran 14:40',
+      },
+      {
+        'prophet': 'Prophet Ibrahim (عليه السلام)',
+        'title': 'Dua for Forgiveness on Judgement Day',
+        'arabic':
+            'رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ',
+        'transliteration':
+            "Rabbanaghfir li wa liwaalidayya wa lil-mu'mineena yawma yaqumul hisab",
+        'english':
+            'Our Lord, forgive me and my parents and the believers the Day the account is established.',
+        'romanUrdu':
+            'Ae hamare Rabb, mujhe aur mere walidain ko aur tamam mominon ko us din maaf farma jis din hisaab qaim hoga.',
+        'source': 'Quran 14:41',
+      },
+      // Yunus
+      {
+        'prophet': 'Prophet Yunus (عليه السلام)',
+        'title': 'Dua from the Darkness',
+        'arabic':
+            'لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ',
+        'transliteration':
+            'La ilaha illa anta subhanaka inni kuntu minaz-zalimeen',
+        'english':
+            'There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers.',
+        'romanUrdu':
+            'Tere siwa koi ilaah nahi, Tu paak hai, beshak main zalimoon mein se tha.',
+        'source': 'Quran 21:87',
+      },
+      // Musa
+      {
+        'prophet': 'Prophet Musa (عليه السلام)',
+        'title': 'Dua for Forgiveness',
+        'arabic': 'رَبِّ إِنِّي ظَلَمْتُ نَفْسِي فَاغْفِرْ لِي',
+        'transliteration': 'Rabbi inni zalamtu nafsi faghfir li',
+        'english': 'My Lord, indeed I have wronged myself, so forgive me.',
+        'romanUrdu':
+            'Ae mere Rabb, beshak maine apne aap par zulm kiya, pas mujhe maaf farma de.',
+        'source': 'Quran 28:16',
+      },
+      {
+        'prophet': 'Prophet Musa (عليه السلام)',
+        'title': 'Dua for Ease in Affairs',
+        'arabic':
+            'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي يَفْقَهُوا قَوْلِي',
+        'transliteration':
+            'Rabbish-rah li sadri wa yassir li amri wahlul uqdatan min lisani yafqahu qawli',
+        'english':
+            'My Lord, expand my breast, ease my task, and remove the impediment from my speech so they may understand what I say.',
+        'romanUrdu':
+            'Ae mere Rabb, mera seena khol de, mera kaam aasaan kar de aur meri zaban ki gaanh khol de taake log meri baat samjhein.',
+        'source': 'Quran 20:25-28',
+      },
+      {
+        'prophet': 'Prophet Musa (عليه السلام)',
+        'title': 'Dua for Good Provision',
+        'arabic': 'رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ',
+        'transliteration': 'Rabbi inni lima anzalta ilayya min khayrin faqeer',
+        'english':
+            'My Lord, indeed I am in need of whatever good You would send down to me.',
+        'romanUrdu':
+            'Ae mere Rabb, beshak main us bhalai ka muhtaaj hoon jo Tu mere liye nazil farmaaye.',
+        'source': 'Quran 28:24',
+      },
+      // Ayyub
+      {
+        'prophet': 'Prophet Ayyub (عليه السلام)',
+        'title': 'Dua in Times of Hardship',
+        'arabic':
+            'أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ',
+        'transliteration': 'Anni massaniyad-durru wa anta arhamur-rahimeen',
+        'english':
+            'Indeed, adversity has touched me, and You are the Most Merciful of the merciful.',
+        'romanUrdu':
+            'Beshak mujhe takleef pahunchi hai aur Tu sab rahm karne walon se zyada rahm karne wala hai.',
+        'source': 'Quran 21:83',
+      },
+      // Zakariyya
+      {
+        'prophet': 'Prophet Zakariyya (عليه السلام)',
+        'title': 'Dua for a Righteous Heir',
+        'arabic':
+            'رَبِّ لَا تَذَرْنِي فَرْدًا وَأَنتَ خَيْرُ الْوَارِثِينَ',
+        'transliteration': 'Rabbi la tadharni fardan wa anta khayrul warithin',
+        'english':
+            'My Lord, do not leave me alone without an heir, and You are the best of inheritors.',
+        'romanUrdu':
+            'Ae mere Rabb, mujhe akela mat chhod aur Tu sab se behtar waris hai.',
+        'source': 'Quran 21:89',
+      },
+      {
+        'prophet': 'Prophet Zakariyya (عليه السلام)',
+        'title': 'Dua for a Pure Offspring',
+        'arabic':
+            'رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً ۖ إِنَّكَ سَمِيعُ الدُّعَاءِ',
+        'transliteration':
+            "Rabbi hab li milladunka dhurriyyatan tayyibah innaka samee'ud-du'a",
+        'english':
+            'My Lord, grant me from Yourself a good offspring. Indeed, You are the Hearer of supplication.',
+        'romanUrdu':
+            'Ae mere Rabb, apni taraf se mujhe paak aulaad ata farma. Beshak Tu dua sunne wala hai.',
+        'source': 'Quran 3:38',
+      },
+      // Sulayman
+      {
+        'prophet': 'Prophet Sulayman (عليه السلام)',
+        'title': 'Dua of Gratitude',
+        'arabic':
+            'رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَىٰ وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ',
+        'transliteration':
+            "Rabbi awzi'ni an ashkura ni'matakal-lati an'amta 'alayya wa 'ala walidayya wa an a'mala salihan tardah",
+        'english':
+            'My Lord, enable me to be grateful for Your favour which You have bestowed upon me and upon my parents, and to do righteousness of which You approve.',
+        'romanUrdu':
+            "Ae mere Rabb, mujhe toufeeq de ke main teri us ne'mat ka shukar ada karun jo tu ne mujhe aur mere walidain ko di aur nek amal karun jo tujhe pasand ho.",
+        'source': 'Quran 27:19',
+      },
+      {
+        'prophet': 'Prophet Sulayman (عليه السلام)',
+        'title': 'Dua for Truthful Entry and Exit',
+        'arabic':
+            'رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ وَاجْعَل لِّي مِن لَّدُنكَ سُلْطَانًا نَّصِيرًا',
+        'transliteration':
+            "Rabbi adkhilni mudkhala sidqin wa akhrijnee mukhraja sidqin waj'al li milladunka sultanan nasira",
+        'english':
+            'My Lord, cause me to enter an entry of truth and to exit an exit of truth and grant me from You a supporting authority.',
+        'romanUrdu':
+            'Ae mere Rabb, mujhe sachche daakhle se daakhil kar aur sachche khurooj se baahir kar aur apni taraf se mujhe madad karne wali quwwat ata farma.',
+        'source': 'Quran 17:80',
+      },
+      // Isa
+      {
+        'prophet': 'Prophet Isa (عليه السلام)',
+        'title': 'Dua for a Table Spread from Heaven',
+        'arabic':
+            'اللَّهُمَّ رَبَّنَا أَنزِلْ عَلَيْنَا مَائِدَةً مِّنَ السَّمَاءِ تَكُونُ لَنَا عِيدًا',
+        'transliteration':
+            "Allahumma Rabbana anzil 'alayna ma'idatam minas-sama'i takunu lana 'eeda",
+        'english':
+            'O Allah, our Lord, send down to us a table from the sky that will be for us a festival.',
+        'romanUrdu':
+            'Ae Allah, hamare Rabb, hamare liye aasmaan se ek dastarkhwaan nazil farma jo hamare liye eid ho.',
+        'source': 'Quran 5:114',
+      },
+      // Lut
+      {
+        'prophet': 'Prophet Lut (عليه السلام)',
+        'title': 'Dua for Victory Over Wrongdoers',
+        'arabic': 'رَبِّ انصُرْنِي عَلَى الْقَوْمِ الْمُفْسِدِينَ',
+        'transliteration': 'Rabbinsurni alal-qawmil mufsideen',
+        'english': 'My Lord, support me against the corrupting people.',
+        'romanUrdu':
+            'Ae mere Rabb, fasaad phailane wali qaum ke khilaf meri madad farma.',
+        'source': 'Quran 29:30',
+      },
+      // Muhammad ﷺ
+      {
+        'prophet': 'Prophet Muhammad ﷺ',
+        'title': 'Dua for Steadfastness of the Heart',
+        'arabic':
+            'يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ',
+        'transliteration': 'Ya muqallibal-qulubi thabbit qalbi ala dinik',
+        'english':
+            'O Turner of hearts, make my heart firm upon Your religion.',
+        'romanUrdu':
+            'Ae dilon ko palat dene wale, mere dil ko apne deen par sabit farma.',
+        'source': 'Sunan Tirmidhi 3522',
+      },
+      {
+        'prophet': 'Prophet Muhammad ﷺ',
+        'title': 'Dua for Beneficial Knowledge',
+        'arabic':
+            'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا وَرِزْقًا طَيِّبًا وَعَمَلًا مُتَقَبَّلًا',
+        'transliteration':
+            "Allahumma inni as'aluka 'ilman nafi'an wa rizqan tayyiban wa 'amalan mutaqabbala",
+        'english':
+            'O Allah, I ask You for beneficial knowledge, good provision, and accepted deeds.',
+        'romanUrdu':
+            'Ae Allah, main tujh se nafa bakhsh ilm, paak rizq aur qabool shuda amal maangta hoon.',
+        'source': 'Sunan Ibn Majah 925',
+      },
+      {
+        'prophet': 'Prophet Muhammad ﷺ',
+        'title': 'Dua for Anxiety and Grief',
+        'arabic':
+            'اللَّهُمَّ إِنِّي عَبْدُكَ ابْنُ عَبْدِكَ ابْنُ أَمَتِكَ نَاصِيَتِي بِيَدِكَ مَاضٍ فِيَّ حُكْمُكَ عَدْلٌ فِيَّ قَضَاؤُكَ',
+        'transliteration':
+            "Allahumma inni 'abduka wabnu 'abdika wabnu amatika nasiyati biyadika madin fiyya hukmuka 'adlun fiyya qada'uk",
+        'english':
+            'O Allah, I am Your servant, son of Your servant, son of Your handmaid. My forelock is in Your hand, Your command over me is forever executed, and Your decree over me is just.',
+        'romanUrdu':
+            'Ae Allah, main tera banda hoon, tere bande ka beta hoon, teri bandhi ka beta hoon. Meri peshaani tere haath mein hai, mujh par tera hukm jaari hai, mujh par tera faisla adl hai.',
+        'source': 'Musnad Ahmad 3704',
+      },
+      {
+        'prophet': 'Prophet Muhammad ﷺ',
+        'title': 'Dua Before Sleeping',
+        'arabic': 'اللَّهُمَّ بِاسْمِكَ أَمُوتُ وَأَحْيَا',
+        'transliteration': 'Allahumma bismika amutu wa ahya',
+        'english': 'O Allah, in Your name I die and I live.',
+        'romanUrdu':
+            'Ae Allah, tere naam ke saath marta hoon aur tere naam ke saath jeeta hoon.',
+        'source': 'Sahih Bukhari 6324',
+      },
+      {
+        'prophet': 'Prophet Muhammad ﷺ',
+        'title': 'Dua for Rectification of Religion and World',
+        'arabic':
+            'اللَّهُمَّ أَصْلِحْ لِي دِينِيَ الَّذِي هُوَ عِصْمَةُ أَمْرِي وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي',
+        'transliteration':
+            "Allahumma aslih li dini alladhi huwa 'ismatu amri wa aslih li dunyaya allati fiha ma'ashi",
+        'english':
+            'O Allah, set right for me my religion which is the safeguard of my affairs, and set right for me my worldly life in which is my livelihood.',
+        'romanUrdu':
+            'Ae Allah, mere deen ko durust kar jo mere saare kamon ki hifaazat ka zariya hai, aur meri duniya ko durust kar jis mein mera guzaara hai.',
+        'source': 'Sahih Muslim 2720',
+      },
     ],
   },
+  // ── 2. Daily Duas (10 duas) ─────────────────────────────────
   {
     'id': 'daily',
     'name': 'Daily Duas',
@@ -67,7 +336,7 @@ const List<Map<String, dynamic>> duasCategories = [
         'arabic':
             'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ',
         'transliteration':
-            'Alhamdu lillahil-ladhi ahyana ba\'da ma amatana wa ilayhin-nushur',
+            "Alhamdu lillahil-ladhi ahyana ba'da ma amatana wa ilayhin-nushur",
         'english':
             'All praise is for Allah who gave us life after having taken it from us and unto Him is the resurrection.',
         'romanUrdu':
@@ -82,8 +351,92 @@ const List<Map<String, dynamic>> duasCategories = [
         'romanUrdu': 'Allah ke naam se aur Allah ki barkat ke saath.',
         'source': 'Sunan Abu Dawud 3767',
       },
+      {
+        'title': 'Dua After Eating',
+        'arabic':
+            'الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ',
+        'transliteration':
+            'Alhamdu lillahil-ladhi at-amani hadha wa razaqanihi min ghayri hawlin minni wa la quwwah',
+        'english':
+            'Praise be to Allah who fed me this and provided it for me without any effort or power on my part.',
+        'romanUrdu':
+            'Shukar hai Allah ka jis ne mujhe yeh khaana khilaya aur bina mere kisi zor aur taqat ke rizq diya.',
+        'source': 'Sunan Tirmidhi 3458',
+      },
+      {
+        'title': 'Dua When Entering the Home',
+        'arabic':
+            'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ الْمَوْلِجِ وَخَيْرَ الْمَخْرَجِ بِسْمِ اللَّهِ وَلَجْنَا وَبِسْمِ اللَّهِ خَرَجْنَا',
+        'transliteration':
+            "Allahumma inni as'aluka khayral mawliji wa khayral makhraj bismillahi walajna wa bismillahi kharajna",
+        'english':
+            'O Allah, I ask You for the good of entering and the good of leaving. In the name of Allah we enter and in the name of Allah we leave.',
+        'romanUrdu':
+            'Ae Allah, main tujh se dakhle ki bhalai aur bahar nikalne ki bhalai maangta hoon. Allah ke naam se hum daakhil hue aur Allah ke naam se hum nikal jaayenge.',
+        'source': 'Sunan Abu Dawud 5096',
+      },
+      {
+        'title': 'Dua When Leaving the Home',
+        'arabic':
+            'بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+        'transliteration':
+            'Bismillahi tawakkaltu alallahi wa la hawla wa la quwwata illa billah',
+        'english':
+            'In the name of Allah, I place my trust in Allah, and there is no might nor power except with Allah.',
+        'romanUrdu':
+            'Allah ke naam se, maine Allah par bharosa kiya aur koi taqat aur koi zor nahi siwaay Allah ke.',
+        'source': 'Sunan Tirmidhi 3426',
+      },
+      {
+        'title': 'Dua Before Entering the Masjid',
+        'arabic': 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ',
+        'transliteration': "Allahummaf-tah li abwaba rahmatik",
+        'english': 'O Allah, open for me the doors of Your mercy.',
+        'romanUrdu': 'Ae Allah, mere liye apni rehmat ke darwaaze khol de.',
+        'source': 'Sahih Muslim 713',
+      },
+      {
+        'title': 'Dua When Leaving the Masjid',
+        'arabic': 'اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ',
+        'transliteration': "Allahumma inni as'aluka min fadlik",
+        'english': 'O Allah, I ask You of Your bounty.',
+        'romanUrdu': 'Ae Allah, main tujh se tere fazl ka sawaali hoon.',
+        'source': 'Sahih Muslim 713',
+      },
+      {
+        'title': 'Dua When Entering the Bathroom',
+        'arabic':
+            'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْخُبُثِ وَالْخَبَائِثِ',
+        'transliteration':
+            "Allahumma inni a'udhu bika minal-khubuthi wal-khaba'ith",
+        'english': 'O Allah, I seek refuge with You from evil and the evil ones.',
+        'romanUrdu':
+            'Ae Allah, main tujh se napaak jinnat mardon aur napaak jinnat aurton se panaah maangta hoon.',
+        'source': 'Sahih Bukhari 142',
+      },
+      {
+        'title': 'Dua When Looking in the Mirror',
+        'arabic':
+            'اللَّهُمَّ أَنْتَ حَسَّنْتَ خَلْقِي فَحَسِّنْ خُلُقِي',
+        'transliteration': 'Allahumma anta hassanta khalqi fahassin khuluqi',
+        'english':
+            'O Allah, You have made my physical form beautiful, so make my character beautiful too.',
+        'romanUrdu':
+            'Ae Allah, tu ne meri soorat achhi banayi, toh meri seerat bhi achhi bana de.',
+        'source': 'Musnad Ahmad 3823',
+      },
+      {
+        'title': 'Dua Before Sleeping',
+        'arabic': 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا',
+        'transliteration': 'Bismika Allahumma amutu wa ahya',
+        'english': 'In Your name, O Allah, I die and I live.',
+        'romanUrdu':
+            'Ae Allah, tere naam ke saath main marta hoon aur tere naam ke saath jeeta hoon.',
+        'source': 'Sahih Bukhari 6324',
+      },
     ],
   },
+  // ── 3. Quranic Duas (7 duas) ────────────────────────────────
   {
     'id': 'quranic',
     'name': 'Quranic Duas',
@@ -111,8 +464,67 @@ const List<Map<String, dynamic>> duasCategories = [
         'romanUrdu': 'Ae mere Rabb, mujhe ilm mein izaafa farma.',
         'source': 'Quran 20:114',
       },
+      {
+        'title': 'Dua for Mercy and Guidance',
+        'arabic':
+            'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً',
+        'transliteration':
+            "Rabbana la tuzigh qulobana ba'da idh hadaytana wa hab lana milladunka rahmah",
+        'english':
+            'Our Lord, let not our hearts deviate after You have guided us, and grant us from Yourself mercy.',
+        'romanUrdu':
+            'Ae hamare Rabb, hamare dilon ko terhaa mat kar baad is ke ke tu ne hamen hidayat di, aur apni taraf se hamen rehmat ata farma.',
+        'source': 'Quran 3:8',
+      },
+      {
+        'title': 'Dua for Forgiveness and Mercy',
+        'arabic':
+            'رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ',
+        'transliteration':
+            'Rabbana zalamna anfusana wa illam taghfir lana wa tarhamna lanakunanna minal khasireen',
+        'english':
+            'Our Lord, we have wronged ourselves, and if You do not forgive us and have mercy upon us, we will surely be among the losers.',
+        'romanUrdu':
+            'Ae hamare Rabb, hum ne apne aap par zulm kiya aur agar Tu hamen maaf na kare aur hum par raham na kare to hum yaqeenan ghaate walon mein se honge.',
+        'source': 'Quran 7:23',
+      },
+      {
+        'title': 'Dua for Parents',
+        'arabic': 'رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا',
+        'transliteration': 'Rabbir-hamhuma kama rabbayani saghira',
+        'english':
+            'My Lord, have mercy upon them as they brought me up when I was small.',
+        'romanUrdu':
+            'Ae mere Rabb, un par raham farma jaise unhon ne mujhe bachpan mein pala.',
+        'source': 'Quran 17:24',
+      },
+      {
+        'title': 'Dua for Guidance to the Right Path',
+        'arabic':
+            'رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا',
+        'transliteration':
+            'Rabbana atina milladunka rahmatan wa hayyi lana min amrina rashada',
+        'english':
+            'Our Lord, grant us from Yourself mercy and prepare for us from our affair right guidance.',
+        'romanUrdu':
+            'Ae hamare Rabb, apni taraf se hamen rehmat ata farma aur hamare kaam mein hamare liye seedh ka intizaam farma.',
+        'source': 'Quran 18:10',
+      },
+      {
+        'title': 'Dua for Steadfastness in Battle',
+        'arabic':
+            'رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ',
+        'transliteration':
+            "Rabbana afrigh 'alayna sabran wa thabbit aqdamana wansurna 'alal-qawmil kafireen",
+        'english':
+            'Our Lord, pour upon us patience and plant firmly our feet and give us victory over the disbelieving people.',
+        'romanUrdu':
+            'Ae hamare Rabb, hum par sabr daal de aur hamare qadam mazbut kar de aur kaafir qaum ke khilaf hamari madad farma.',
+        'source': 'Quran 2:250',
+      },
     ],
   },
+  // ── 4. Special Occasions (5 duas) ──────────────────────────
   {
     'id': 'occasions',
     'name': 'Special Occasions',
@@ -122,7 +534,8 @@ const List<Map<String, dynamic>> duasCategories = [
     'duas': [
       {
         'title': 'Dua for Laylatul Qadr',
-        'arabic': 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
+        'arabic':
+            'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
         'transliteration':
             "Allahumma innaka 'afuwwun tuhibbul-'afwa fa'fu 'anni",
         'english':
@@ -143,8 +556,41 @@ const List<Map<String, dynamic>> duasCategories = [
             'Ae Allah, maine tere liye roza rakha aur tujh par imaan laya aur tujh par bharosa kiya aur tere rizq se iftaar kiya.',
         'source': 'Sunan Abu Dawud 2358',
       },
+      {
+        'title': 'Dua on the Day of Arafah',
+        'arabic':
+            'لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+        'transliteration':
+            'La ilaha illallahu wahdahu la sharika lah lahul-mulku wa lahul-hamdu wa huwa ala kulli shay in qadir',
+        'english':
+            'There is no god but Allah alone, He has no partner, His is the dominion and His is the praise, and He has power over everything.',
+        'romanUrdu':
+            'Allah ke siwa koi ilaah nahi, akela hai, uska koi shareek nahi, usi ki badshaahi hai aur usi ki taareef hai aur woh har cheez par qadir hai.',
+        'source': 'Sunan Tirmidhi 3585',
+      },
+      {
+        'title': 'Dua When Visiting the Sick',
+        'arabic':
+            'أَسْأَلُ اللَّهَ الْعَظِيمَ رَبَّ الْعَرْشِ الْعَظِيمِ أَنْ يَشْفِيَكَ',
+        'transliteration':
+            "As'alullaahal-'azeema rabbal-'arshil-'azeemi an yashfiyak",
+        'english':
+            'I ask Allah, the Mighty, the Lord of the Mighty Throne, to cure you.',
+        'romanUrdu':
+            'Main Allah azeem se jo arsh azeem ka Rabb hai dua karta hoon ke woh tujhe shifa de.',
+        'source': 'Sunan Abu Dawud 3106',
+      },
+      {
+        'title': 'Dua When it Rains',
+        'arabic': 'اللَّهُمَّ صَيِّبًا نَافِعًا',
+        'transliteration': "Allahumma sayyiban nafi'a",
+        'english': 'O Allah, make it a beneficial rain.',
+        'romanUrdu': 'Ae Allah, ise nafa bakhsh baarish bana.',
+        'source': 'Sahih Bukhari 1032',
+      },
     ],
   },
+  // ── 5. Success & Protection (5 duas) ───────────────────────
   {
     'id': 'protection',
     'name': 'Success & Protection',
@@ -156,7 +602,8 @@ const List<Map<String, dynamic>> duasCategories = [
         'title': 'Dua for Protection from Evil Eye',
         'arabic':
             'أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
-        'transliteration': "A'udhu bikalimatillahit-tammati min sharri ma khalaq",
+        'transliteration':
+            "A'udhu bikalimatillahit-tammati min sharri ma khalaq",
         'english':
             'I seek refuge in the perfect words of Allah from the evil of what He has created.',
         'romanUrdu':
@@ -174,6 +621,40 @@ const List<Map<String, dynamic>> duasCategories = [
         'romanUrdu':
             'Ae Allah, apne halaal se mujhe apne haraam se be-niyaaz farma aur apne fazl se mujhe apne siwa sab se be-niyaaz farma.',
         'source': 'Sunan Tirmidhi 3563',
+      },
+      {
+        'title': 'Dua for Ease in Affairs',
+        'arabic': 'رَبِّ يَسِّرْ وَلَا تُعَسِّرْ وَتَمِّمْ بِالْخَيْرِ',
+        'transliteration': "Rabbi yassir wa la tu'assir wa tammim bil-khayr",
+        'english':
+            'My Lord, make things easy and do not make them difficult, and complete things with goodness.',
+        'romanUrdu':
+            'Ae mere Rabb, aasaan farma aur mushkil mat bana aur bhalai ke saath mukammal farma.',
+        'source': 'Athari — widely reported supplication',
+      },
+      {
+        'title': 'Dua for Morning Protection',
+        'arabic':
+            'اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا وَبِكَ نَحْيَا وَبِكَ نَمُوتُ وَإِلَيْكَ النُّشُورُ',
+        'transliteration':
+            'Allahumma bika asbahna wa bika amsayna wa bika nahya wa bika namutu wa ilaykan-nushur',
+        'english':
+            'O Allah, by You we have entered the morning, by You we have entered the evening, by You we live and by You we die, and unto You is the resurrection.',
+        'romanUrdu':
+            'Ae Allah, tere zariye hum ne subah ki aur tere zariye hum ne shaam ki, tere zariye hum jeete hain aur tere zariye hum marte hain aur tere paas hi uthna hai.',
+        'source': 'Sunan Tirmidhi 3391',
+      },
+      {
+        'title': 'Dua for Protection from Shaytan',
+        'arabic':
+            'أَعُوذُ بِاللَّهِ السَّمِيعِ الْعَلِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ',
+        'transliteration':
+            "A'udhu billahis-samee'il-'aleemi minash-shaytanir-rajeem",
+        'english':
+            'I seek refuge in Allah, the All-Hearing, the All-Knowing, from the accursed devil.',
+        'romanUrdu':
+            'Main Allah se jo sunne wala aur jaanne wala hai, mardood shaytan se panaah maangta hoon.',
+        'source': 'Sunan Tirmidhi 3392',
       },
     ],
   },
