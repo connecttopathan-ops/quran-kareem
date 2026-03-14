@@ -44,8 +44,14 @@ jobs:
           echo "flutter.versionName=1.0.0" >> android/local.properties
           echo "flutter.versionCode=1" >> android/local.properties
       - run: flutter build appbundle --release
+      - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
           name: quran-kareem-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quran-kareem-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 90
