@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../services/location_service.dart';
 import '../services/audio_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/q_icons.dart';
 import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
@@ -14,6 +15,7 @@ import 'reader_screen.dart';
 import 'language_selection_screen.dart';
 import 'qibla_screen.dart';
 import 'sponsor_screen.dart';
+import 'duas_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   Timer? _clockTimer;
+  LocationService? _locationService;
 
   @override
   void initState() {
@@ -38,6 +41,45 @@ class _HomeScreenState extends State<HomeScreen> {
         _checkFirstLaunchLocation();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ls = context.read<LocationService>();
+    if (_locationService != ls) {
+      _locationService?.removeListener(_onPrayerTimesUpdated);
+      _locationService = ls;
+      _locationService!.addListener(_onPrayerTimesUpdated);
+    }
+  }
+
+  void _onPrayerTimesUpdated() {
+    final pt = _locationService?.prayerTimes;
+    if (pt != null) _scheduleNotifications(pt);
+  }
+
+  Future<void> _scheduleNotifications(PrayerTimes pt) async {
+    final prefs = await SharedPreferences.getInstance();
+    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
+    final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
+    final mode = PrayerNotificationMode.values.firstWhere(
+      (e) => e.name == modeStr,
+      orElse: () => PrayerNotificationMode.off,
+    );
+    final adhanType = AdhanType.values.firstWhere(
+      (e) => e.name == adhanStr,
+      orElse: () => AdhanType.makkah,
+    );
+    final times = {
+      'Fajr': pt.fajrStr,
+      'Dhuhr': pt.dhuhrStr,
+      'Asr': pt.asrStr,
+      'Maghrib': pt.maghribStr,
+      'Isha': pt.ishaStr,
+    };
+    await NotificationService()
+        .scheduleAllPrayers(times, mode, adhanType: adhanType);
   }
 
   Future<void> _checkFirstLaunchLocation() async {
@@ -98,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _locationService?.removeListener(_onPrayerTimesUpdated);
     _clockTimer?.cancel();
     super.dispose();
   }
@@ -303,37 +346,6 @@ class _HomeTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Qibla compass button
-                  GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const QiblaScreen())),
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldDim.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: context.border),
-                      ),
-                      child: Center(child: Icon(Icons.explore_outlined,
-                          size: 18, color: AppColors.gold)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Sponsor button
-                  GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const SponsorScreen())),
-                    child: Container(
-                      width: 36, height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.goldDim.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: context.border),
-                      ),
-                      child: Center(child: Icon(Icons.favorite_outline,
-                          size: 18, color: AppColors.gold)),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -341,16 +353,18 @@ class _HomeTab extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(13, 12, 13, 24),
-                children: const [
-                  _CalPrayerCard(),
-                  SizedBox(height: 12),
-                  _ContinueCard(),
-                  SizedBox(height: 12),
-                  _DailyAyah(),
-                  SizedBox(height: 12),
-                  _PopularSurahs(),
-                  SizedBox(height: 12),
-                  _Stats(),
+                children: [
+                  const _CalPrayerCard(),
+                  const SizedBox(height: 12),
+                  const _QuickActionsCard(),
+                  const SizedBox(height: 12),
+                  const _ContinueCard(),
+                  const SizedBox(height: 12),
+                  const _DailyAyah(),
+                  const SizedBox(height: 12),
+                  const _PopularSurahs(),
+                  const SizedBox(height: 12),
+                  const _Stats(),
                 ],
               ),
             ),
@@ -367,36 +381,38 @@ class _HomeTab extends StatelessWidget {
 class _CalPrayerCard extends StatelessWidget {
   const _CalPrayerCard();
 
-  Map<String, int> _toHijri(DateTime d) {
-    int jd = _gToJ(d.year, d.month, d.day);
-    jd = jd - 1948440 + 10632;
-    int n = ((jd - 1) / 10631).floor();
-    jd = jd - 10631 * n + 354;
-    int j = ((10985 - jd) / 5316).floor() * ((50 * jd) / 17719).floor() +
-        (jd / 5670).floor() * ((43 * jd) / 15238).floor();
-    jd = jd - ((30 - j) / 15).floor() * ((17719 * j) / 50).floor() -
-        (j / 16).floor() * ((15238 * j) / 43).floor() + 29;
-    int month = (24 * jd / 709).floor();
-    int day = jd - (709 * month / 24).floor();
-    return {'y': 30 * n + j - 30, 'm': month, 'd': day};
-  }
+  Map<String, int> _toHijri(DateTime date) {
+    int y = date.year;
+    int m = date.month;
+    int d = date.day;
 
-  int _gToJ(int y, int m, int d) {
-    if (m <= 2) { y--; m += 12; }
-    return d + ((153 * m - 457) / 5).floor() + 365 * y +
-        (y / 4).floor() - (y / 100).floor() + (y / 400).floor() + 1721119;
+    int jd = (1461 * (y + 4800 + (m - 14) ~/ 12)) ~/ 4 +
+        (367 * (m - 2 - 12 * ((m - 14) ~/ 12))) ~/ 12 -
+        (3 * ((y + 4900 + (m - 14) ~/ 12) ~/ 100)) ~/ 4 +
+        d - 32075;
+
+    int l = jd - 1948440 + 10632;
+    int n = (l - 1) ~/ 10631;
+    l = l - 10631 * n + 354;
+    int j = ((10985 - l) ~/ 5316) * ((50 * l) ~/ 17719) +
+        (l ~/ 5670) * ((43 * l) ~/ 15238);
+    l = l - ((30 - j) ~/ 15) * ((17719 * j) ~/ 50) -
+        (j ~/ 16) * ((15238 * j) ~/ 43) + 29;
+    int hYear = 30 * n + j - 30;
+    int hMonth = (24 * l) ~/ 709;
+    int hDay = l - (709 * hMonth) ~/ 24;
+
+    return {'day': hDay, 'month': hMonth, 'year': hYear};
   }
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now().toLocal();
-    final h = _toHijri(now);
-    const hMonths = ['','Muharram','Safar',"Rabi' Al-Awwal","Rabi' Al-Thani",
-        "Jumada Al-Awwal","Jumada Al-Thani",'Rajab',"Sha'ban",
-        'Ramadan','Shawwal',"Dhul-Qi'dah",'Dhul-Hijjah'];
-    const hMonthsAr = ['','\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645','\u0635\u064e\u0641\u064e\u0631','\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644','\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
-        '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649','\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629','\u0631\u064e\u062c\u064e\u0628','\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
-        '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646','\u0634\u064e\u0648\u064e\u0651\u0627\u0644','\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629','\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
+    const hMonths = ['Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+        "Jumada al-Awwal", "Jumada al-Thani", 'Rajab', "Sha'ban",
+        'Ramadan', 'Shawwal', "Dhu al-Qi'dah", 'Dhu al-Hijjah'];
+    const hMonthsAr = ['\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645', '\u0635\u064e\u0641\u064e\u0631', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
+        '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649', '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629', '\u0631\u064e\u062c\u064e\u0628', '\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
+        '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646', '\u0634\u064e\u0648\u064e\u0651\u0627\u0644', '\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629', '\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const wdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
@@ -405,7 +421,14 @@ class _CalPrayerCard extends StatelessWidget {
       return n.toString().split('').map((c) => d[int.parse(c)]).join();
     }
 
-    return Container(
+    return Consumer<LocationService>(
+      builder: (context, loc, _) {
+        // Always use device local time — the device timezone is more accurate
+        // than a longitude-based approximation.
+        final now = DateTime.now();
+        final h = _toHijri(now);
+
+        return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
@@ -415,7 +438,7 @@ class _CalPrayerCard extends StatelessWidget {
         children: [
           // Calendar
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 11),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 7),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: context.isDark
@@ -432,27 +455,27 @@ class _CalPrayerCard extends StatelessWidget {
                       style: TextStyle(fontSize: 7, letterSpacing: 2, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
                   const SizedBox(height: 1),
-                  Text('${h['d']}',
-                      style: TextStyle(fontFamily: 'serif', fontSize: 34, height: 1,
+                  Text('${h['day']}',
+                      style: TextStyle(fontFamily: 'serif', fontSize: 32, height: 1,
                           color: context.isDark ? AppColors.warmWhite : const Color(0xFF2a1e08))),
-                  Text(hMonths[h['m']!],
-                      style: TextStyle(fontFamily: 'serif', fontSize: 13,
+                  Text(hMonths[h['month']! - 1],
+                      style: TextStyle(fontFamily: 'serif', fontSize: 16,
                           fontStyle: FontStyle.italic,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-                  Text('${h['y']} AH',
-                      style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
+                  Text('${h['year']} AH',
+                      style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                 ]),
                 const Spacer(),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  Text(toAI(h['d']!),
-                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 34, height: 1,
+                  Text(toAI(h['day']!),
+                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 30, height: 1,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-                  Text(hMonthsAr[h['m']!],
-                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 13,
+                  Text(hMonthsAr[h['month']! - 1],
+                      style: TextStyle(fontFamily: 'Scheherazade', fontSize: 15,
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                   Text('${wdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}',
-                      style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
+                      style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? const Color(0xFF5a5040) : const Color(0xFF9a7030))),
                 ]),
               ],
@@ -471,7 +494,9 @@ class _CalPrayerCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+      );
+    },
+  );
   }
 }
 
@@ -584,80 +609,323 @@ class _PrayerSection extends StatelessWidget {
   }
 }
 
-class _PrayerGrid extends StatelessWidget {
+// Rakah breakdown data
+const _kRakahRows = {
+  'Fajr':    [('Sunnah', 2), ('Fard', 2)],
+  'Dhuhr':   [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2)],
+  'Asr':     [('Sunnah', 4), ('Fard', 4)],
+  'Maghrib': [('Fard', 3), ('Sunnah', 2)],
+  'Isha':    [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2), ('Witr', 3)],
+};
+const _kRakahTotal = {
+  'Fajr': 4, 'Dhuhr': 10, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
+};
+
+class _PrayerGrid extends StatefulWidget {
   final PrayerTimes pt;
   const _PrayerGrid({required this.pt});
 
   @override
-  Widget build(BuildContext context) {
-    final prayers = [
-      ('Fajr',   pt.fajrStr,   '2S+2F'),
-      ('Dhuhr',  pt.dhuhrStr,  '4S+4F\n+2S'),
-      ('Asr',    pt.asrStr,    '4S+4F'),
-      ('Maghrib',pt.maghribStr,'3F+2S'),
-      ('Isha',   pt.ishaStr,   '4F+2S\n+1W'),
-    ];
-    final next = pt.nextPrayerName;
-    final rem = pt.timeUntilNext;
-    final countdown = rem.inHours > 0
-        ? '${rem.inHours}h ${rem.inMinutes % 60}m'
-        : '${rem.inMinutes}m';
+  State<_PrayerGrid> createState() => _PrayerGridState();
+}
 
-    return Column(
-      children: [
-        Row(
-          children: prayers.map((p) {
-            final isNext = p.$1 == next;
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: isNext
-                      ? AppColors.goldDim.withOpacity(context.isDark ? 0.18 : 0.12)
-                      : context.surface2,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: isNext ? AppColors.gold : context.border,
-                      width: isNext ? 1.2 : 1),
-                ),
-                child: Column(
+class _PrayerGridState extends State<_PrayerGrid>
+    with SingleTickerProviderStateMixin {
+  int? _tappedIndex;
+  late AnimationController _blinkCtrl;
+  late Animation<double> _blinkAnim;
+  Timer? _countdownTimer;
+  late DateTime _targetTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
+
+    _blinkCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _blinkAnim = Tween<double>(begin: 1.0, end: 0.15).animate(
+      CurvedAnimation(parent: _blinkCtrl, curve: Curves.easeInOut),
+    );
+    _blinkCtrl.repeat(reverse: true);
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didUpdateWidget(_PrayerGrid old) {
+    super.didUpdateWidget(old);
+    if (old.pt != widget.pt) {
+      _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
+    }
+  }
+
+  @override
+  void dispose() {
+    _blinkCtrl.dispose();
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  String _getCurrentPrayer(Map<String, String> times) {
+    final now = TimeOfDay.now();
+    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    String current = 'Isha';
+    for (int i = 0; i < prayers.length; i++) {
+      final t = _parseTime(times[prayers[i]]!);
+      if (_timeToMinutes(now) >= _timeToMinutes(t)) {
+        current = prayers[i];
+      }
+    }
+    return current;
+  }
+
+  TimeOfDay _parseTime(String timeStr) {
+    final cleaned = timeStr.trim();
+    final upper = cleaned.toUpperCase();
+    if (upper.contains('AM') || upper.contains('PM')) {
+      final parts = cleaned.split(' ');
+      final timeParts = parts[0].split(':');
+      int hour = int.parse(timeParts[0]);
+      int minute = int.parse(timeParts[1]);
+      final isPm = parts[1].toUpperCase() == 'PM';
+      if (isPm && hour != 12) hour += 12;
+      if (!isPm && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } else {
+      final parts = cleaned.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    }
+  }
+
+  int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  Widget _buildPopup(BuildContext context, String prayerName) {
+    final rows = _kRakahRows[prayerName] ?? [];
+    final total = _kRakahTotal[prayerName] ?? 0;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 10,
+              offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(prayerName.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 1.5,
+                  color: AppColors.gold,
+                  fontFamily: 'sans-serif',
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          ...rows.map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(p.$1,
-                        style: TextStyle(fontSize: 7, fontFamily: 'sans-serif',
-                            fontWeight: isNext ? FontWeight.w700 : FontWeight.normal,
-                            color: isNext
-                                ? (context.isDark ? AppColors.gold : AppColors.goldDark)
-                                : context.textDim)),
-                    const SizedBox(height: 3),
-                    Text(p.$2.replaceAll(' AM', '').replaceAll(' PM', ''),
-                        style: TextStyle(fontFamily: 'serif', fontSize: 11,
-                            color: isNext
-                                ? (context.isDark ? AppColors.goldLight : AppColors.goldDark)
-                                : context.text)),
-                    const SizedBox(height: 2),
-                    Text(p.$3,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 6, fontFamily: 'sans-serif',
-                            height: 1.3,
-                            color: isNext ? AppColors.goldDim : context.textDim.withOpacity(0.6))),
+                    Text(r.$1,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: context.textDim,
+                            fontFamily: 'sans-serif')),
+                    Text('${r.$2}',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: context.text,
+                            fontFamily: 'sans-serif')),
                   ],
                 ),
+              )),
+          Divider(height: 14, color: context.border),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      fontFamily: 'sans-serif',
+                      fontWeight: FontWeight.w700)),
+              Text('$total',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      fontFamily: 'sans-serif',
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prayers = [
+      ('Fajr',    widget.pt.fajrStr,    4),
+      ('Dhuhr',   widget.pt.dhuhrStr,   10),
+      ('Asr',     widget.pt.asrStr,     8),
+      ('Maghrib', widget.pt.maghribStr, 5),
+      ('Isha',    widget.pt.ishaStr,    13),
+    ];
+    final next = widget.pt.nextPrayerName;
+    final currentPrayer = _getCurrentPrayer({
+      'Fajr': widget.pt.fajrStr,
+      'Dhuhr': widget.pt.dhuhrStr,
+      'Asr': widget.pt.asrStr,
+      'Maghrib': widget.pt.maghribStr,
+      'Isha': widget.pt.ishaStr,
+    });
+
+    final rem = _targetTime.difference(DateTime.now());
+    final remClamped = rem.isNegative ? Duration.zero : rem;
+    final h = remClamped.inHours;
+    final m = remClamped.inMinutes % 60;
+    final s = remClamped.inSeconds % 60;
+    final countdown = '${h}h ${m}m ${s}s';
+
+    return GestureDetector(
+      onTap: () {
+        if (_tappedIndex != null) setState(() => _tappedIndex = null);
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Column(
+        children: [
+          // Popup shown above prayer row
+          if (_tappedIndex != null) ...[
+            _buildPopup(context, prayers[_tappedIndex!].$1),
+            const SizedBox(height: 6),
+          ],
+          // Prayer cards row
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: List.generate(5, (i) {
+                final p = prayers[i];
+                final isCurrent = p.$1 == currentPrayer;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(
+                        () => _tappedIndex = _tappedIndex == i ? null : i),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: isCurrent
+                            ? Border.all(color: AppColors.gold, width: 2)
+                            : Border.all(color: context.border),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(p.$1,
+                              style: TextStyle(
+                                  fontSize: 7,
+                                  fontFamily: 'sans-serif',
+                                  fontWeight: isCurrent
+                                      ? FontWeight.w700
+                                      : FontWeight.normal,
+                                  color: isCurrent
+                                      ? AppColors.gold
+                                      : context.textDim)),
+                          const SizedBox(height: 3),
+                          Text(
+                              p.$2
+                                  .replaceAll(' AM', '')
+                                  .replaceAll(' PM', ''),
+                              style: TextStyle(
+                                  fontFamily: 'serif',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: isCurrent
+                                      ? AppColors.gold
+                                      : context.text)),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isCurrent
+                                  ? AppColors.gold.withOpacity(0.15)
+                                  : context.textDim.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('${p.$3} rak.',
+                                style: TextStyle(
+                                    fontSize: 9,
+                                    fontFamily: 'sans-serif',
+                                    color: isCurrent
+                                        ? AppColors.gold
+                                        : context.textDim)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Hint text
+          Text(
+            '✦ Tap a prayer to see full rakah breakdown ✦',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: 9,
+                fontFamily: 'sans-serif',
+                color: context.textDim.withOpacity(0.7)),
+          ),
+          const SizedBox(height: 8),
+          // Next prayer row with blinking dot
+          Row(children: [
+            FadeTransition(
+              opacity: _blinkAnim,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: AppColors.gold),
               ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 8),
-        Row(children: [
-          Container(width: 5, height: 5,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
-          const SizedBox(width: 6),
-          Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-          Text(next, style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
-              color: AppColors.gold, fontWeight: FontWeight.w700)),
-          Text(' in $countdown', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-        ]),
-      ],
+            ),
+            const SizedBox(width: 6),
+            Text('Next: ',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: context.textDim)),
+            Text(next,
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w700)),
+            Text(' in $countdown',
+                style: TextStyle(
+                    fontSize: 10,
+                    fontFamily: 'sans-serif',
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.w700)),
+          ]),
+        ],
+      ),
     );
   }
 }
@@ -1012,6 +1280,90 @@ class _PopularSurahs extends StatelessWidget {
     ]);
   }
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// QUICK ACTIONS CARD
+// ─────────────────────────────────────────────────────────────────────────────
+class _QuickActionsCard extends StatelessWidget {
+  const _QuickActionsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = [
+      (
+        icon: Icon(Icons.explore_outlined, size: 26, color: AppColors.gold),
+        label: 'Qibla',
+        subtitle: 'Find direction',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
+      ),
+      (
+        icon: Icon(Icons.menu_book_outlined, size: 26, color: AppColors.gold),
+        label: 'Duas',
+        subtitle: 'Daily supplications',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const DuasScreen())),
+      ),
+      (
+        icon: Icon(Icons.volunteer_activism, size: 26, color: AppColors.gold),
+        label: 'Sponsor Quran',
+        subtitle: 'Free Quran distribution',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.border),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: actions.map((a) {
+            return Expanded(
+              child: GestureDetector(
+                onTap: a.onTap,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: context.surface2,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      a.icon,
+                      const SizedBox(height: 4),
+                      Text(a.label,
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: context.text),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 2),
+                      Text(a.subtitle,
+                          style: TextStyle(
+                              fontSize: 9,
+                              fontFamily: 'sans-serif',
+                              color: context.textDim),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
 class _Stats extends StatelessWidget {
   const _Stats();
 

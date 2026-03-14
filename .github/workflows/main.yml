@@ -1,4 +1,4 @@
-name: Build Quran App APK
+name: Build Quran App AAB
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK
+    name: Build Android AAB
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,17 +21,37 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - name: Download ur-roman translation (Maududi Roman Urdu from fawazahmed0)
+        run: python3 scripts/download_ur_roman.py
+      - name: Download all 46 bundled translations (alquran.cloud)
+        run: python3 scripts/download_all_translations.py
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/qurankareem-release.jks
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=qurankareem-release.jks
+          EOF
       - name: Create local.properties
         run: |
           echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-          echo "flutter.buildMode=debug" >> android/local.properties
+          echo "flutter.buildMode=release" >> android/local.properties
           echo "flutter.versionName=1.0.0" >> android/local.properties
           echo "flutter.versionCode=1" >> android/local.properties
-      - run: flutter build apk --debug
+      - run: flutter build appbundle --release
+      - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: quran-kareem-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 30
+          name: quran-kareem-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quran-kareem-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90

@@ -1,7 +1,7 @@
 name: quran_kareem
 description: Get Quran - A beautiful Quran app
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -10,13 +10,20 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^6.1.0
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.2.3
   http: ^1.1.0
   provider: ^6.1.1
   audioplayers: ^6.1.0
   geolocator: ^13.0.0
   flutter_compass: ^0.8.0
+  sensors_plus: ^4.0.0
+  intl: ^0.19.0
   webview_flutter: ^4.4.2
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.9.4
+  android_alarm_manager_plus: ^4.0.0
+  permission_handler: ^11.3.0
+  flutter_timezone: ^1.0.7
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -33,3 +40,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
+    - assets/translations/
+    - assets/audio/adhan_makkah.mp3
+    - assets/audio/adhan_madinah.mp3
+    - assets/audio/adhan_makkah_fajr.mp3

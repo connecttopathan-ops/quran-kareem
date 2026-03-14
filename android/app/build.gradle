@@ -4,8 +4,14 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace "com.example.quran_kareem"
+    namespace "co.getquran.app"
     compileSdk 35
     ndkVersion "26.3.11579264"
 
@@ -19,16 +25,27 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.quran_kareem"
+        applicationId "co.getquran.app"
         minSdk 21
         targetSdk 35
         versionCode flutter.versionCode
         versionName flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
         }
     }
 }

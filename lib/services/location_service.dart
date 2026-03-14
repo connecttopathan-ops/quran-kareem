@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -108,8 +109,17 @@ class LocationService extends ChangeNotifier {
     final city = p.getString('cityName');
     if (lat != null && lng != null && city != null) {
       _prayerTimes = _calc(lat, lng, city);
+      notifyListeners();
+    } else {
+      // No stored location — silently auto-fetch if permission already granted
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        fetchLocation(); // fire-and-forget; it calls notifyListeners() internally
+      } else {
+        notifyListeners();
+      }
     }
-    notifyListeners();
   }
 
   Future<void> fetchLocation() async {
@@ -178,21 +188,110 @@ class LocationService extends ChangeNotifier {
 
   PrayerTimes _calc(double lat, double lng, String city) {
     final now = DateTime.now();
-    final times = [
-      DateTime(now.year, now.month, now.day, 5, 15),
-      DateTime(now.year, now.month, now.day, 12, 30),
-      DateTime(now.year, now.month, now.day, 15, 45),
-      DateTime(now.year, now.month, now.day, 18, 20),
-      DateTime(now.year, now.month, now.day, 19, 45),
-    ];
-    final names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
-    String fmt(DateTime t) {
-      final h = t.hour > 12 ? t.hour - 12 : (t.hour == 0 ? 12 : t.hour);
-      return '$h:${t.minute.toString().padLeft(2,'0')} ${t.hour >= 12 ? "PM" : "AM"}';
+    // ── Julian Day Number for today ──────────────────────────────────────────
+    int y = now.year, m = now.month, d = now.day;
+    if (m <= 2) { y--; m += 12; }
+    final int A = y ~/ 100;
+    final int B = 2 - A + A ~/ 4;
+    final double jd = (365.25 * (y + 4716)).floor() +
+        (30.6001 * (m + 1)).floor() +
+        d.toDouble() +
+        B -
+        1524.5;
+
+    // ── Solar position (USNO low-precision formulae) ─────────────────────────
+    final double D = jd - 2451545.0; // days from J2000.0
+    final double g = _fixAngle(357.529 + 0.98560028 * D); // mean anomaly (°)
+    final double q = _fixAngle(280.459 + 0.98564736 * D); // mean longitude (°)
+    final double L = _fixAngle(
+        q + 1.915 * sin(_rad(g)) + 0.02 * sin(_rad(2 * g))); // ecliptic lon (°)
+    final double e = 23.439 - 0.00000036 * D; // obliquity of ecliptic (°)
+
+    // Right ascension (hours, 0–24)
+    double RA = _fixAngle(_deg(atan2(cos(_rad(e)) * sin(_rad(L)), cos(_rad(L))))) / 15;
+    // Declination (radians)
+    final double decl = asin(sin(_rad(e)) * sin(_rad(L)));
+    // Equation of time (hours)
+    double EqT = q / 15 - RA;
+    if (EqT > 12) EqT -= 24;
+    if (EqT < -12) EqT += 24;
+
+    // UTC offset of the device
+    final double utcOffset = now.timeZoneOffset.inMinutes / 60.0;
+
+    // Solar noon in local device time (hours)
+    final double midday = 12 - lng / 15 - EqT + utcOffset;
+
+    // ── Hour-angle helper ────────────────────────────────────────────────────
+    // Returns hours from midday to reach a given sun altitude (degrees).
+    double ha(double altDeg) {
+      double cosT = (sin(_rad(altDeg)) - sin(_rad(lat)) * sin(decl)) /
+          (cos(_rad(lat)) * cos(decl));
+      cosT = cosT.clamp(-1.0, 1.0);
+      return _deg(acos(cosT)) / 15;
     }
 
-    String nextName = 'Fajr';
+    // ── Fajr / Isha angles by calculation method ─────────────────────────────
+    double fajrAngle, ishaAngle;
+    bool ishaIsOffset = false;
+    int ishaOffsetMin = 0;
+    switch (_calcMethodId) {
+      case 'ISNA':
+        fajrAngle = 15.0; ishaAngle = 15.0;
+      case 'Egyptian':
+        fajrAngle = 19.5; ishaAngle = 17.5;
+      case 'Karachi':
+        fajrAngle = 18.0; ishaAngle = 18.0;
+      case 'UmmAlQura':
+        fajrAngle = 18.5; ishaAngle = 0; ishaIsOffset = true; ishaOffsetMin = 90;
+      case 'Tehran':
+        fajrAngle = 17.7; ishaAngle = 14.0;
+      default: // MWL
+        fajrAngle = 18.0; ishaAngle = 17.0;
+    }
+
+    // ── Asr altitude (shadow factor: Shafi'i = 1, Hanafi = 2) ───────────────
+    final double asrFactor = _calcMethodId == 'Karachi' ? 2.0 : 1.0;
+    final double asrAlt =
+        atan(1.0 / (asrFactor + tan((decl - _rad(lat)).abs())));
+    // Hour angle for Asr (sun above horizon at asrAlt radians)
+    double asrCosT = (sin(asrAlt) - sin(_rad(lat)) * sin(decl)) /
+        (cos(_rad(lat)) * cos(decl));
+    asrCosT = asrCosT.clamp(-1.0, 1.0);
+    final double asrHA = _deg(acos(asrCosT)) / 15;
+
+    // ── Prayer hours (local device time, decimal) ────────────────────────────
+    final double fajrHour    = midday - ha(-fajrAngle);
+    final double dhuhrHour   = midday;
+    final double asrHour     = midday + asrHA;
+    final double maghribHour = midday + ha(-0.833);
+    final double ishaHour    = ishaIsOffset
+        ? maghribHour + ishaOffsetMin / 60.0
+        : midday + ha(-ishaAngle);
+
+    // ── Convert decimal hours → local DateTime ───────────────────────────────
+    DateTime toDateTime(double hours) {
+      final int totalMins = (hours * 60).round();
+      return DateTime(
+          now.year, now.month, now.day, (totalMins ~/ 60) % 24, totalMins % 60);
+    }
+
+    String fmt(DateTime t) {
+      final int h = t.hour > 12 ? t.hour - 12 : (t.hour == 0 ? 12 : t.hour);
+      return '$h:${t.minute.toString().padLeft(2, '0')} ${t.hour >= 12 ? "PM" : "AM"}';
+    }
+
+    final times = [
+      toDateTime(fajrHour),
+      toDateTime(dhuhrHour),
+      toDateTime(asrHour),
+      toDateTime(maghribHour),
+      toDateTime(ishaHour),
+    ];
+    const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+    String nextName = names[0];
     Duration untilNext = const Duration(hours: 8);
     for (int i = 0; i < times.length; i++) {
       if (now.isBefore(times[i])) {
@@ -200,6 +299,11 @@ class LocationService extends ChangeNotifier {
         untilNext = times[i].difference(now);
         break;
       }
+    }
+    // Past Isha → next is Fajr tomorrow
+    if (now.isAfter(times[4])) {
+      nextName = names[0];
+      untilNext = toDateTime(fajrHour).add(const Duration(days: 1)).difference(now);
     }
 
     return PrayerTimes(
@@ -209,4 +313,9 @@ class LocationService extends ChangeNotifier {
       nextPrayerName: nextName, timeUntilNext: untilNext,
     );
   }
+
+  // ── Math helpers ─────────────────────────────────────────────────────────
+  static double _rad(double deg) => deg * pi / 180;
+  static double _deg(double rad) => rad * 180 / pi;
+  static double _fixAngle(double a) => a - 360.0 * (a / 360.0).floor();
 }

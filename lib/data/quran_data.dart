@@ -124,7 +124,7 @@ List<Verse> _placeholderVerses(int surahNumber) {
     surah.verses,
     (i) => Verse(
       number: i + 1,
-      arabic: '\u﴿${i + 1}\u﴾',
+      arabic: '\uFD3F${i + 1}\uFD3E',
       transliteration: '',
       translations: {},
     ),

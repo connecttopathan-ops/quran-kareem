@@ -90,6 +90,8 @@ class SettingsScreen extends StatelessWidget {
                           activeColor: AppColors.gold,
                         ),
                       ),
+                      _SectionHeader('Notifications'),
+                      _NotificationTile(),
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
@@ -107,6 +109,8 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+
+// ── Shared widgets ────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -194,6 +198,47 @@ class _IconBtn extends StatelessWidget {
           border: Border.all(color: context.border),
         ),
         child: Icon(icon, size: 16, color: context.text),
+      ),
+    );
+  }
+}
+
+class _NotificationTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/prayer-notifications'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.notifications_outlined,
+                color: AppColors.gold, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Prayer Notifications',
+                      style: TextStyle(fontSize: 14, color: context.text)),
+                  const SizedBox(height: 2),
+                  Text('Adhan, vibration, or silent alerts',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textDim, size: 20),
+          ],
+        ),
       ),
     );
   }

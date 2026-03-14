@@ -15,7 +15,10 @@ class LanguageSelectionScreen extends StatefulWidget {
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
-  String _selectedCode = 'en';
+  String _selectedCode = 'ur-roman';
+
+  Language get _selectedLang =>
+      kLanguages.firstWhere((l) => l.code == _selectedCode);
 
   Future<void> _confirm() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,7 +32,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Build a flat list interleaved with group headers
+    // Build flat list with group headers
     final items = <dynamic>[];
     String? currentGroup;
     for (final lang in kLanguages) {
@@ -119,8 +122,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             : context.surface,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color:
-                              selected ? AppColors.gold : context.border,
+                          color: selected ? AppColors.gold : context.border,
                           width: selected ? 1.5 : 1,
                         ),
                       ),
@@ -162,7 +164,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          // Arabic text (line 1)
+                          // Arabic
                           Text(
                             'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                             textDirection: TextDirection.rtl,
@@ -175,7 +177,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          // Roman Arabic transliteration (line 2)
+                          // Transliteration
                           Text(
                             'Bismillaahir Rahmaanir Raheem',
                             style: TextStyle(
@@ -186,7 +188,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          // Translation in selected language (line 3)
+                          // Translation preview
                           Text(
                             preview,
                             textDirection:
@@ -224,8 +226,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 ),
                 child: const Text(
                   'Continue',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

@@ -114,6 +114,87 @@ class QuranService extends ChangeNotifier {
   static String editionForCode(String langCode) =>
       kEditionIds[langCode] ?? 'en.asad';
 
+  /// Shared cache key for bulk-downloaded translations.
+  static String _transCacheKey(String langCode, int surahNumber) =>
+      'translation_cache_${langCode}_$surahNumber';
+
+  /// Download all 114 surahs for [langCode] and save to SharedPreferences.
+  /// [onProgress] is called after each surah with (completedCount).
+  Future<void> downloadAllSurahs(
+    String langCode, {
+    void Function(int completed)? onProgress,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final editionId = kEditionIds[langCode];
+
+    for (int n = 1; n <= 114; n++) {
+      try {
+        List<String>? texts;
+
+        if (langCode == 'ur-roman') {
+          final uri = Uri.parse(
+            'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1'
+            '/editions/urd-maududi-la/$n.json',
+          );
+          final response =
+              await http.get(uri).timeout(const Duration(seconds: 15));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final chapter = data['chapter'] as List?;
+            if (chapter != null) {
+              texts =
+                  chapter.map((v) => (v['text'] as String? ?? '')).toList();
+            }
+          }
+        } else if (editionId != null) {
+          final uri = Uri.parse(
+            'https://api.alquran.cloud/v1/surah/$n/$editionId',
+          );
+          final response =
+              await http.get(uri).timeout(const Duration(seconds: 15));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final ayahs = data['data']?['ayahs'] as List?;
+            if (ayahs != null) {
+              texts =
+                  ayahs.map((a) => (a['text'] as String? ?? '')).toList();
+            }
+          }
+        }
+
+        if (texts != null) {
+          await prefs.setString(_transCacheKey(langCode, n), jsonEncode(texts));
+        }
+      } catch (_) {}
+
+      onProgress?.call(n);
+    }
+
+    // Mark language as fully downloaded
+    final downloaded = prefs.getStringList('downloaded_languages') ?? [];
+    if (!downloaded.contains(langCode)) {
+      downloaded.add(langCode);
+      await prefs.setStringList('downloaded_languages', downloaded);
+    }
+  }
+
+  /// Returns list of language codes that have been fully downloaded.
+  static Future<List<String>> getDownloadedLanguages() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('downloaded_languages') ?? [];
+  }
+
+  /// Delete all cached translations for [langCode].
+  static Future<void> deleteLanguageCache(String langCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (int n = 1; n <= 114; n++) {
+      await prefs.remove(_transCacheKey(langCode, n));
+    }
+    final downloaded = prefs.getStringList('downloaded_languages') ?? [];
+    downloaded.remove(langCode);
+    await prefs.setStringList('downloaded_languages', downloaded);
+  }
+
   final Map<int, List<Verse>> _verses = {};
   final Set<int> _loading = {};
   final Set<int> _loaded = {};
@@ -274,8 +355,9 @@ class QuranService extends ChangeNotifier {
       final cacheKey = 'trans_cache_$tKey';
       List<String>? texts;
 
-      // ── Try cache ──────────────────────────────────────────────────────────
-      final cached = prefs.getString(cacheKey);
+      // ── Try cache (bulk-download key first, then per-request key) ──────────
+      final bulkCached = prefs.getString(_transCacheKey(langCode, surahNumber));
+      final cached = bulkCached ?? prefs.getString(cacheKey);
       if (cached != null) {
         texts = (jsonDecode(cached) as List).cast<String>();
       }
@@ -306,12 +388,14 @@ class QuranService extends ChangeNotifier {
       }
 
       // ── Fall back to alquran.cloud ─────────────────────────────────────────
+      // ur-roman must only come from the fawazahmed0 Latin-script edition;
+      // never fall back to a Urdu-script edition.
+      if (texts == null && langCode == 'ur-roman') return;
+
       if (texts == null) {
-        final fallbackEdition =
-            langCode == 'ur-roman' ? 'ur.junagarhi' : editionId;
         final uri = Uri.parse(
           'https://api.alquran.cloud/v1/surah/$surahNumber/editions/'
-          '$fallbackEdition',
+          '$editionId',
         );
         final response =
             await http.get(uri).timeout(const Duration(seconds: 15));
