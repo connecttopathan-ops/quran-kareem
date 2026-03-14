@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'models/app_state.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
 import 'services/quran_service.dart';
 import 'services/translation_service.dart';
+import 'services/notification_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/duas_screen.dart';
+import 'screens/prayer_notification_settings_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
+  await AndroidAlarmManager.initialize();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
@@ -48,6 +53,8 @@ class QuranApp extends StatelessWidget {
             home: const HomeScreen(),
             routes: {
               '/duas': (context) => const DuasScreen(),
+              '/prayer-notifications': (context) =>
+                  const PrayerNotificationSettingsScreen(),
             },
           );
         },

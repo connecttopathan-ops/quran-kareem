@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../services/location_service.dart';
 import '../services/audio_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/q_icons.dart';
 import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
@@ -25,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   Timer? _clockTimer;
+  LocationService? _locationService;
 
   @override
   void initState() {
@@ -39,6 +41,45 @@ class _HomeScreenState extends State<HomeScreen> {
         _checkFirstLaunchLocation();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ls = context.read<LocationService>();
+    if (_locationService != ls) {
+      _locationService?.removeListener(_onPrayerTimesUpdated);
+      _locationService = ls;
+      _locationService!.addListener(_onPrayerTimesUpdated);
+    }
+  }
+
+  void _onPrayerTimesUpdated() {
+    final pt = _locationService?.prayerTimes;
+    if (pt != null) _scheduleNotifications(pt);
+  }
+
+  Future<void> _scheduleNotifications(PrayerTimes pt) async {
+    final prefs = await SharedPreferences.getInstance();
+    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
+    final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
+    final mode = PrayerNotificationMode.values.firstWhere(
+      (e) => e.name == modeStr,
+      orElse: () => PrayerNotificationMode.off,
+    );
+    final adhanType = AdhanType.values.firstWhere(
+      (e) => e.name == adhanStr,
+      orElse: () => AdhanType.makkah,
+    );
+    final times = {
+      'Fajr': pt.fajrStr,
+      'Dhuhr': pt.dhuhrStr,
+      'Asr': pt.asrStr,
+      'Maghrib': pt.maghribStr,
+      'Isha': pt.ishaStr,
+    };
+    await NotificationService()
+        .scheduleAllPrayers(times, mode, adhanType: adhanType);
   }
 
   Future<void> _checkFirstLaunchLocation() async {
@@ -99,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _locationService?.removeListener(_onPrayerTimesUpdated);
     _clockTimer?.cancel();
     super.dispose();
   }
@@ -339,34 +381,38 @@ class _HomeTab extends StatelessWidget {
 class _CalPrayerCard extends StatelessWidget {
   const _CalPrayerCard();
 
-  Map<String, int> _toHijri(DateTime d) {
-    int jd = _gToJ(d.year, d.month, d.day);
-    jd = jd - 1948440 + 10632;
-    int n = ((jd - 1) / 10631).floor();
-    jd = jd - 10631 * n + 354;
-    int j = ((10985 - jd) / 5316).floor() * ((50 * jd) / 17719).floor() +
-        (jd / 5670).floor() * ((43 * jd) / 15238).floor();
-    jd = jd - ((30 - j) / 15).floor() * ((17719 * j) / 50).floor() -
-        (j / 16).floor() * ((15238 * j) / 43).floor() + 29;
-    int month = (24 * jd / 709).floor();
-    int day = jd - (709 * month / 24).floor();
-    return {'y': 30 * n + j - 30, 'm': month, 'd': day};
-  }
+  Map<String, int> _toHijri(DateTime date) {
+    int y = date.year;
+    int m = date.month;
+    int d = date.day;
 
-  int _gToJ(int y, int m, int d) {
-    if (m <= 2) { y--; m += 12; }
-    return d + ((153 * m - 457) / 5).floor() + 365 * y +
-        (y / 4).floor() - (y / 100).floor() + (y / 400).floor() + 1721119;
+    int jd = (1461 * (y + 4800 + (m - 14) ~/ 12)) ~/ 4 +
+        (367 * (m - 2 - 12 * ((m - 14) ~/ 12))) ~/ 12 -
+        (3 * ((y + 4900 + (m - 14) ~/ 12) ~/ 100)) ~/ 4 +
+        d - 32075;
+
+    int l = jd - 1948440 + 10632;
+    int n = (l - 1) ~/ 10631;
+    l = l - 10631 * n + 354;
+    int j = ((10985 - l) ~/ 5316) * ((50 * l) ~/ 17719) +
+        (l ~/ 5670) * ((43 * l) ~/ 15238);
+    l = l - ((30 - j) ~/ 15) * ((17719 * j) ~/ 50) -
+        (j ~/ 16) * ((15238 * j) ~/ 43) + 29;
+    int hYear = 30 * n + j - 30;
+    int hMonth = (24 * l) ~/ 709;
+    int hDay = l - (709 * hMonth) ~/ 24;
+
+    return {'day': hDay, 'month': hMonth, 'year': hYear};
   }
 
   @override
   Widget build(BuildContext context) {
-    const hMonths = ['','Muharram','Safar',"Rabi' Al-Awwal","Rabi' Al-Thani",
-        "Jumada Al-Awwal","Jumada Al-Thani",'Rajab',"Sha'ban",
-        'Ramadan','Shawwal',"Dhul-Qi'dah",'Dhul-Hijjah'];
-    const hMonthsAr = ['','\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645','\u0635\u064e\u0641\u064e\u0631','\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644','\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
-        '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649','\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629','\u0631\u064e\u062c\u064e\u0628','\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
-        '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646','\u0634\u064e\u0648\u064e\u0651\u0627\u0644','\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629','\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
+    const hMonths = ['Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+        "Jumada al-Awwal", "Jumada al-Thani", 'Rajab', "Sha'ban",
+        'Ramadan', 'Shawwal', "Dhu al-Qi'dah", 'Dhu al-Hijjah'];
+    const hMonthsAr = ['\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645', '\u0635\u064e\u0641\u064e\u0631', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
+        '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649', '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629', '\u0631\u064e\u062c\u064e\u0628', '\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
+        '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646', '\u0634\u064e\u0648\u064e\u0651\u0627\u0644', '\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629', '\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const wdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
@@ -409,23 +455,23 @@ class _CalPrayerCard extends StatelessWidget {
                       style: TextStyle(fontSize: 7, letterSpacing: 2, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
                   const SizedBox(height: 1),
-                  Text('${h['d']}',
+                  Text('${h['day']}',
                       style: TextStyle(fontFamily: 'serif', fontSize: 32, height: 1,
                           color: context.isDark ? AppColors.warmWhite : const Color(0xFF2a1e08))),
-                  Text(hMonths[h['m']!],
+                  Text(hMonths[h['month']! - 1],
                       style: TextStyle(fontFamily: 'serif', fontSize: 16,
                           fontStyle: FontStyle.italic,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-                  Text('${h['y']} AH',
+                  Text('${h['year']} AH',
                       style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                 ]),
                 const Spacer(),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  Text(toAI(h['d']!),
+                  Text(toAI(h['day']!),
                       style: TextStyle(fontFamily: 'Scheherazade', fontSize: 30, height: 1,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-                  Text(hMonthsAr[h['m']!],
+                  Text(hMonthsAr[h['month']! - 1],
                       style: TextStyle(fontFamily: 'Scheherazade', fontSize: 15,
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                   Text('${wdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}',
@@ -625,6 +671,39 @@ class _PrayerGridState extends State<_PrayerGrid>
     super.dispose();
   }
 
+  String _getCurrentPrayer(Map<String, String> times) {
+    final now = TimeOfDay.now();
+    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    String current = 'Isha';
+    for (int i = 0; i < prayers.length; i++) {
+      final t = _parseTime(times[prayers[i]]!);
+      if (_timeToMinutes(now) >= _timeToMinutes(t)) {
+        current = prayers[i];
+      }
+    }
+    return current;
+  }
+
+  TimeOfDay _parseTime(String timeStr) {
+    final cleaned = timeStr.trim();
+    final upper = cleaned.toUpperCase();
+    if (upper.contains('AM') || upper.contains('PM')) {
+      final parts = cleaned.split(' ');
+      final timeParts = parts[0].split(':');
+      int hour = int.parse(timeParts[0]);
+      int minute = int.parse(timeParts[1]);
+      final isPm = parts[1].toUpperCase() == 'PM';
+      if (isPm && hour != 12) hour += 12;
+      if (!isPm && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    } else {
+      final parts = cleaned.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    }
+  }
+
+  int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
   Widget _buildPopup(BuildContext context, String prayerName) {
     final rows = _kRakahRows[prayerName] ?? [];
     final total = _kRakahTotal[prayerName] ?? 0;
@@ -704,6 +783,13 @@ class _PrayerGridState extends State<_PrayerGrid>
       ('Isha',    widget.pt.ishaStr,    13),
     ];
     final next = widget.pt.nextPrayerName;
+    final currentPrayer = _getCurrentPrayer({
+      'Fajr': widget.pt.fajrStr,
+      'Dhuhr': widget.pt.dhuhrStr,
+      'Asr': widget.pt.asrStr,
+      'Maghrib': widget.pt.maghribStr,
+      'Isha': widget.pt.ishaStr,
+    });
 
     final rem = _targetTime.difference(DateTime.now());
     final remClamped = rem.isNegative ? Duration.zero : rem;
@@ -730,7 +816,7 @@ class _PrayerGridState extends State<_PrayerGrid>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: List.generate(5, (i) {
                 final p = prayers[i];
-                final isActive = p.$1 == next;
+                final isCurrent = p.$1 == currentPrayer;
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => setState(
@@ -740,12 +826,10 @@ class _PrayerGridState extends State<_PrayerGrid>
                       padding: const EdgeInsets.symmetric(
                           vertical: 8, horizontal: 2),
                       decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.gold
-                            : AppColors.gold.withOpacity(0.08),
+                        color: AppColors.gold.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: isActive
-                            ? null
+                        border: isCurrent
+                            ? Border.all(color: AppColors.gold, width: 2)
                             : Border.all(color: context.border),
                       ),
                       child: Column(
@@ -755,11 +839,11 @@ class _PrayerGridState extends State<_PrayerGrid>
                               style: TextStyle(
                                   fontSize: 7,
                                   fontFamily: 'sans-serif',
-                                  fontWeight: isActive
+                                  fontWeight: isCurrent
                                       ? FontWeight.w700
                                       : FontWeight.normal,
-                                  color: isActive
-                                      ? Colors.white
+                                  color: isCurrent
+                                      ? AppColors.gold
                                       : context.textDim)),
                           const SizedBox(height: 3),
                           Text(
@@ -770,16 +854,16 @@ class _PrayerGridState extends State<_PrayerGrid>
                                   fontFamily: 'serif',
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: isActive
-                                      ? Colors.white
+                                  color: isCurrent
+                                      ? AppColors.gold
                                       : context.text)),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isActive
-                                  ? Colors.white.withOpacity(0.25)
+                              color: isCurrent
+                                  ? AppColors.gold.withOpacity(0.15)
                                   : context.textDim.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -787,8 +871,8 @@ class _PrayerGridState extends State<_PrayerGrid>
                                 style: TextStyle(
                                     fontSize: 9,
                                     fontFamily: 'sans-serif',
-                                    color: isActive
-                                        ? Colors.white
+                                    color: isCurrent
+                                        ? AppColors.gold
                                         : context.textDim)),
                           ),
                         ],
