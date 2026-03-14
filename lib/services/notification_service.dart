@@ -1,6 +1,11 @@
 // ⚠️ Replace placeholder files in android/app/src/main/res/raw/ with real adhan mp3 audio.
 // adhan_makkah_fajr.mp3 is used for Fajr regardless of which mosque the user selects.
 
+// ⚠️ IMPORTANT: After deploying this fix, the app MUST be uninstalled
+// and reinstalled on the test device. Simply updating is not enough
+// because Android persists old notification channels even across updates.
+// Uninstall → reinstall → go to Prayer Notifications → Save & Schedule.
+
 import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -20,8 +25,10 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static const String _channelId = 'prayer_times';
-  static const String _channelName = 'Prayer Times';
+  static const String _adhanChannelId = 'prayer_times_adhan';
+  static const String _adhanChannelName = 'Prayer Times (Adhan)';
+  static const String _vibrationChannelId = 'prayer_times_vibration';
+  static const String _vibrationChannelName = 'Prayer Times (Vibration)';
 
   static const List<int> _prayerIds = [1, 2, 3, 4, 5];
   static const List<String> _prayerNames = [
@@ -43,17 +50,40 @@ class NotificationService {
         InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
 
-    // Create notification channel
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      _channelId,
-      _channelName,
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    // Always delete old channels to force recreation with correct sound.
+    // Android caches channel settings after first creation — deleting ensures
+    // the channel is recreated with the correct sound/vibration config.
+    await androidPlugin?.deleteNotificationChannel('prayer_times');
+    await androidPlugin?.deleteNotificationChannel(_adhanChannelId);
+    await androidPlugin?.deleteNotificationChannel(_vibrationChannelId);
+
+    // Channel 1 — adhan (with sound)
+    const AndroidNotificationChannel adhanChannel = AndroidNotificationChannel(
+      _adhanChannelId,
+      _adhanChannelName,
+      description: 'Adhan audio at prayer times',
       importance: Importance.max,
+      playSound: true,
       enableVibration: true,
     );
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+
+    // Channel 2 — vibration only (no sound)
+    const AndroidNotificationChannel vibrationChannel =
+        AndroidNotificationChannel(
+      _vibrationChannelId,
+      _vibrationChannelName,
+      description: 'Vibration alert at prayer times',
+      importance: Importance.high,
+      playSound: false,
+      enableVibration: true,
+    );
+
+    await androidPlugin?.createNotificationChannel(adhanChannel);
+    await androidPlugin?.createNotificationChannel(vibrationChannel);
 
     // Request POST_NOTIFICATIONS permission on Android 13+
     await Permission.notification.request();
@@ -117,45 +147,47 @@ class NotificationService {
 
     switch (mode) {
       case PrayerNotificationMode.adhan:
-        final soundName = prayerName == 'Fajr'
+        // Fajr always uses adhan_makkah_fajr regardless of adhanType
+        final soundFile = prayerName == 'Fajr'
             ? 'adhan_makkah_fajr'
             : (adhanType == AdhanType.makkah ? 'adhan_makkah' : 'adhan_madinah');
         androidDetails = AndroidNotificationDetails(
-          _channelId,
-          _channelName,
+          _adhanChannelId,
+          _adhanChannelName,
+          channelDescription: 'Adhan audio at prayer times',
           importance: Importance.max,
           priority: Priority.max,
-          sound: RawResourceAndroidNotificationSound(soundName),
           playSound: true,
+          sound: RawResourceAndroidNotificationSound(soundFile),
+          enableVibration: true,
         );
 
       case PrayerNotificationMode.vibration:
         androidDetails = AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          importance: Importance.max,
-          priority: Priority.max,
-          sound: const RawResourceAndroidNotificationSound(''),
+          _vibrationChannelId,
+          _vibrationChannelName,
+          importance: Importance.high,
+          priority: Priority.high,
           playSound: false,
-          vibrationPattern:
-              Int64List.fromList([0, 500, 200, 500, 200, 500]),
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 500, 200, 500, 200, 500]),
         );
 
       case PrayerNotificationMode.singleVibration:
         androidDetails = AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          importance: Importance.max,
-          priority: Priority.max,
-          sound: const RawResourceAndroidNotificationSound(''),
+          _vibrationChannelId,
+          _vibrationChannelName,
+          importance: Importance.high,
+          priority: Priority.high,
           playSound: false,
+          enableVibration: true,
           vibrationPattern: Int64List.fromList([0, 400]),
         );
 
       case PrayerNotificationMode.off:
         androidDetails = const AndroidNotificationDetails(
-          _channelId,
-          _channelName,
+          _adhanChannelId,
+          _adhanChannelName,
         );
     }
 
