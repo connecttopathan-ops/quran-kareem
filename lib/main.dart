@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +19,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // JustAudioBackground.init disabled — audio uses audioplayers for now
   await NotificationService().init();
-  await AndroidAlarmManager.initialize();
+  if (Platform.isAndroid) {
+    await AndroidAlarmManager.initialize();
+  }
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));

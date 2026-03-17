@@ -46,8 +46,13 @@ class NotificationService {
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
     const InitializationSettings initSettings =
-        InitializationSettings(android: androidSettings);
+        InitializationSettings(android: androidSettings, iOS: iosSettings);
     await _plugin.initialize(initSettings);
 
     final androidPlugin = _plugin
@@ -144,6 +149,7 @@ class NotificationService {
     AdhanType adhanType,
   ) {
     AndroidNotificationDetails androidDetails;
+    DarwinNotificationDetails iosDetails;
 
     switch (mode) {
       case PrayerNotificationMode.adhan:
@@ -161,6 +167,13 @@ class NotificationService {
           sound: RawResourceAndroidNotificationSound(soundFile),
           enableVibration: true,
         );
+        // iOS: custom adhan sound must be added to ios/Runner/ as .aiff/.wav/.caf
+        iosDetails = DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: false,
+          presentSound: true,
+          sound: '$soundFile.aiff',
+        );
 
       case PrayerNotificationMode.vibration:
         androidDetails = AndroidNotificationDetails(
@@ -171,6 +184,11 @@ class NotificationService {
           playSound: false,
           enableVibration: true,
           vibrationPattern: Int64List.fromList([0, 500, 200, 500, 200, 500]),
+        );
+        iosDetails = const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: false,
+          presentSound: false,
         );
 
       case PrayerNotificationMode.singleVibration:
@@ -183,15 +201,21 @@ class NotificationService {
           enableVibration: true,
           vibrationPattern: Int64List.fromList([0, 400]),
         );
+        iosDetails = const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: false,
+          presentSound: false,
+        );
 
       case PrayerNotificationMode.off:
         androidDetails = const AndroidNotificationDetails(
           _adhanChannelId,
           _adhanChannelName,
         );
+        iosDetails = const DarwinNotificationDetails();
     }
 
-    return NotificationDetails(android: androidDetails);
+    return NotificationDetails(android: androidDetails, iOS: iosDetails);
   }
 
   Future<void> cancelAll() async {
