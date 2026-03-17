@@ -2,7 +2,7 @@ name: Build Quran App AAB
 
 on:
   push:
-    branches: [ main, claude/check-missing-items-4JdPM ]
+    branches: [ main, claude/check-missing-items-4JdPM, claude/fix-ios-flutter-build-fHNRQ ]
   workflow_dispatch:
 
 jobs:
@@ -54,4 +54,33 @@ jobs:
         with:
           name: quran-kareem-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 90
+
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.4'
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - name: Download ur-roman translation (Maududi Roman Urdu from fawazahmed0)
+        run: python3 scripts/download_ur_roman.py
+      - name: Download all 46 bundled translations (alquran.cloud)
+        run: python3 scripts/download_all_translations.py
+      - name: Generate launcher icons
+        run: flutter pub run flutter_launcher_icons
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quran-kareem-ios-release
+          path: build/ios/iphoneos/Runner.app
           retention-days: 90
