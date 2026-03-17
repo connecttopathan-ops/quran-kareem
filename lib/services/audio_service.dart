@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
 
@@ -54,7 +51,6 @@ int surahVerseOffset(int surahNumber) {
 
 class AudioService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
-
   String _reciterId = 'ar.alafasy';
   NowPlaying? _nowPlaying;
   bool _isPlaying = false, _isLoading = false;
@@ -75,17 +71,15 @@ class AudioService extends ChangeNotifier {
 
   AudioService() {
     _loadPrefs();
-
-    _player.playerStateStream.listen((state) {
-      final playing = state.playing &&
-          state.processingState != ProcessingState.completed;
+    _player.onPlayerStateChanged.listen((state) {
+      final playing = state == PlayerState.playing;
       if (_isPlaying != playing) {
         _isPlaying = playing;
         notifyListeners();
       }
-      if (state.processingState == ProcessingState.completed) {
-        _handleVerseComplete();
-      }
+    });
+    _player.onPlayerComplete.listen((_) {
+      _autoNextVerse();
     });
   }
 
@@ -99,36 +93,12 @@ class AudioService extends ChangeNotifier {
   String _audioUrl(int absoluteVerse) =>
       'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
 
-  void _handleVerseComplete() {
-    if (_nowPlaying == null) return;
-    final current = _nowPlaying!;
-    if (current.verseNumber < current.totalVerses) {
-      playVerse(
-        surahNumber: current.surahNumber,
-        surahName: current.surahName,
-        verseNumber: current.verseNumber + 1,
-        totalVerses: current.totalVerses,
-      );
-    } else {
-      _isPlaying = false;
-      if (current.surahNumber < 114) {
-        _surahCompleteController.add(current.surahNumber + 1);
-      }
-      notifyListeners();
-    }
-  }
-
   Future<void> playVerse({
     required int surahNumber,
     required String surahName,
     required int verseNumber,
     required int totalVerses,
   }) async {
-    // Request notification permission for Android 13+ before first playback
-    if (Platform.isAndroid) {
-      await Permission.notification.request();
-    }
-
     _error = null;
     final offset = surahVerseOffset(surahNumber);
     _nowPlaying = NowPlaying(
@@ -140,24 +110,12 @@ class AudioService extends ChangeNotifier {
     );
     _isLoading = true;
     notifyListeners();
-
     try {
+      final url = _audioUrl(_nowPlaying!.absoluteVerseNumber);
+      debugPrint('Playing audio URL: $url');
       await _player.stop();
-      final absoluteVerse = offset + verseNumber;
-      final source = AudioSource.uri(
-        Uri.parse(_audioUrl(absoluteVerse)),
-        tag: MediaItem(
-          id: 'ayah_$absoluteVerse',
-          title: '$surahName — Ayah $verseNumber',
-          artist: 'Get Quran',
-          album: 'Holy Quran · $surahName',
-          displayTitle: '$surahName — Ayah $verseNumber',
-          displaySubtitle: 'Get Quran',
-        ),
-      );
-      await _player.setAudioSource(source);
-      await _player.setSpeed(_playbackSpeed);
-      await _player.play();
+      await _player.setPlaybackRate(_playbackSpeed);
+      await _player.play(UrlSource(url));
       _isLoading = false;
       _isPlaying = true;
     } catch (e) {
@@ -174,7 +132,7 @@ class AudioService extends ChangeNotifier {
     if (_isPlaying) {
       await _player.pause();
     } else {
-      await _player.play();
+      await _player.resume();
     }
   }
 
@@ -185,28 +143,54 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _autoNextVerse() async {
+    if (_nowPlaying == null) return;
+    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
+      final next = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
+      _nowPlaying = next;
+      notifyListeners();
+      try {
+        final url = _audioUrl(_nowPlaying!.absoluteVerseNumber);
+        debugPrint('Auto-advancing to: $url');
+        await _player.play(UrlSource(url));
+      } catch (e) {
+        debugPrint('Auto-advance error: $e');
+      }
+    } else {
+      _isPlaying = false;
+      if (_nowPlaying!.surahNumber < 114) {
+        _surahCompleteController.add(_nowPlaying!.surahNumber + 1);
+      }
+      notifyListeners();
+    }
+  }
+
   Future<void> nextVerse() async {
     if (_nowPlaying == null) return;
-    final current = _nowPlaying!;
-    if (current.verseNumber >= current.totalVerses) return;
-    await playVerse(
-      surahNumber: current.surahNumber,
-      surahName: current.surahName,
-      verseNumber: current.verseNumber + 1,
-      totalVerses: current.totalVerses,
-    );
+    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
+      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
+      notifyListeners();
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (e) {
+        debugPrint('Next verse error: $e');
+      }
+    }
   }
 
   Future<void> previousVerse() async {
     if (_nowPlaying == null) return;
-    final current = _nowPlaying!;
-    if (current.verseNumber <= 1) return;
-    await playVerse(
-      surahNumber: current.surahNumber,
-      surahName: current.surahName,
-      verseNumber: current.verseNumber - 1,
-      totalVerses: current.totalVerses,
-    );
+    if (_nowPlaying!.verseNumber > 1) {
+      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
+      notifyListeners();
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (e) {
+        debugPrint('Previous verse error: $e');
+      }
+    }
   }
 
   Future<void> setReciter(String id) async {
@@ -214,12 +198,12 @@ class AudioService extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
     if (_nowPlaying != null) {
-      await playVerse(
-        surahNumber: _nowPlaying!.surahNumber,
-        surahName: _nowPlaying!.surahName,
-        verseNumber: _nowPlaying!.verseNumber,
-        totalVerses: _nowPlaying!.totalVerses,
-      );
+      try {
+        await _player.stop();
+        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+      } catch (e) {
+        debugPrint('Set reciter error: $e');
+      }
     }
     notifyListeners();
   }
@@ -228,7 +212,7 @@ class AudioService extends ChangeNotifier {
     _playbackSpeed = speed;
     final p = await SharedPreferences.getInstance();
     await p.setDouble('playbackSpeed', speed);
-    await _player.setSpeed(speed);
+    await _player.setPlaybackRate(speed);
     notifyListeners();
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+// import 'package:just_audio_background/just_audio_background.dart'; // disabled — not used yet
 import 'models/app_state.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
@@ -16,16 +16,7 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'co.getquran.app.audio',
-      androidNotificationChannelName: 'Quran Recitation',
-      androidNotificationOngoing: true,
-      androidShowNotificationBadge: true,
-    );
-  } catch (e) {
-    debugPrint('JustAudioBackground error: $e');
-  }
+  // JustAudioBackground.init disabled — audio uses audioplayers for now
   await NotificationService().init();
   await AndroidAlarmManager.initialize();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
