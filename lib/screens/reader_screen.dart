@@ -127,17 +127,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _saveTimer = Timer(const Duration(seconds: 1), _saveReadingProgress);
   }
 
-  static const double _estimatedAyahHeight = 120.0;
+  static const double _estimatedAyahHeight = 150.0;
 
   void _scrollToAyah(int ayahNumber) {
-    if (_scrollController.hasClients && ayahNumber > 1) {
-      final offset = (ayahNumber - 1) * _estimatedAyahHeight;
-      _scrollController.animateTo(
-        offset,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    }
+    if (!_scrollController.hasClients || ayahNumber <= 1) return;
+    final offset = ((ayahNumber - 1) * _estimatedAyahHeight)
+        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    _scrollController.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        'Restored to approximately Ayah $ayahNumber — scroll to find your exact place',
+        style: const TextStyle(fontFamily: 'sans-serif', fontSize: 12),
+      ),
+      duration: const Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
   }
 
   Future<void> _loadContent() async {
@@ -158,7 +167,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
+      Future.delayed(const Duration(milliseconds: 400), () {
         if (!mounted) return;
         _scrollToAyah(widget.initialAyah);
         if (widget.autoPlay && mounted) {
