@@ -272,8 +272,17 @@ class _QiblaScreenState extends State<QiblaScreen>
                                           sin(needleAngle) * 90,
                                           -cos(needleAngle) * 90,
                                         ),
-                                        child: const Icon(Icons.mosque,
-                                            size: 20, color: AppColors.gold),
+                                        child: Container(
+                                          width: 22,
+                                          height: 22,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1a1a1a),
+                                            borderRadius: BorderRadius.circular(3),
+                                            border: Border.all(
+                                                color: AppColors.gold,
+                                                width: 1.5),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
