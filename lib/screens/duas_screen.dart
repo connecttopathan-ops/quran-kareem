@@ -666,12 +666,12 @@ const List<Map<String, dynamic>> duasCategories = [
 
 IconData _categoryIcon(String id) {
   switch (id) {
-    case 'prophets':  return Icons.auto_awesome_outlined;
-    case 'daily':     return Icons.wb_sunny_outlined;
-    case 'quranic':   return Icons.menu_book_outlined;
-    case 'occasions': return Icons.star_border;
-    case 'protection': return Icons.shield_outlined;
-    default:          return Icons.format_list_bulleted;
+    case 'prophets':  return Icons.people;
+    case 'daily':     return Icons.wb_sunny;
+    case 'quranic':   return Icons.book;
+    case 'occasions': return Icons.star;
+    case 'protection': return Icons.security;
+    default:          return Icons.list;
   }
 }
 
