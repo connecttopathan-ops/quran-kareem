@@ -272,16 +272,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                                           sin(needleAngle) * 90,
                                           -cos(needleAngle) * 90,
                                         ),
-                                        child: Container(
-                                          width: 22,
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF1a1a1a),
-                                            borderRadius: BorderRadius.circular(3),
-                                            border: Border.all(
-                                                color: AppColors.gold,
-                                                width: 1.5),
-                                          ),
+                                        child: Image.asset(
+                                          'assets/icon/kaaba.png',
+                                          width: 28,
+                                          height: 28,
                                         ),
                                       ),
                                     ],
