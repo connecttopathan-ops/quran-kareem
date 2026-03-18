@@ -963,12 +963,12 @@ class _CategoryCard extends StatelessWidget {
                     // Icon + name row
                     Row(
                       children: [
-                        Text(
-                          category['emoji'] as String,
+                        DefaultTextStyle(
                           style: const TextStyle(
-                            inherit: false,
+                            fontFamily: 'sans-serif',
                             fontSize: 28,
                           ),
+                          child: Text(category['emoji'] as String),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1114,12 +1114,12 @@ class DuasCategoryPage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              category['emoji'] as String,
+            DefaultTextStyle(
               style: const TextStyle(
-                inherit: false,
+                fontFamily: 'sans-serif',
                 fontSize: 18,
               ),
+              child: Text(category['emoji'] as String),
             ),
             const SizedBox(width: 8),
             Text(
