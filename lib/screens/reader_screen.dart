@@ -123,9 +123,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       final offset = appState.lastScrollOffset;
       final savedSurah = appState.lastScrollSurah;
       if (savedSurah == widget.surah.number && offset > 0) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients &&
-              offset <= _scrollController.position.maxScrollExtent) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 50));
+          if (mounted && _scrollController.hasClients) {
             _scrollController.jumpTo(offset);
           }
         });
