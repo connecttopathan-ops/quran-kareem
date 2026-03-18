@@ -664,6 +664,17 @@ const List<Map<String, dynamic>> duasCategories = [
 // LEVEL 1 — CATEGORIES PAGE
 // ═══════════════════════════════════════════════════════════════
 
+IconData _categoryIcon(String id) {
+  switch (id) {
+    case 'prophets':  return Icons.auto_awesome_outlined;
+    case 'daily':     return Icons.wb_sunny_outlined;
+    case 'quranic':   return Icons.menu_book_outlined;
+    case 'occasions': return Icons.star_border;
+    case 'protection': return Icons.shield_outlined;
+    default:          return Icons.format_list_bulleted;
+  }
+}
+
 class DuasScreen extends StatefulWidget {
   const DuasScreen({super.key});
 
@@ -963,12 +974,10 @@ class _CategoryCard extends StatelessWidget {
                     // Icon + name row
                     Row(
                       children: [
-                        DefaultTextStyle(
-                          style: const TextStyle(
-                            fontFamily: 'sans-serif',
-                            fontSize: 28,
-                          ),
-                          child: Text(category['emoji'] as String),
+                        Icon(
+                          _categoryIcon(category['id'] as String),
+                          size: 28,
+                          color: AppColors.gold,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1114,12 +1123,10 @@ class DuasCategoryPage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DefaultTextStyle(
-              style: const TextStyle(
-                fontFamily: 'sans-serif',
-                fontSize: 18,
-              ),
-              child: Text(category['emoji'] as String),
+            Icon(
+              _categoryIcon(category['id'] as String),
+              size: 18,
+              color: AppColors.gold,
             ),
             const SizedBox(width: 8),
             Text(
