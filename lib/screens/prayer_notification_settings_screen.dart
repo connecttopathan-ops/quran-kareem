@@ -196,13 +196,13 @@ class _PrayerNotificationSettingsScreenState
 
   Widget _buildAlertTypeSection() {
     final options = [
-      (PrayerNotificationMode.adhan, '🔊', 'Adhan',
+      (PrayerNotificationMode.adhan, Icons.volume_up, 'Adhan',
           'Full adhan audio at prayer time'),
-      (PrayerNotificationMode.vibration, '📳', 'Vibration',
+      (PrayerNotificationMode.vibration, Icons.vibration, 'Vibration',
           'Repeating vibration, no sound'),
-      (PrayerNotificationMode.singleVibration, '📳', 'Single pulse',
+      (PrayerNotificationMode.singleVibration, Icons.phone_in_talk, 'Single pulse',
           'One short vibration'),
-      (PrayerNotificationMode.off, '🔕', 'Off', 'No alerts'),
+      (PrayerNotificationMode.off, Icons.notifications_off, 'Off', 'No alerts'),
     ];
 
     return Container(
@@ -226,7 +226,7 @@ class _PrayerNotificationSettingsScreenState
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 title: Row(
                   children: [
-                    Text(opt.$2, style: const TextStyle(fontSize: 16)),
+                    Icon(opt.$2, size: 16, color: AppColors.gold),
                     const SizedBox(width: 8),
                     Text(opt.$3,
                         style: TextStyle(fontSize: 14, color: context.text)),
@@ -255,7 +255,7 @@ class _PrayerNotificationSettingsScreenState
       (
         AdhanType.makkah,
         'makkah',
-        '🕋',
+        Icons.mosque,
         'Makkah',
         'Masjid al-Haram · Sheikh Mishary Rashid Alafasy',
         'audio/adhan_makkah.mp3',
@@ -263,7 +263,7 @@ class _PrayerNotificationSettingsScreenState
       (
         AdhanType.madinah,
         'madinah',
-        '🕌',
+        Icons.mosque_outlined,
         'Madinah',
         'Masjid an-Nabawi · Sheikh Ahmad al-Nafees',
         'audio/adhan_madinah.mp3',
@@ -295,7 +295,7 @@ class _PrayerNotificationSettingsScreenState
                         const EdgeInsets.only(left: 12, right: 8, top: 0),
                     title: Row(
                       children: [
-                        Text(opt.$3, style: const TextStyle(fontSize: 16)),
+                        Icon(opt.$3, size: 16, color: AppColors.gold),
                         const SizedBox(width: 8),
                         Text(opt.$4,
                             style:

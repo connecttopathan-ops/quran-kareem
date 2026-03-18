@@ -365,7 +365,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                                 const SizedBox(height: 8),
                                 // Location footer
                                 Text(
-                                  '📍 ${pt.cityName} (${pt.lat.toStringAsFixed(4)}°N, ${pt.lng.toStringAsFixed(4)}°E)',
+                                  '${pt.cityName} (${pt.lat.toStringAsFixed(4)}°N, ${pt.lng.toStringAsFixed(4)}°E)',
                                   style: TextStyle(
                                     color: context.textDim,
                                     fontSize: 10,
@@ -502,16 +502,16 @@ class _AccuracyIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, icon, color) = level == 2
-        ? ('High', '✅', Colors.green)
+        ? ('High', Icons.check_circle, Colors.green)
         : level == 1
-            ? ('Medium', '⚠️', Colors.orange)
-            : ('Low', '❌', Colors.red);
+            ? ('Medium', Icons.warning_amber, Colors.orange)
+            : ('Low', Icons.cancel, Colors.red);
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
+          Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(label,
               style: TextStyle(
