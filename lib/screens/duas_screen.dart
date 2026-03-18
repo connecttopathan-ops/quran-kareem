@@ -966,8 +966,8 @@ class _CategoryCard extends StatelessWidget {
                         Text(
                           category['emoji'] as String,
                           style: const TextStyle(
+                            inherit: false,
                             fontSize: 28,
-                            fontFamilyFallback: ['Apple Color Emoji', 'Noto Color Emoji'],
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1117,8 +1117,8 @@ class DuasCategoryPage extends StatelessWidget {
             Text(
               category['emoji'] as String,
               style: const TextStyle(
+                inherit: false,
                 fontSize: 18,
-                fontFamilyFallback: ['Apple Color Emoji', 'Noto Color Emoji'],
               ),
             ),
             const SizedBox(width: 8),
