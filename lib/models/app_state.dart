@@ -35,6 +35,8 @@ class AppState extends ChangeNotifier {
   int _versesRead = 0;
   int _lastSurahNumber = 1;
   String _lastSurahName = 'Al-Fatihah';
+  double _lastScrollOffset = 0.0;
+  int _lastScrollSurah = 0;
   Set<int> _readSurahs = {};
 
   // ── Getters ─────────────────────────────────────────────────────
@@ -53,6 +55,8 @@ class AppState extends ChangeNotifier {
   int    get versesRead         => _versesRead;
   int    get lastSurahNumber    => _lastSurahNumber;
   String get lastSurahName      => _lastSurahName;
+  double get lastScrollOffset   => _lastScrollOffset;
+  int    get lastScrollSurah    => _lastScrollSurah;
 
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
@@ -79,6 +83,8 @@ class AppState extends ChangeNotifier {
     _versesRead          = p.getInt('versesRead')      ?? 0;
     _lastSurahNumber     = p.getInt('lastSurahNumber') ?? 1;
     _lastSurahName       = p.getString('lastSurahName') ?? 'Al-Fatihah';
+    _lastScrollOffset    = p.getDouble('lastScrollOffset') ?? 0.0;
+    _lastScrollSurah     = p.getInt('lastScrollSurah') ?? 0;
     final readSurahsList = p.getStringList('readSurahs') ?? [];
     _readSurahs          = readSurahsList.map(int.parse).toSet();
     notifyListeners();
@@ -199,6 +205,14 @@ class AppState extends ChangeNotifier {
     await p.setStringList('readSurahs', _readSurahs.map((n) => n.toString()).toList());
     await p.setInt('surahsRead', _surahsRead);
     notifyListeners();
+  }
+
+  Future<void> saveScrollOffset(int surahNumber, double offset) async {
+    _lastScrollOffset = offset;
+    _lastScrollSurah = surahNumber;
+    final p = await SharedPreferences.getInstance();
+    await p.setDouble('lastScrollOffset', offset);
+    await p.setInt('lastScrollSurah', surahNumber);
   }
 
   Future<void> recordVerseRead() async {

@@ -91,6 +91,8 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   bool _isBookmarked = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _hasRestoredScroll = false;
 
   @override
   void initState() {
@@ -99,6 +101,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _loadBookmark();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadContent() async {
@@ -110,6 +118,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
       quranService.loadSurah(widget.surah.number, langCode: appState.langCode),
       translService.loadSurahTranslation(appState.langCode, widget.surah.number),
     ]);
+    if (mounted && !_hasRestoredScroll) {
+      _hasRestoredScroll = true;
+      final offset = appState.lastScrollOffset;
+      final savedSurah = appState.lastScrollSurah;
+      if (savedSurah == widget.surah.number && offset > 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients &&
+              offset <= _scrollController.position.maxScrollExtent) {
+            _scrollController.jumpTo(offset);
+          }
+        });
+      }
+    }
   }
 
   Future<void> _loadBookmark() async {
@@ -354,7 +375,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
           final verses = quranService.getVerses(widget.surah.number);
           final loading = quranService.isLoading(widget.surah.number);
           return Stack(children: [
-            ListView.builder(
+            NotificationListener<ScrollEndNotification>(
+              onNotification: (n) {
+                context.read<AppState>().saveScrollOffset(
+                    widget.surah.number, n.metrics.pixels);
+                return false;
+              },
+              child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
               itemCount: verses.length + 2, // +1 header, +1 footer
               itemBuilder: (context, index) {
@@ -376,6 +404,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       state.langCode, widget.surah.number, verse.number),
                 );
               },
+            ),
             ),
           if (loading)
             Positioned(
