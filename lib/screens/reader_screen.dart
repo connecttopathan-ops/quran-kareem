@@ -178,11 +178,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void _openLanguagePicker(AppState state) {
     showModalBottomSheet(
       context: context,
