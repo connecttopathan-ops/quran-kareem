@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/quran_data.dart';
 import '../models/app_state.dart';
 import '../models/surah.dart';
 import '../models/language.dart';
@@ -136,6 +137,24 @@ class _ReaderScreenState extends State<ReaderScreen> {
         ),
       );
     }
+  }
+
+  void _goToNextSurah() {
+    if (widget.surah.number >= 114) return;
+    final next = kSurahs[widget.surah.number]; // 0-based index of next surah
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ReaderScreen(surah: next)),
+    );
+  }
+
+  void _goToPrevSurah() {
+    if (widget.surah.number <= 1) return;
+    final prev = kSurahs[widget.surah.number - 2]; // 0-based index of prev surah
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ReaderScreen(surah: prev)),
+    );
   }
 
   @override
@@ -324,26 +343,40 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   Widget _buildBody(AppState state) {
-    return Consumer<QuranService>(builder: (context, quranService, _) {
-      return Consumer<TranslationService>(builder: (context, translService, _) {
-        final verses = quranService.getVerses(widget.surah.number);
-        final loading = quranService.isLoading(widget.surah.number);
-        return Stack(children: [
-          ListView.builder(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
-            itemCount: verses.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
-              final verse = verses[index - 1];
-              return _VerseCard(
-                verse: verse,
-                surah: widget.surah,
-                state: state,
-                translText: translService.getText(
-                    state.langCode, widget.surah.number, verse.number),
-              );
-            },
-          ),
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v > 300) _goToNextSurah();   // swipe right → next surah
+        if (v < -300) _goToPrevSurah();  // swipe left  → previous surah
+      },
+      child: Consumer<QuranService>(builder: (context, quranService, _) {
+        return Consumer<TranslationService>(builder: (context, translService, _) {
+          final verses = quranService.getVerses(widget.surah.number);
+          final loading = quranService.isLoading(widget.surah.number);
+          return Stack(children: [
+            ListView.builder(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+              itemCount: verses.length + 2, // +1 header, +1 footer
+              itemBuilder: (context, index) {
+                if (index == 0) return _SurahHeader(surah: widget.surah, readerTheme: state.readerTheme);
+                if (index == verses.length + 1) {
+                  return _SurahNavFooter(
+                    surah: widget.surah,
+                    readerTheme: state.readerTheme,
+                    onPrev: widget.surah.number > 1 ? _goToPrevSurah : null,
+                    onNext: widget.surah.number < 114 ? _goToNextSurah : null,
+                  );
+                }
+                final verse = verses[index - 1];
+                return _VerseCard(
+                  verse: verse,
+                  surah: widget.surah,
+                  state: state,
+                  translText: translService.getText(
+                      state.langCode, widget.surah.number, verse.number),
+                );
+              },
+            ),
           if (loading)
             Positioned(
               top: 8,
@@ -377,13 +410,116 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 ),
               ),
             ),
-        ]);
-      });
-    });
+          ]);
+        });
+      }),
+    );
   }
 }
 
 // \u2500\u2500 Surah Header \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── Surah Nav Footer ──────────────────────────────────────────────
+class _SurahNavFooter extends StatelessWidget {
+  final Surah surah;
+  final ReaderTheme readerTheme;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  const _SurahNavFooter({
+    required this.surah,
+    required this.readerTheme,
+    this.onPrev,
+    this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = _RC.isDark(readerTheme);
+    final prevSurah = surah.number > 1 ? kSurahs[surah.number - 2] : null;
+    final nextSurah = surah.number < 114 ? kSurahs[surah.number] : null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: prevSurah != null
+                ? GestureDetector(
+                    onTap: onPrev,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5EDD8),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _RC.border(readerTheme)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.chevron_left, size: 20, color: AppColors.gold),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Previous',
+                                    style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
+                                        color: _RC.textDim(readerTheme))),
+                                Text(prevSurah.nameTransliteration,
+                                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 13, fontFamily: 'serif',
+                                        fontWeight: FontWeight.w600, color: _RC.text(readerTheme))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
+          ),
+          if (prevSurah != null && nextSurah != null) const SizedBox(width: 10),
+          Expanded(
+            child: nextSurah != null
+                ? GestureDetector(
+                    onTap: onNext,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5EDD8),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _RC.border(readerTheme)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('Next',
+                                    style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
+                                        color: _RC.textDim(readerTheme))),
+                                Text(nextSurah.nameTransliteration,
+                                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 13, fontFamily: 'serif',
+                                        fontWeight: FontWeight.w600, color: _RC.text(readerTheme))),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(Icons.chevron_right, size: 20, color: AppColors.gold),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Surah Header ──────────────────────────────────────────────────
 class _SurahHeader extends StatelessWidget {
   final Surah surah;
   final ReaderTheme readerTheme;
