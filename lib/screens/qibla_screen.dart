@@ -325,14 +325,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        onTarget
-                                            ? Icons.mosque
-                                            : Icons.mosque_outlined,
-                                        size: 16,
-                                        color: onTarget
-                                            ? Colors.green
-                                            : AppColors.gold,
+                                      Image.asset(
+                                        'assets/icon/kaaba.png',
+                                        width: 20,
+                                        height: 20,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
