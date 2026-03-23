@@ -117,10 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(color: context.textDim, fontSize: 13, fontFamily: 'sans-serif'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Skip', style: TextStyle(color: context.textDim)),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
@@ -131,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pop(ctx);
               context.read<LocationService>().fetchLocation();
             },
-            child: const Text('Allow Location'),
+            child: const Text('Continue'),
           ),
         ],
       ),
