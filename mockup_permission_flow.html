@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location Permission Flow — Get Quran</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #fff; padding: 40px 20px; }
+  h1 { text-align: center; color: #c9a84c; font-size: 18px; letter-spacing: 1px; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 48px; }
+  .flows { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; }
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .flow-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 24px; }
+  .flow-label.bad { color: #e05c5c; }
+  .flow-label.good { color: #5ce08a; }
+
+  /* Phone frame */
+  .phone { width: 220px; height: 420px; background: #0c0c12; border-radius: 32px; border: 2px solid #2a2a3e; position: relative; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; }
+  .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 20px; background: #0c0c12; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
+  .phone-screen { width: 100%; height: 100%; background: #0c0c12; display: flex; align-items: center; justify-content: center; padding: 20px 14px; }
+
+  /* Home screen behind dialog */
+  .home-bg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 48px; gap: 8px; opacity: 0.3; }
+  .home-bg .app-name { color: #c9a84c; font-size: 14px; font-family: serif; }
+  .home-bg .moon { font-size: 40px; }
+  .home-bg .prayer-row { width: 90%; height: 28px; background: #1a1a2e; border-radius: 6px; }
+
+  /* Dialog */
+  .dialog { width: 190px; background: #1e1e2e; border-radius: 16px; padding: 18px 16px 14px; position: relative; z-index: 5; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
+  .dialog-title { color: #f0f0f0; font-size: 14px; font-family: Georgia, serif; font-weight: 600; margin-bottom: 10px; }
+  .dialog-body { color: #888; font-size: 10px; line-height: 1.5; margin-bottom: 16px; }
+  .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+  .btn-skip { color: #666; font-size: 11px; background: none; border: none; cursor: pointer; padding: 4px 6px; }
+  .btn-allow { background: #c9a84c; color: #fff; border: none; border-radius: 8px; font-size: 11px; padding: 7px 12px; cursor: pointer; font-weight: 600; }
+  .btn-continue { background: #c9a84c; color: #fff; border: none; border-radius: 8px; font-size: 11px; padding: 7px 14px; cursor: pointer; font-weight: 600; }
+  .btn-continue.full { width: 100%; text-align: center; padding: 9px 14px; font-size: 12px; }
+
+  /* iOS system dialog */
+  .ios-dialog { width: 190px; background: #f2f2f7; border-radius: 14px; padding: 18px 16px 0; position: relative; z-index: 5; box-shadow: 0 20px 60px rgba(0,0,0,0.7); color: #000; overflow: hidden; }
+  .ios-dialog-app { font-size: 10px; color: #555; text-align: center; margin-bottom: 4px; }
+  .ios-dialog-title { font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 8px; color: #000; }
+  .ios-dialog-body { font-size: 10px; color: #444; text-align: center; line-height: 1.45; margin-bottom: 14px; }
+  .ios-divider { border: none; border-top: 0.5px solid #c6c6c8; margin: 0 -16px; }
+  .ios-actions { display: flex; }
+  .ios-btn { flex: 1; text-align: center; padding: 11px 4px; font-size: 12px; color: #007aff; cursor: pointer; border: none; background: none; }
+  .ios-btn.bold { font-weight: 700; }
+  .ios-btn-divider { width: 0.5px; background: #c6c6c8; }
+
+  /* Arrow between phones */
+  .arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #c9a84c; font-size: 22px; padding: 0 4px; margin-top: 60px; }
+  .arrow-label { font-size: 10px; color: #555; margin-top: 4px; white-space: nowrap; text-align: center; }
+
+  /* X badge */
+  .badge-bad { background: #e05c5c; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; position: absolute; top: -8px; right: -8px; z-index: 20; }
+  .badge-good { background: #5ce08a; color: #0c0c12; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; position: absolute; top: -8px; right: -8px; z-index: 20; }
+
+  .phone-wrap { position: relative; }
+
+  /* Dead-end screen */
+  .dead-end { width: 220px; height: 420px; background: #0c0c12; border-radius: 32px; border: 2px solid #3a1a1a; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .dead-end-icon { font-size: 36px; opacity: 0.5; }
+  .dead-end-text { color: #e05c5c; font-size: 11px; text-align: center; padding: 0 24px; line-height: 1.5; }
+
+  /* Section divider */
+  .divider { width: 100%; max-width: 900px; margin: 48px auto; border: none; border-top: 1px solid #2a2a3e; }
+  .section-title { text-align: center; color: #444; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 32px; }
+
+  .strike { text-decoration: line-through; color: #e05c5c; }
+  .green { color: #5ce08a; }
+</style>
+</head>
+<body>
+
+<h1>Location Permission — Screen Flow</h1>
+<p class="subtitle">Get Quran · iOS · App Store compliance fix</p>
+
+<!-- BEFORE -->
+<p class="section-title">❌ &nbsp;Before (rejected by Apple — Guideline 5.1.1iv)</p>
+<div class="flows">
+
+  <!-- Screen 1: Pre-prompt with Skip -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="home-bg">
+          <div class="moon">☽</div>
+          <div class="app-name">Get Quran</div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+        </div>
+        <div class="dialog">
+          <div class="dialog-title">Prayer Times</div>
+          <div class="dialog-body">Allow Get Quran to access your location to automatically calculate accurate prayer times for your area.</div>
+          <div class="dialog-actions">
+            <button class="btn-skip">Skip</button>
+            <button class="btn-allow">Allow Location</button>
+          </div>
+        </div>
+      </div>
+      <div class="badge-bad">✕</div>
+    </div>
+    <div style="font-size:10px;color:#666;text-align:center;width:220px;line-height:1.5;">
+      <span class="strike">"Allow Location"</span> wording<br>
+      <span class="strike">"Skip"</span> lets user bypass entirely
+    </div>
+  </div>
+
+  <div class="arrow">→<div class="arrow-label">taps Skip</div></div>
+
+  <!-- Dead end -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="phone-wrap">
+      <div class="dead-end">
+        <div class="phone-notch"></div>
+        <div class="dead-end-icon">📍</div>
+        <div class="dead-end-text">No permission request shown.<br>Prayer times unavailable.<br>User never sees iOS dialog.</div>
+      </div>
+      <div class="badge-bad">✕</div>
+    </div>
+    <div style="font-size:10px;color:#e05c5c;text-align:center;width:220px;">User escapes without<br>system dialog ever appearing</div>
+  </div>
+
+</div>
+
+<hr class="divider">
+
+<!-- AFTER -->
+<p class="section-title">✅ &nbsp;After (compliant)</p>
+<div class="flows">
+
+  <!-- Screen 1: Pre-prompt — Continue only -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="home-bg">
+          <div class="moon">☽</div>
+          <div class="app-name">Get Quran</div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+        </div>
+        <div class="dialog">
+          <div class="dialog-title">Prayer Times</div>
+          <div class="dialog-body">Allow Get Quran to access your location to automatically calculate accurate prayer times for your area.</div>
+          <div class="dialog-actions">
+            <button class="btn-continue full">Continue</button>
+          </div>
+        </div>
+      </div>
+      <div class="badge-good">✓</div>
+    </div>
+    <div style="font-size:10px;color:#666;text-align:center;width:220px;line-height:1.5;">
+      <span class="green">"Continue"</span> — neutral wording ✓<br>
+      No skip button — must proceed ✓
+    </div>
+  </div>
+
+  <div class="arrow">→<div class="arrow-label">taps Continue</div></div>
+
+  <!-- Screen 2: iOS system dialog -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="home-bg">
+          <div class="moon">☽</div>
+          <div class="app-name">Get Quran</div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+          <div class="prayer-row"></div>
+        </div>
+        <div class="ios-dialog">
+          <div class="ios-dialog-app">"Get Quran" Would Like to<br>Access Your Location</div>
+          <div class="ios-dialog-title"></div>
+          <div class="ios-dialog-body">Allow Get Quran to access your location while you are using the app?</div>
+          <hr class="ios-divider">
+          <div class="ios-actions">
+            <button class="ios-btn">Don't Allow</button>
+            <div class="ios-btn-divider"></div>
+            <button class="ios-btn bold">Allow While Using App</button>
+          </div>
+        </div>
+      </div>
+      <div class="badge-good">✓</div>
+    </div>
+    <div style="font-size:10px;color:#666;text-align:center;width:220px;line-height:1.5;">
+      iOS system dialog always fires.<br>User chooses Allow or Don't Allow.
+    </div>
+  </div>
+
+  <div class="arrow">→<div class="arrow-label">taps Allow</div></div>
+
+  <!-- Screen 3: Home with prayer times -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+    <div class="phone-wrap">
+      <div class="phone" style="align-items:flex-start;padding:0;">
+        <div class="phone-notch"></div>
+        <!-- Simulated home screen with data -->
+        <div style="width:100%;height:100%;background:#0c0c12;display:flex;flex-direction:column;align-items:center;padding:36px 16px 16px;gap:12px;">
+          <div style="color:#c9a84c;font-family:serif;font-size:15px;">Get Quran</div>
+          <div style="color:#888;font-size:10px;">London, UK</div>
+          <div style="width:100%;background:#1a1a2e;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:#888;">Fajr</span><span style="color:#c9a84c;">05:21</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:#888;">Dhuhr</span><span style="color:#c9a84c;">12:47</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;border-left:2px solid #c9a84c;padding-left:6px;"><span style="color:#fff;">Asr</span><span style="color:#c9a84c;">15:58 ▶</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:#888;">Maghrib</span><span style="color:#c9a84c;">18:44</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;"><span style="color:#888;">Isha</span><span style="color:#c9a84c;">20:15</span></div>
+          </div>
+          <div style="color:#888;font-size:9px;margin-top:4px;">Next prayer in 1h 23m</div>
+        </div>
+      </div>
+      <div class="badge-good">✓</div>
+    </div>
+    <div style="font-size:10px;color:#5ce08a;text-align:center;width:220px;line-height:1.5;">
+      Prayer times load automatically<br>from detected location
+    </div>
+  </div>
+
+</div>
+
+<hr class="divider">
+<p style="text-align:center;color:#444;font-size:11px;max-width:600px;margin:0 auto;line-height:1.7;">
+  <strong style="color:#666;">What changed in code:</strong>&nbsp;
+  <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;color:#c9a84c;">home_screen.dart</code>
+  — removed <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;color:#e05c5c;">TextButton("Skip")</code>,
+  renamed <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;color:#e05c5c;">ElevatedButton("Allow Location")</code>
+  → <code style="background:#1a1a2e;padding:2px 6px;border-radius:4px;color:#5ce08a;">ElevatedButton("Continue")</code>
+</p>
+<p style="text-align:center;color:#333;font-size:11px;margin-top:16px;">App Store Guideline 5.1.1(iv) · Submission eed2bf39</p>
+
+</body>
+</html>
