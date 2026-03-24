@@ -13,6 +13,7 @@ import 'surah_list_screen.dart';
 import 'settings_screen.dart';
 import 'reader_screen.dart';
 import 'language_selection_screen.dart';
+import 'reading_mode_picker_screen.dart';
 import 'qibla_screen.dart';
 import 'sponsor_screen.dart';
 import 'duas_screen.dart';
@@ -99,6 +100,17 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(
             builder: (_) => const LanguageSelectionScreen(),
+            fullscreenDialog: true),
+      );
+    }
+
+    // 3. Reading mode picker (first launch, after language selection)
+    final modeSet = prefs.getBool('reading_mode_set') ?? false;
+    if (!modeSet && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const ReadingModePickerScreen(),
             fullscreenDialog: true),
       );
     }

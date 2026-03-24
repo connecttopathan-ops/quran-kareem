@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
 import '../widgets/q_icons.dart';
+import 'text_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -52,6 +53,7 @@ class SettingsScreen extends StatelessWidget {
                       _SectionHeader('Translation'),
                       _LanguageSelector(state: state),
                       _SectionHeader('Reading'),
+                      _TextSettingsTile(),
                       _SettingTile(
                         title: 'Arabic Font Size',
                         subtitle: '${state.arabicFontSize.toInt()}px',
@@ -198,6 +200,44 @@ class _IconBtn extends StatelessWidget {
           border: Border.all(color: context.border),
         ),
         child: Icon(icon, size: 16, color: context.text),
+      ),
+    );
+  }
+}
+
+class _TextSettingsTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showTextSettingsSheet(context),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(children: [
+          Icon(Icons.text_fields, color: AppColors.gold, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Text Settings',
+                    style: TextStyle(fontSize: 14, color: context.text)),
+                const SizedBox(height: 2),
+                Text('Reading mode, font size, swipe navigation',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: context.textDim,
+                        fontFamily: 'sans-serif')),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: context.textDim, size: 20),
+        ]),
       ),
     );
   }

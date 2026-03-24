@@ -29,6 +29,13 @@ class AppState extends ChangeNotifier {
   ReadingMode _readingMode = ReadingMode.list;
   bool _keepScreenOn = true;
 
+  // ── Display reading mode (1=translation, 2=arabic+trans, 3=arabic+translit+trans)
+  int _displayReadingMode = 1;
+  bool _displayReadingModeSet = false;
+  double _readingFontSize = 14.0;  // translation font size, range 12–20
+  bool _swipeEnabled = true;
+  bool _showSurahHints = true;
+
   // ── Stats & Continue Reading ────────────────────────────────────
   int _dayStreak = 0;
   int _surahsRead = 0;
@@ -50,6 +57,11 @@ class AppState extends ChangeNotifier {
   bool   get showTranslation    => _showTranslation;
   ReadingMode get readingMode   => _readingMode;
   bool   get keepScreenOn       => _keepScreenOn;
+  int    get displayReadingMode    => _displayReadingMode;
+  bool   get displayReadingModeSet => _displayReadingModeSet;
+  double get readingFontSize       => _readingFontSize;
+  bool   get swipeEnabled          => _swipeEnabled;
+  bool   get showSurahHints        => _showSurahHints;
   int    get dayStreak          => _dayStreak;
   int    get surahsRead         => _surahsRead;
   int    get versesRead         => _versesRead;
@@ -78,6 +90,11 @@ class AppState extends ChangeNotifier {
     _showTranslation     = p.getBool('showTranslation')?? true;
     _readingMode         = ReadingMode.values[p.getInt('readingMode') ?? 0];
     _keepScreenOn        = p.getBool('keepScreenOn')   ?? true;
+    _displayReadingMode  = p.getInt('reading_mode')    ?? 1;
+    _displayReadingModeSet = p.getBool('reading_mode_set') ?? false;
+    _readingFontSize     = p.getDouble('font_size')    ?? 14.0;
+    _swipeEnabled        = p.getBool('swipe_enabled')  ?? true;
+    _showSurahHints      = p.getBool('show_surah_hints') ?? true;
     _dayStreak           = p.getInt('dayStreak')       ?? 0;
     _surahsRead          = p.getInt('surahsRead')      ?? 0;
     _versesRead          = p.getInt('versesRead')      ?? 0;
@@ -158,6 +175,41 @@ class AppState extends ChangeNotifier {
     _keepScreenOn = !_keepScreenOn;
     final p = await SharedPreferences.getInstance();
     await p.setBool('keepScreenOn', _keepScreenOn);
+    notifyListeners();
+  }
+
+  Future<void> setDisplayReadingMode(int mode) async {
+    _displayReadingMode = mode.clamp(1, 3);
+    final p = await SharedPreferences.getInstance();
+    await p.setInt('reading_mode', _displayReadingMode);
+    notifyListeners();
+  }
+
+  Future<void> setDisplayReadingModeSet(bool value) async {
+    _displayReadingModeSet = value;
+    final p = await SharedPreferences.getInstance();
+    await p.setBool('reading_mode_set', value);
+    notifyListeners();
+  }
+
+  Future<void> setReadingFontSize(double size) async {
+    _readingFontSize = size.clamp(12.0, 20.0);
+    final p = await SharedPreferences.getInstance();
+    await p.setDouble('font_size', _readingFontSize);
+    notifyListeners();
+  }
+
+  Future<void> toggleSwipeEnabled() async {
+    _swipeEnabled = !_swipeEnabled;
+    final p = await SharedPreferences.getInstance();
+    await p.setBool('swipe_enabled', _swipeEnabled);
+    notifyListeners();
+  }
+
+  Future<void> toggleShowSurahHints() async {
+    _showSurahHints = !_showSurahHints;
+    final p = await SharedPreferences.getInstance();
+    await p.setBool('show_surah_hints', _showSurahHints);
     notifyListeners();
   }
 

@@ -11,6 +11,8 @@ import '../services/quran_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
 import '../theme/app_theme.dart';
+import 'reading_mode_picker_screen.dart';
+import 'text_settings_screen.dart';
 
 
 // ── Reader Theme Colors helper ─────────────────────────────────────────────
@@ -101,6 +103,25 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _loadBookmark();
     context.read<AppState>().recordSurahOpened(
       widget.surah.number, widget.surah.nameTransliteration);
+    _checkReadingModePicker();
+  }
+
+  Future<void> _checkReadingModePicker() async {
+    final prefs = await SharedPreferences.getInstance();
+    final modeSet = prefs.getBool('reading_mode_set') ?? false;
+    if (!modeSet && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ReadingModePickerScreen(),
+              fullscreenDialog: true,
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -290,6 +311,18 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
+  void _openTextSettings() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<AppState>(),
+        child: const TextSettingsSheet(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (context, state, _) {
@@ -343,6 +376,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 ),
               ),
             ),
+            // Text settings
+            IconButton(
+              icon: Text(
+                'Aa',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'sans-serif',
+                  fontWeight: FontWeight.w700,
+                  color: context.textDim,
+                ),
+              ),
+              onPressed: _openTextSettings,
+            ),
             IconButton(
               icon: QIcon.tune(size: 22, color: AppColors.gold),
               onPressed: _openSettings,
@@ -353,19 +399,33 @@ class _ReaderScreenState extends State<ReaderScreen> {
             child: Container(height: 1, color: _RC.border(rt)),
           ),
         ),
-        body: _buildBody(state),
+        body: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragEnd: state.swipeEnabled
+              ? (details) {
+                  final v = details.primaryVelocity ?? 0;
+                  if (v > 300) _goToNextSurah();
+                  if (v < -300) _goToPrevSurah();
+                }
+              : null,
+          child: Column(children: [
+            if (state.showSurahHints)
+              _SurahNavStrip(
+                surah: widget.surah,
+                readerTheme: rt,
+                onPrev: widget.surah.number > 1 ? _goToPrevSurah : null,
+                onNext: widget.surah.number < 114 ? _goToNextSurah : null,
+              ),
+            Expanded(child: _buildBody(state)),
+            _ModeChipsBar(state: state, surah: widget.surah),
+          ]),
+        ),
       );
     });
   }
 
   Widget _buildBody(AppState state) {
-    return GestureDetector(
-      onHorizontalDragEnd: (details) {
-        final v = details.primaryVelocity ?? 0;
-        if (v > 300) _goToNextSurah();   // swipe right → next surah
-        if (v < -300) _goToPrevSurah();  // swipe left  → previous surah
-      },
-      child: Consumer<QuranService>(builder: (context, quranService, _) {
+    return Consumer<QuranService>(builder: (context, quranService, _) {
         return Consumer<TranslationService>(builder: (context, translService, _) {
           final verses = quranService.getVerses(widget.surah.number);
           final loading = quranService.isLoading(widget.surah.number);
@@ -722,25 +782,26 @@ class _VerseCard extends StatelessWidget {
             ]),
           ),
 
-          // Arabic text
-          Container(
-            color: _RC.surface2(state.readerTheme),
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Text(
-              verse.arabic,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: TextStyle(
-                fontFamily: 'Scheherazade',
-                fontSize: state.arabicFontSize,
-                color: _RC.arabic(state.readerTheme),
-                height: 2.0,
+          // Arabic text — shown in modes 2 and 3
+          if (state.displayReadingMode >= 2)
+            Container(
+              color: _RC.surface2(state.readerTheme),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+              child: Text(
+                verse.arabic,
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  fontSize: state.arabicFontSize,
+                  color: _RC.arabic(state.readerTheme),
+                  height: 2.0,
+                ),
               ),
             ),
-          ),
 
-          // Roman Arabic transliteration — always shown when toggle is on
-          if (state.showTranslit && translit.isNotEmpty)
+          // Roman Arabic transliteration — shown in mode 3 only
+          if (state.displayReadingMode >= 3 && translit.isNotEmpty)
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
               decoration: BoxDecoration(
@@ -758,13 +819,14 @@ class _VerseCard extends StatelessWidget {
               ]),
             ),
 
-          // Translation in the user's selected language — always shown when toggle is on
-          if (state.showTranslation)
-            Container(
+          // Translation — always shown in all reading modes
+          Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               decoration: BoxDecoration(
                 color: _RC.surface2(state.readerTheme),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+                borderRadius: state.displayReadingMode == 1
+                    ? BorderRadius.circular(14)
+                    : const BorderRadius.vertical(bottom: Radius.circular(14)),
                 border: Border(top: BorderSide(color: _RC.border(state.readerTheme))),
               ),
               child: Column(
@@ -782,7 +844,7 @@ class _VerseCard extends StatelessWidget {
                             ? TextDirection.rtl
                             : TextDirection.ltr,
                         style: TextStyle(fontFamily: 'serif',
-                            fontSize: state.translationFontSize,
+                            fontSize: state.readingFontSize,
                             color: _RC.translation(state.readerTheme),
                             height: 1.6)),
                 ],
@@ -838,6 +900,178 @@ class _NowPlayingDotsState extends State<_NowPlayingDots>
 // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // READER SETTINGS SHEET
 // \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// ── Surah Nav Strip ────────────────────────────────────────────────────────────
+
+class _SurahNavStrip extends StatelessWidget {
+  final Surah surah;
+  final ReaderTheme readerTheme;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+
+  const _SurahNavStrip({
+    required this.surah,
+    required this.readerTheme,
+    this.onPrev,
+    this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final prevSurah = surah.number > 1 ? kSurahs[surah.number - 2] : null;
+    final nextSurah = surah.number < 114 ? kSurahs[surah.number] : null;
+
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: _RC.surface2(readerTheme),
+        border: Border(bottom: BorderSide(color: _RC.border(readerTheme))),
+      ),
+      child: Row(children: [
+        GestureDetector(
+          onTap: prevSurah != null ? onPrev : null,
+          child: Opacity(
+            opacity: prevSurah != null ? 1.0 : 0.3,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, right: 4),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.chevron_left, size: 18, color: AppColors.gold),
+                if (prevSurah != null)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 80),
+                    child: Text(
+                      prevSurah.nameTransliteration,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _RC.textDim(readerTheme),
+                        fontFamily: 'sans-serif',
+                      ),
+                    ),
+                  ),
+              ]),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Text(
+              surah.nameTransliteration,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: _RC.text(readerTheme),
+                fontFamily: 'serif',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: nextSurah != null ? onNext : null,
+          child: Opacity(
+            opacity: nextSurah != null ? 1.0 : 0.3,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, right: 8),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (nextSurah != null)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 80),
+                    child: Text(
+                      nextSurah.nameTransliteration,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _RC.textDim(readerTheme),
+                        fontFamily: 'sans-serif',
+                      ),
+                    ),
+                  ),
+                Icon(Icons.chevron_right, size: 18, color: AppColors.gold),
+              ]),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ── Mode Chips Bar ─────────────────────────────────────────────────────────────
+
+class _ModeChipsBar extends StatelessWidget {
+  final AppState state;
+  final Surah surah;
+
+  const _ModeChipsBar({required this.state, required this.surah});
+
+  @override
+  Widget build(BuildContext context) {
+    final rt = state.readerTheme;
+    final chips = [
+      [1, 'Translation'],
+      [2, 'Arabic+'],
+      [3, '+Roman'],
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: _RC.surface2(rt),
+        border: Border(top: BorderSide(color: _RC.border(rt))),
+      ),
+      child: Row(children: [
+        ...chips.map((chip) {
+          final mode = chip[0] as int;
+          final label = chip[1] as String;
+          final sel = state.displayReadingMode == mode;
+          return Padding(
+            padding: const EdgeInsets.only(right: 7),
+            child: GestureDetector(
+              onTap: () => state.setDisplayReadingMode(mode),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: sel
+                      ? AppColors.goldDim.withOpacity(0.12)
+                      : _RC.surface(rt),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: sel ? AppColors.gold : _RC.border(rt),
+                  ),
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'sans-serif',
+                    fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+                    color: sel ? AppColors.gold : _RC.textDim(rt),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+        const Spacer(),
+        Text(
+          '${surah.number} / 114',
+          style: TextStyle(
+            fontSize: 11,
+            color: _RC.textDim(rt),
+            fontFamily: 'sans-serif',
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 class _ReaderSettingsSheet extends StatefulWidget {
   const _ReaderSettingsSheet();
   @override
