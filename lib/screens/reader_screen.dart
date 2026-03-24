@@ -496,8 +496,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ),
           ]);
         });
-      }),
-    );
+      });
   }
 }
 
