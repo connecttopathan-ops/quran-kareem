@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
+import '../models/islamic_book.dart';
 import '../widgets/q_icons.dart';
+import '../services/book_download_service.dart';
 import 'text_settings_screen.dart';
+import 'book_language_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -92,6 +96,9 @@ class SettingsScreen extends StatelessWidget {
                           activeColor: AppColors.gold,
                         ),
                       ),
+                      _SectionHeader('Islamic Books'),
+                      _IslamicBooksLanguageTile(),
+                      _ManageDownloadsTile(),
                       _SectionHeader('Notifications'),
                       _NotificationTile(),
                       _SectionHeader('About'),
@@ -322,6 +329,208 @@ class _LanguageSelector extends StatelessWidget {
               if (code != null) state.setLanguage(code);
             },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Islamic Books tiles ───────────────────────────────────────────────────────
+
+class _IslamicBooksLanguageTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookDownloadService>(builder: (context, svc, _) {
+      final langName = svc.language == 'ar'
+          ? 'Arabic'
+          : svc.language == 'ur'
+              ? 'Urdu'
+              : 'English';
+      return GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const BookLanguageScreen(),
+              fullscreenDialog: true),
+        ),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: context.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: context.border),
+          ),
+          child: Row(children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Reading language',
+                      style: TextStyle(fontSize: 14, color: context.text)),
+                  const SizedBox(height: 2),
+                  Text(langName,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textDim, size: 20),
+          ]),
+        ),
+      );
+    });
+  }
+}
+
+class _ManageDownloadsTile extends StatelessWidget {
+  Future<void> _showManageSheet(BuildContext context) async {
+    final svc = context.read<BookDownloadService>();
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ManageDownloadsSheet(svc: svc),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookDownloadService>(builder: (context, svc, _) {
+      final downloaded = svc.downloadedBooks;
+      final subtitle = downloaded.isEmpty
+          ? 'No books downloaded'
+          : '${downloaded.length} book${downloaded.length == 1 ? '' : 's'} downloaded';
+      return GestureDetector(
+        onTap: () => _showManageSheet(context),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: context.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: context.border),
+          ),
+          child: Row(children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Manage downloads',
+                      style: TextStyle(fontSize: 14, color: context.text)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textDim, size: 20),
+          ]),
+        ),
+      );
+    });
+  }
+}
+
+class _ManageDownloadsSheet extends StatelessWidget {
+  final BookDownloadService svc;
+  const _ManageDownloadsSheet({required this.svc});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+        border: Border(top: BorderSide(color: context.border)),
+      ),
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          left: 20,
+          right: 20,
+          top: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 3,
+              decoration: BoxDecoration(
+                  color: context.border,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text('Manage Downloads',
+              style: TextStyle(
+                  fontFamily: 'serif', fontSize: 18, color: context.text)),
+          const SizedBox(height: 16),
+          if (svc.downloadedBooks.isEmpty)
+            Text('No books downloaded yet.',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: 'sans-serif',
+                    color: context.textDim))
+          else
+            ...svc.downloadedBooks.map((book) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  decoration: BoxDecoration(
+                    color: context.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Row(children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: book.spineColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(book.spineChar,
+                            style: const TextStyle(
+                                fontFamily: 'Scheherazade',
+                                fontSize: 14,
+                                color: AppColors.gold)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(book.title,
+                              style: TextStyle(
+                                  fontSize: 13, color: context.text)),
+                          Text('${book.fileSizeMb.toStringAsFixed(1)} MB',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: 'sans-serif',
+                                  color: context.textDim)),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await svc.deleteBook(book.id);
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      child: Text('Delete',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red.shade400,
+                              fontFamily: 'sans-serif')),
+                    ),
+                  ]),
+                )),
         ],
       ),
     );

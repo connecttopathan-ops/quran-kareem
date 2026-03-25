@@ -17,6 +17,11 @@ import 'reading_mode_picker_screen.dart';
 import 'qibla_screen.dart';
 import 'sponsor_screen.dart';
 import 'duas_screen.dart';
+import 'islamic_books_screen.dart';
+import 'book_detail_screen.dart';
+import 'book_language_screen.dart';
+import '../models/islamic_book.dart';
+import '../services/book_download_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -369,6 +374,8 @@ class _HomeTab extends StatelessWidget {
                   const _ContinueCard(),
                   const SizedBox(height: 12),
                   const _DailyAyah(),
+                  const SizedBox(height: 12),
+                  const _BooksHomeSection(),
                   const SizedBox(height: 12),
                   const _PopularSurahs(),
                   const SizedBox(height: 12),
@@ -1407,4 +1414,435 @@ class _Stats extends StatelessWidget {
       ]),
     ),
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ISLAMIC BOOKS HOME SECTION
+// ─────────────────────────────────────────────────────────────────────────────
+class _BooksHomeSection extends StatefulWidget {
+  const _BooksHomeSection();
+
+  @override
+  State<_BooksHomeSection> createState() => _BooksHomeSectionState();
+}
+
+class _BooksHomeSectionState extends State<_BooksHomeSection> {
+  String _filter = 'all'; // 'all', 'hadith', 'seerah'
+
+  @override
+  void initState() {
+    super.initState();
+    // Language picker is shown on first open of IslamicBooksScreen, not here
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BookDownloadService>(
+      builder: (context, svc, _) {
+        final allBooks = kIslamicBooks;
+        final filtered = _filter == 'hadith'
+            ? allBooks.where((b) => b.category == BookCategory.hadith).toList()
+            : _filter == 'seerah'
+                ? allBooks
+                    .where((b) => b.category == BookCategory.seerah)
+                    .toList()
+                : allBooks;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Continue reading a book
+            if (svc.mostRecentBook != null) ...[
+              _BookContinueCard(svc: svc),
+              const SizedBox(height: 12),
+            ],
+            // Section header
+            Row(
+              children: [
+                Text('Islamic Books'.toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 8,
+                        letterSpacing: 2.5,
+                        color: context.textDim,
+                        fontFamily: 'sans-serif')),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const IslamicBooksScreen()),
+                  ),
+                  child: const Text('See all',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontFamily: 'sans-serif',
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Filter chips
+            Row(
+              children: [
+                _FilterChip(
+                    label: 'All',
+                    selected: _filter == 'all',
+                    onTap: () => setState(() => _filter = 'all')),
+                const SizedBox(width: 6),
+                _FilterChip(
+                    label: 'Hadith',
+                    selected: _filter == 'hadith',
+                    onTap: () => setState(() => _filter = 'hadith')),
+                const SizedBox(width: 6),
+                _FilterChip(
+                    label: 'Seerah',
+                    selected: _filter == 'seerah',
+                    onTap: () => setState(() => _filter = 'seerah')),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Horizontal book cards
+            SizedBox(
+              height: 160,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: filtered.length,
+                itemBuilder: (context, i) {
+                  final book = filtered[i];
+                  return _HomeBookCard(
+                    book: book,
+                    svc: svc,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const IslamicBooksScreen()),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip(
+      {required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.goldDim.withOpacity(0.12)
+              : context.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.gold : context.border,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                color: selected ? AppColors.gold : context.textDim)),
+      ),
+    );
+  }
+}
+
+class _HomeBookCard extends StatefulWidget {
+  final IslamicBook book;
+  final BookDownloadService svc;
+  final VoidCallback onTap;
+
+  const _HomeBookCard(
+      {required this.book, required this.svc, required this.onTap});
+
+  @override
+  State<_HomeBookCard> createState() => _HomeBookCardState();
+}
+
+class _HomeBookCardState extends State<_HomeBookCard> {
+  double _readingProgress = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.svc.getReadingProgress(widget.book.id).then((p) {
+      if (mounted) setState(() => _readingProgress = p);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.svc.stateFor(widget.book.id);
+    final dlProgress = widget.svc.progressFor(widget.book.id);
+
+    String badge;
+    switch (state) {
+      case BookDownloadState.notDownloaded:
+        badge = 'Download to read';
+        break;
+      case BookDownloadState.downloading:
+        badge = 'Downloading ${(dlProgress * 100).toStringAsFixed(0)}%';
+        break;
+      case BookDownloadState.downloaded:
+        badge = _readingProgress > 0 ? 'Continue' : 'Start reading';
+        break;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (state == BookDownloadState.downloaded) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => BookDetailScreen(book: widget.book)),
+          );
+        } else {
+          widget.onTap();
+        }
+      },
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Spine header
+            Container(
+              height: 72,
+              decoration: BoxDecoration(
+                color: widget.book.spineColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(11)),
+              ),
+              child: Center(
+                child: Text(widget.book.spineChar,
+                    style: const TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 32,
+                        color: AppColors.gold)),
+              ),
+            ),
+            // Info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+              child: Text(widget.book.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: context.text)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 1, 8, 0),
+              child: Text(widget.book.author,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 8,
+                      fontFamily: 'sans-serif',
+                      color: context.textDim)),
+            ),
+            // Progress bar
+            if (_readingProgress > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: _readingProgress,
+                    minHeight: 2,
+                    backgroundColor: context.border,
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.gold),
+                  ),
+                ),
+              ),
+            const Spacer(),
+            // Badge
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: state == BookDownloadState.downloaded
+                      ? AppColors.gold
+                      : context.surface2,
+                  borderRadius: BorderRadius.circular(6),
+                  border: state == BookDownloadState.downloaded
+                      ? null
+                      : Border.all(color: context.border),
+                ),
+                child: Text(badge,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontFamily: 'sans-serif',
+                        fontWeight: FontWeight.w600,
+                        color: state == BookDownloadState.downloaded
+                            ? Colors.white
+                            : context.textDim)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOOK CONTINUE READING CARD
+// ─────────────────────────────────────────────────────────────────────────────
+class _BookContinueCard extends StatefulWidget {
+  final BookDownloadService svc;
+  const _BookContinueCard({required this.svc});
+
+  @override
+  State<_BookContinueCard> createState() => _BookContinueCardState();
+}
+
+class _BookContinueCardState extends State<_BookContinueCard> {
+  double _progress = 0;
+  String _positionLabel = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final book = widget.svc.mostRecentBook;
+    if (book == null) return;
+    final progress = await widget.svc.getReadingProgress(book.id);
+    final pos = await widget.svc.getLastPosition(book.id);
+    if (mounted) {
+      setState(() {
+        _progress = progress;
+        if (pos != null) {
+          final parts = pos.split(':');
+          final chapterNum = parts.isNotEmpty ? parts[0] : '?';
+          final hadithNum = parts.length > 1 ? parts[1] : '0';
+          _positionLabel = book.category == BookCategory.hadith
+              ? 'Book $chapterNum · Hadith $hadithNum'
+              : 'Chapter $chapterNum';
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final book = widget.svc.mostRecentBook;
+    if (book == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Continue Reading'.toUpperCase(),
+            style: TextStyle(
+                fontSize: 8,
+                letterSpacing: 2.5,
+                color: context.textDim,
+                fontFamily: 'sans-serif')),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => BookDetailScreen(book: book)),
+          ),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+            decoration: BoxDecoration(
+              color: context.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: book.spineColor,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Center(
+                      child: Text(book.spineChar,
+                          style: const TextStyle(
+                              fontFamily: 'Scheherazade',
+                              fontSize: 18,
+                              color: AppColors.gold)),
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(book.title,
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: context.text)),
+                        if (_positionLabel.isNotEmpty)
+                          Text(_positionLabel,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color: context.textDim,
+                                  fontFamily: 'sans-serif')),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 18, color: context.textDim),
+                ]),
+                if (_progress > 0) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      minHeight: 3,
+                      backgroundColor: context.border,
+                      valueColor:
+                          const AlwaysStoppedAnimation(AppColors.gold),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

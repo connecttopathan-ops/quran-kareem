@@ -12,6 +12,7 @@ dependencies:
   google_fonts: ^6.1.0
   shared_preferences: ^2.2.3
   http: ^1.1.0
+  path_provider: ^2.1.4
   provider: ^6.1.1
   audioplayers: ^6.1.0
   geolocator: ^13.0.0
@@ -44,3 +45,4 @@ flutter:
     - assets/audio/adhan_makkah.mp3
     - assets/audio/adhan_madinah.mp3
     - assets/audio/adhan_makkah_fajr.mp3
+    - assets/books/

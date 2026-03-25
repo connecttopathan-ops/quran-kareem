@@ -9,9 +9,11 @@ import 'services/audio_service.dart';
 import 'services/quran_service.dart';
 import 'services/translation_service.dart';
 import 'services/notification_service.dart';
+import 'services/book_download_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/duas_screen.dart';
 import 'screens/prayer_notification_settings_screen.dart';
+import 'screens/islamic_books_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -40,6 +42,7 @@ class QuranApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AudioService()),
         ChangeNotifierProvider(create: (_) => QuranService()),
         ChangeNotifierProvider(create: (_) => TranslationService()),
+        ChangeNotifierProvider(create: (_) => BookDownloadService()),
       ],
       child: Consumer<AppState>(
         builder: (context, state, _) {
@@ -60,6 +63,7 @@ class QuranApp extends StatelessWidget {
               '/duas': (context) => const DuasScreen(),
               '/prayer-notifications': (context) =>
                   const PrayerNotificationSettingsScreen(),
+              '/islamic-books': (context) => const IslamicBooksScreen(),
             },
           );
         },
