@@ -182,8 +182,8 @@ class BookDownloadService extends ChangeNotifier {
     for (final e in sectionDetails.entries) {
       final sNum = (int.tryParse(e.key) ?? 0) + 1;
       final d = e.value as Map<String, dynamic>;
-      final first = d['hadithnumber_first'] as int? ?? 0;
-      final last = d['hadithnumber_last'] as int? ?? 0;
+      final first = (d['hadithnumber_first'] as num?)?.toInt() ?? 0;
+      final last = (d['hadithnumber_last'] as num?)?.toInt() ?? 0;
       for (int i = first; i <= last; i++) {
         hadithSection[i] = sNum;
       }
@@ -193,10 +193,10 @@ class BookDownloadService extends ChangeNotifier {
     final books = sections.entries.map((e) {
       final sectionKey = int.tryParse(e.key) ?? 0;
       final detail = sectionDetails[e.key] as Map<String, dynamic>?;
-      final first = detail?['hadithnumber_first'] as int? ?? 0;
-      final last = detail?['hadithnumber_last'] as int? ?? 0;
+      final first = (detail?['hadithnumber_first'] as num?)?.toInt() ?? 0;
+      final last = (detail?['hadithnumber_last'] as num?)?.toInt() ?? 0;
       return {
-        'bookNumber': sectionKey + 1,
+        'bookNumber': sectionKey,
         'book': [
           {'lang': 'en', 'name': e.value.toString()}
         ],
@@ -258,7 +258,7 @@ class BookDownloadService extends ChangeNotifier {
     final bySection = <String, List<Map<String, dynamic>>>{};
     for (final h in hadiths) {
       if (h is! Map) continue;
-      final num = h['hadithnumber'] as int? ?? 0;
+      final num = (h['hadithnumber'] as num?)?.toInt() ?? 0;
       final sNum = hadithSection[num] ?? 0;
       if (sNum == 0) continue;
       bySection.putIfAbsent(sNum.toString(), () => []).add({
