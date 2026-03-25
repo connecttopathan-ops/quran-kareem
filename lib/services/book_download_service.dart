@@ -83,6 +83,12 @@ class BookDownloadService extends ChangeNotifier {
     return '${dir.path}/books/${bookId}_index.json';
   }
 
+  /// Per-language hadith file — hadiths pre-grouped by section number.
+  Future<String> _bookLangPath(String bookId, String lang) async {
+    final dir = await getApplicationDocumentsDirectory();
+    return '${dir.path}/books/${bookId}_$lang.json';
+  }
+
   Future<bool> isFileDownloaded(String bookId) async {
     try {
       final path = await _bookFilePath(bookId);
@@ -143,54 +149,47 @@ class BookDownloadService extends ChangeNotifier {
     const base =
         'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
     final col = book.collectionKey;
+    const timeout = Duration(seconds: 90);
 
+    // ── Step 1: English (also contains metadata) ──────────────────────────
     _progress[book.id] = 0.05;
     notifyListeners();
 
-    const timeout = Duration(seconds: 60);
     final enResp = await http
         .get(Uri.parse('$base/eng-$col.min.json'))
         .timeout(timeout);
-    _progress[book.id] = 0.35;
-    notifyListeners();
-
-    final arResp = await http
-        .get(Uri.parse('$base/ara-$col.min.json'))
-        .timeout(timeout);
-    _progress[book.id] = 0.60;
-    notifyListeners();
-
-    final urResp = await http
-        .get(Uri.parse('$base/urd-$col.min.json'))
-        .timeout(timeout);
-    _progress[book.id] = 0.80;
-    notifyListeners();
-
     if (enResp.statusCode != 200) {
       throw Exception('Download failed (${enResp.statusCode})');
     }
+    _progress[book.id] = 0.20;
+    notifyListeners();
 
     final enData = jsonDecode(enResp.body) as Map<String, dynamic>;
-    final arData = arResp.statusCode == 200
-        ? jsonDecode(arResp.body) as Map<String, dynamic>
-        : null;
-    final urData = urResp.statusCode == 200
-        ? jsonDecode(urResp.body) as Map<String, dynamic>
-        : null;
-
     final meta = enData['metadata'] as Map<String, dynamic>;
     final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
     final sectionDetails =
         (meta['section_details'] as Map<String, dynamic>?) ?? {};
 
-    // Build books list (table of contents) — 1-indexed so no "Book 0"
+    // Build hadith-number → 1-indexed section lookup
+    final hadithSection = <int, int>{};
+    for (final e in sectionDetails.entries) {
+      final sNum = (int.tryParse(e.key) ?? 0) + 1;
+      final d = e.value as Map<String, dynamic>;
+      final first = d['hadithnumber_first'] as int? ?? 0;
+      final last = d['hadithnumber_last'] as int? ?? 0;
+      for (int i = first; i <= last; i++) {
+        hadithSection[i] = sNum;
+      }
+    }
+
+    // Write small index file (books list only)
     final books = sections.entries.map((e) {
       final sectionKey = int.tryParse(e.key) ?? 0;
       final detail = sectionDetails[e.key] as Map<String, dynamic>?;
       final first = detail?['hadithnumber_first'] as int? ?? 0;
       final last = detail?['hadithnumber_last'] as int? ?? 0;
       return {
-        'bookNumber': sectionKey + 1, // 1-indexed
+        'bookNumber': sectionKey + 1,
         'book': [
           {'lang': 'en', 'name': e.value.toString()}
         ],
@@ -200,88 +199,75 @@ class BookDownloadService extends ChangeNotifier {
       ..sort((a, b) =>
           (a['bookNumber'] as int).compareTo(b['bookNumber'] as int));
 
-    // Build hadith-number → section-number lookup (1-indexed)
-    final hadithSection = <int, int>{};
-    for (final e in sectionDetails.entries) {
-      final sNum = (int.tryParse(e.key) ?? 0) + 1; // 1-indexed
-      final d = e.value as Map<String, dynamic>;
-      final first = d['hadithnumber_first'] as int? ?? 0;
-      final last = d['hadithnumber_last'] as int? ?? 0;
-      for (int i = first; i <= last; i++) {
-        hadithSection[i] = sNum;
-      }
-    }
-
-    // Build per-language lookup maps
-    Map<int, dynamic> _buildMap(Map<String, dynamic>? data) {
-      final map = <int, dynamic>{};
-      if (data == null) return map;
-      for (final h in (data['hadiths'] as List? ?? [])) {
-        if (h is Map) map[h['hadithnumber'] as int] = h;
-      }
-      return map;
-    }
-
-    final arMap = _buildMap(arData);
-    final urMap = _buildMap(urData);
-
-    // Merge English + Arabic + Urdu hadiths
-    final hadiths = (enData['hadiths'] as List? ?? []).map((h) {
-      final num = h['hadithnumber'] as int;
-      final entries = <Map<String, dynamic>>[
-        {
-          'lang': 'en',
-          'narrator': h['narrator']?.toString() ?? '',
-          'body': h['text']?.toString() ?? '',
-        },
-      ];
-      final arH = arMap[num];
-      if (arH != null) {
-        entries.add({
-          'lang': 'ar',
-          'narrator': arH['narrator']?.toString() ?? '',
-          'body': arH['text']?.toString() ?? '',
-        });
-      }
-      final urH = urMap[num];
-      if (urH != null) {
-        entries.add({
-          'lang': 'ur',
-          'narrator': urH['narrator']?.toString() ?? '',
-          'body': urH['text']?.toString() ?? '',
-        });
-      }
-      return {
-        'hadithNumber': num.toString(),
-        'sectionNumber': hadithSection[num] ?? 0,
-        'hadith': entries,
-      };
-    }).toList();
-
     final title = meta['name']?.toString() ?? book.title;
-
-    // Write small index file (books list only) — loaded by BookDetailScreen
-    final indexData = {
+    await File(await _bookIndexPath(book.id)).writeAsString(jsonEncode({
       'title': title,
       'collection': col,
-      'source': 'fawazahmed0',
+      'source': 'fawazahmed0_v2',
       'books': books,
-    };
-    final indexPath = await _bookIndexPath(book.id);
-    await File(indexPath).writeAsString(jsonEncode(indexData));
+    }));
 
-    // Write full data file (hadiths) — loaded per-chapter by reader
-    final saved = {
-      'title': title,
-      'collection': col,
-      'source': 'fawazahmed0',
-      'hadiths': hadiths,
-    };
-
-    _progress[book.id] = 0.92;
+    // Save English hadiths grouped by section
+    await _saveHadithsBySection(
+        enData['hadiths'] as List, hadithSection, 'en', book.id);
+    _progress[book.id] = 0.45;
     notifyListeners();
-    final path = await _bookFilePath(book.id);
-    await File(path).writeAsString(jsonEncode(saved));
+
+    // ── Step 2: Arabic ─────────────────────────────────────────────────────
+    final arResp = await http
+        .get(Uri.parse('$base/ara-$col.min.json'))
+        .timeout(timeout);
+    if (arResp.statusCode == 200) {
+      final arData = jsonDecode(arResp.body) as Map<String, dynamic>;
+      await _saveHadithsBySection(
+          arData['hadiths'] as List, hadithSection, 'ar', book.id);
+    }
+    _progress[book.id] = 0.72;
+    notifyListeners();
+
+    // ── Step 3: Urdu ───────────────────────────────────────────────────────
+    final urResp = await http
+        .get(Uri.parse('$base/urd-$col.min.json'))
+        .timeout(timeout);
+    if (urResp.statusCode == 200) {
+      final urData = jsonDecode(urResp.body) as Map<String, dynamic>;
+      await _saveHadithsBySection(
+          urData['hadiths'] as List, hadithSection, 'ur', book.id);
+    }
+    _progress[book.id] = 0.95;
+    notifyListeners();
+  }
+
+  /// Groups hadiths by 1-indexed section number and writes to a per-language file.
+  /// Memory: processes one language at a time — no merging.
+  Future<void> _saveHadithsBySection(
+    List hadiths,
+    Map<int, int> hadithSection,
+    String lang,
+    String bookId,
+  ) async {
+    final bySection = <String, List<Map<String, dynamic>>>{};
+    for (final h in hadiths) {
+      if (h is! Map) continue;
+      final num = h['hadithnumber'] as int? ?? 0;
+      final sNum = hadithSection[num] ?? 0;
+      if (sNum == 0) continue;
+      bySection.putIfAbsent(sNum.toString(), () => []).add({
+        'hadithNumber': num.toString(),
+        'hadith': [
+          {
+            'lang': lang,
+            'narrator': h['narrator']?.toString() ?? '',
+            'body': h['text']?.toString() ?? '',
+          }
+        ],
+      });
+    }
+    await File(await _bookLangPath(bookId, lang)).writeAsString(jsonEncode({
+      'source': 'fawazahmed0_v2',
+      'lang': lang,
+      'sections': bySection,
+    }));
   }
 
   Future<List<Map<String, dynamic>>> loadChapterIndex(IslamicBook book) async {
@@ -351,15 +337,18 @@ class BookDownloadService extends ChangeNotifier {
       IslamicBook book, int bookNumber, {int page = 1}) async {
     if (book.isLocal) return [];
     try {
-      final path = await _bookFilePath(book.id);
-      final content = await File(path).readAsString();
-      final data = jsonDecode(content) as Map<String, dynamic>;
-      if (data['source'] == 'fawazahmed0') {
-        final all = (data['hadiths'] as List? ?? [])
+      // Try user's language file, fall back to English
+      for (final lang in [_language, 'en']) {
+        final path = await _bookLangPath(book.id, lang);
+        final file = File(path);
+        if (!await file.exists()) continue;
+        final data =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        if (data['source'] != 'fawazahmed0_v2') continue;
+        final sections = data['sections'] as Map<String, dynamic>? ?? {};
+        final all = (sections[bookNumber.toString()] as List? ?? [])
             .whereType<Map>()
-            .where((h) => h['sectionNumber'] == bookNumber)
             .where((h) {
-              // Skip hadiths with no text in any language
               final entries = h['hadith'] as List? ?? [];
               return entries.any(
                   (e) => e is Map && (e['body'] as String? ?? '').isNotEmpty);
@@ -377,12 +366,16 @@ class BookDownloadService extends ChangeNotifier {
 
   Future<void> deleteBook(String bookId) async {
     try {
-      final path = await _bookFilePath(bookId);
-      final f = File(path);
-      if (await f.exists()) await f.delete();
-      final indexPath = await _bookIndexPath(bookId);
-      final fi = File(indexPath);
-      if (await fi.exists()) await fi.delete();
+      for (final path in [
+        await _bookFilePath(bookId),
+        await _bookIndexPath(bookId),
+        await _bookLangPath(bookId, 'en'),
+        await _bookLangPath(bookId, 'ar'),
+        await _bookLangPath(bookId, 'ur'),
+      ]) {
+        final f = File(path);
+        if (await f.exists()) await f.delete();
+      }
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('book_${bookId}_downloaded', false);
