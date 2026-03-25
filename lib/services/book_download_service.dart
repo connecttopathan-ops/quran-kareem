@@ -77,6 +77,12 @@ class BookDownloadService extends ChangeNotifier {
     return '${dir.path}/books/$bookId.json';
   }
 
+  /// Separate small index file — just the books list, no hadith content.
+  Future<String> _bookIndexPath(String bookId) async {
+    final dir = await getApplicationDocumentsDirectory();
+    return '${dir.path}/books/${bookId}_index.json';
+  }
+
   Future<bool> isFileDownloaded(String bookId) async {
     try {
       final path = await _bookFilePath(bookId);
@@ -141,18 +147,22 @@ class BookDownloadService extends ChangeNotifier {
     _progress[book.id] = 0.05;
     notifyListeners();
 
-    final enResp =
-        await http.get(Uri.parse('$base/eng-$col.min.json'));
+    const timeout = Duration(seconds: 60);
+    final enResp = await http
+        .get(Uri.parse('$base/eng-$col.min.json'))
+        .timeout(timeout);
     _progress[book.id] = 0.35;
     notifyListeners();
 
-    final arResp =
-        await http.get(Uri.parse('$base/ara-$col.min.json'));
+    final arResp = await http
+        .get(Uri.parse('$base/ara-$col.min.json'))
+        .timeout(timeout);
     _progress[book.id] = 0.60;
     notifyListeners();
 
-    final urResp =
-        await http.get(Uri.parse('$base/urd-$col.min.json'));
+    final urResp = await http
+        .get(Uri.parse('$base/urd-$col.min.json'))
+        .timeout(timeout);
     _progress[book.id] = 0.80;
     notifyListeners();
 
@@ -173,13 +183,14 @@ class BookDownloadService extends ChangeNotifier {
     final sectionDetails =
         (meta['section_details'] as Map<String, dynamic>?) ?? {};
 
-    // Build books list (table of contents)
+    // Build books list (table of contents) — 1-indexed so no "Book 0"
     final books = sections.entries.map((e) {
+      final sectionKey = int.tryParse(e.key) ?? 0;
       final detail = sectionDetails[e.key] as Map<String, dynamic>?;
       final first = detail?['hadithnumber_first'] as int? ?? 0;
       final last = detail?['hadithnumber_last'] as int? ?? 0;
       return {
-        'bookNumber': int.tryParse(e.key) ?? 0,
+        'bookNumber': sectionKey + 1, // 1-indexed
         'book': [
           {'lang': 'en', 'name': e.value.toString()}
         ],
@@ -189,10 +200,10 @@ class BookDownloadService extends ChangeNotifier {
       ..sort((a, b) =>
           (a['bookNumber'] as int).compareTo(b['bookNumber'] as int));
 
-    // Build hadith-number → section-number lookup
+    // Build hadith-number → section-number lookup (1-indexed)
     final hadithSection = <int, int>{};
     for (final e in sectionDetails.entries) {
-      final sNum = int.tryParse(e.key) ?? 0;
+      final sNum = (int.tryParse(e.key) ?? 0) + 1; // 1-indexed
       final d = e.value as Map<String, dynamic>;
       final first = d['hadithnumber_first'] as int? ?? 0;
       final last = d['hadithnumber_last'] as int? ?? 0;
@@ -247,11 +258,23 @@ class BookDownloadService extends ChangeNotifier {
       };
     }).toList();
 
-    final saved = {
-      'title': meta['name']?.toString() ?? book.title,
+    final title = meta['name']?.toString() ?? book.title;
+
+    // Write small index file (books list only) — loaded by BookDetailScreen
+    final indexData = {
+      'title': title,
       'collection': col,
       'source': 'fawazahmed0',
       'books': books,
+    };
+    final indexPath = await _bookIndexPath(book.id);
+    await File(indexPath).writeAsString(jsonEncode(indexData));
+
+    // Write full data file (hadiths) — loaded per-chapter by reader
+    final saved = {
+      'title': title,
+      'collection': col,
+      'source': 'fawazahmed0',
       'hadiths': hadiths,
     };
 
@@ -263,6 +286,17 @@ class BookDownloadService extends ChangeNotifier {
 
   Future<List<Map<String, dynamic>>> loadChapterIndex(IslamicBook book) async {
     try {
+      // Try the small index file first (fast path for hadith books)
+      final indexPath = await _bookIndexPath(book.id);
+      final indexFile = File(indexPath);
+      if (await indexFile.exists()) {
+        final data =
+            jsonDecode(await indexFile.readAsString()) as Map<String, dynamic>;
+        if (data.containsKey('books')) {
+          return (data['books'] as List).cast<Map<String, dynamic>>();
+        }
+      }
+      // Fall back to full data file (seerah books / legacy downloads)
       final path = await _bookFilePath(book.id);
       final content = await File(path).readAsString();
       final data = jsonDecode(content) as Map<String, dynamic>;
@@ -324,6 +358,12 @@ class BookDownloadService extends ChangeNotifier {
         final all = (data['hadiths'] as List? ?? [])
             .whereType<Map>()
             .where((h) => h['sectionNumber'] == bookNumber)
+            .where((h) {
+              // Skip hadiths with no text in any language
+              final entries = h['hadith'] as List? ?? [];
+              return entries.any(
+                  (e) => e is Map && (e['body'] as String? ?? '').isNotEmpty);
+            })
             .cast<Map<String, dynamic>>()
             .toList();
         const pageSize = 20;
@@ -340,6 +380,9 @@ class BookDownloadService extends ChangeNotifier {
       final path = await _bookFilePath(bookId);
       final f = File(path);
       if (await f.exists()) await f.delete();
+      final indexPath = await _bookIndexPath(bookId);
+      final fi = File(indexPath);
+      if (await fi.exists()) await fi.delete();
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('book_${bookId}_downloaded', false);
