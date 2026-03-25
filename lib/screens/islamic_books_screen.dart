@@ -188,11 +188,12 @@ class _BookCardState extends State<_BookCard> {
 
   Future<void> _handleTap(BuildContext context) async {
     final state = widget.svc.stateFor(widget.book.id);
-    if (state == BookDownloadState.notDownloaded) {
+    if (state == BookDownloadState.notDownloaded ||
+        state == BookDownloadState.failed) {
       final shown = await widget.svc.wasPromptShown(widget.book.id);
       if (!shown && context.mounted) {
         await _showDownloadSheet(context);
-      } else if (shown) {
+      } else {
         widget.svc.startDownload(widget.book);
       }
       return;
@@ -352,6 +353,38 @@ class _StateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (state) {
+      case BookDownloadState.failed:
+        final errMsg = svc.errorFor(book.id) ?? 'Unknown error';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Download failed. Tap to retry.',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontFamily: 'sans-serif',
+                  color: Colors.red.shade400),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              errMsg,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: 9,
+                  fontFamily: 'sans-serif',
+                  color: context.textDim),
+            ),
+            const SizedBox(height: 6),
+            _outlinedBtn(
+              context,
+              label: 'Retry download',
+              icon: Icons.refresh,
+              onTap: () => svc.startDownload(book),
+            ),
+          ],
+        );
+
       case BookDownloadState.notDownloaded:
         return _outlinedBtn(
           context,

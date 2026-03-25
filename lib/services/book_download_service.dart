@@ -7,11 +7,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/islamic_book.dart';
 
-enum BookDownloadState { notDownloaded, downloading, downloaded }
+enum BookDownloadState { notDownloaded, downloading, downloaded, failed }
 
 class BookDownloadService extends ChangeNotifier {
   final Map<String, BookDownloadState> _states = {};
   final Map<String, double> _progress = {};
+  final Map<String, String> _errors = {};
   String _language = 'en';
 
   BookDownloadService() {
@@ -35,6 +36,8 @@ class BookDownloadService extends ChangeNotifier {
       _states[bookId] ?? BookDownloadState.notDownloaded;
 
   double progressFor(String bookId) => _progress[bookId] ?? 0.0;
+
+  String? errorFor(String bookId) => _errors[bookId];
 
   bool get hasAnyProgress => kIslamicBooks.any((b) {
         final pos = _cachedPositions[b.id];
@@ -100,6 +103,7 @@ class BookDownloadService extends ChangeNotifier {
 
   Future<void> startDownload(IslamicBook book) async {
     if (_states[book.id] == BookDownloadState.downloading) return;
+    _errors.remove(book.id);
     _states[book.id] = BookDownloadState.downloading;
     _progress[book.id] = 0.0;
     notifyListeners();
@@ -119,9 +123,11 @@ class BookDownloadService extends ChangeNotifier {
       await prefs.setBool('book_${book.id}_downloaded', true);
       _states[book.id] = BookDownloadState.downloaded;
       _progress[book.id] = 1.0;
-    } catch (e) {
-      _states[book.id] = BookDownloadState.notDownloaded;
+    } catch (e, stack) {
+      debugPrint('BookDownload error for ${book.id}: $e\n$stack');
+      _states[book.id] = BookDownloadState.failed;
       _progress[book.id] = 0.0;
+      _errors[book.id] = e.toString();
     }
     notifyListeners();
   }
@@ -164,7 +170,8 @@ class BookDownloadService extends ChangeNotifier {
     _progress[book.id] = 0.20;
     notifyListeners();
 
-    final enData = jsonDecode(enResp.body) as Map<String, dynamic>;
+    final enData = await compute(
+        (String s) => jsonDecode(s) as Map<String, dynamic>, enResp.body);
     final meta = enData['metadata'] as Map<String, dynamic>;
     final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
     final sectionDetails =
@@ -218,7 +225,8 @@ class BookDownloadService extends ChangeNotifier {
         .get(Uri.parse('$base/ara-$col.min.json'))
         .timeout(timeout);
     if (arResp.statusCode == 200) {
-      final arData = jsonDecode(arResp.body) as Map<String, dynamic>;
+      final arData = await compute(
+          (String s) => jsonDecode(s) as Map<String, dynamic>, arResp.body);
       await _saveHadithsBySection(
           arData['hadiths'] as List, hadithSection, 'ar', book.id);
     }
@@ -230,7 +238,8 @@ class BookDownloadService extends ChangeNotifier {
         .get(Uri.parse('$base/urd-$col.min.json'))
         .timeout(timeout);
     if (urResp.statusCode == 200) {
-      final urData = jsonDecode(urResp.body) as Map<String, dynamic>;
+      final urData = await compute(
+          (String s) => jsonDecode(s) as Map<String, dynamic>, urResp.body);
       await _saveHadithsBySection(
           urData['hadiths'] as List, hadithSection, 'ur', book.id);
     }
