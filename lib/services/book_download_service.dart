@@ -258,11 +258,11 @@ class BookDownloadService extends ChangeNotifier {
     final bySection = <String, List<Map<String, dynamic>>>{};
     for (final h in hadiths) {
       if (h is! Map) continue;
-      final num = (h['hadithnumber'] as num?)?.toInt() ?? 0;
-      final sNum = hadithSection[num] ?? 0;
+      final hadithNum = (h['hadithnumber'] as num?)?.toInt() ?? 0;
+      final sNum = hadithSection[hadithNum] ?? 0;
       if (sNum == 0) continue;
       bySection.putIfAbsent(sNum.toString(), () => []).add({
-        'hadithNumber': num.toString(),
+        'hadithNumber': hadithNum.toString(),
         'hadith': [
           {
             'lang': lang,
