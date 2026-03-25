@@ -123,20 +123,31 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
 
   String _hadithNarrator(Map<String, dynamic> h) {
     final list = h['hadith'] as List? ?? [];
-    final enEntry = list.firstWhere(
-        (e) => e is Map && e['lang'] == 'en',
-        orElse: () => list.isNotEmpty ? list.first : null);
-    if (enEntry == null) return '';
-    return (enEntry as Map)['narrator']?.toString() ?? '';
+    final lang = context.read<BookDownloadService>().language;
+    final entry = list.firstWhere(
+          (e) => e is Map && e['lang'] == lang,
+          orElse: () => list.firstWhere(
+            (e) => e is Map && e['lang'] == 'en',
+            orElse: () => list.isNotEmpty ? list.first : null,
+          ),
+        );
+    if (entry == null) return '';
+    return (entry as Map)['narrator']?.toString() ?? '';
   }
 
   String _hadithBody(Map<String, dynamic> h) {
     final list = h['hadith'] as List? ?? [];
-    final enEntry = list.firstWhere(
-        (e) => e is Map && e['lang'] == 'en',
-        orElse: () => list.isNotEmpty ? list.first : null);
-    if (enEntry == null) return '';
-    return (enEntry as Map)['body']?.toString() ?? '';
+    final lang = context.read<BookDownloadService>().language;
+    // Show translation in user's language; fall back to English
+    final entry = list.firstWhere(
+          (e) => e is Map && e['lang'] == lang,
+          orElse: () => list.firstWhere(
+            (e) => e is Map && e['lang'] == 'en',
+            orElse: () => list.isNotEmpty ? list.first : null,
+          ),
+        );
+    if (entry == null) return '';
+    return (entry as Map)['body']?.toString() ?? '';
   }
 
   String _hadithArabic(Map<String, dynamic> h) {

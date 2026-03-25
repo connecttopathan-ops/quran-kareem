@@ -143,12 +143,17 @@ class BookDownloadService extends ChangeNotifier {
 
     final enResp =
         await http.get(Uri.parse('$base/eng-$col.min.json'));
-    _progress[book.id] = 0.45;
+    _progress[book.id] = 0.35;
     notifyListeners();
 
     final arResp =
         await http.get(Uri.parse('$base/ara-$col.min.json'));
-    _progress[book.id] = 0.75;
+    _progress[book.id] = 0.60;
+    notifyListeners();
+
+    final urResp =
+        await http.get(Uri.parse('$base/urd-$col.min.json'));
+    _progress[book.id] = 0.80;
     notifyListeners();
 
     if (enResp.statusCode != 200) {
@@ -158,6 +163,9 @@ class BookDownloadService extends ChangeNotifier {
     final enData = jsonDecode(enResp.body) as Map<String, dynamic>;
     final arData = arResp.statusCode == 200
         ? jsonDecode(arResp.body) as Map<String, dynamic>
+        : null;
+    final urData = urResp.statusCode == 200
+        ? jsonDecode(urResp.body) as Map<String, dynamic>
         : null;
 
     final meta = enData['metadata'] as Map<String, dynamic>;
@@ -193,15 +201,20 @@ class BookDownloadService extends ChangeNotifier {
       }
     }
 
-    // Build Arabic lookup by hadith number
-    final arMap = <int, dynamic>{};
-    if (arData != null) {
-      for (final h in (arData['hadiths'] as List? ?? [])) {
-        if (h is Map) arMap[h['hadithnumber'] as int] = h;
+    // Build per-language lookup maps
+    Map<int, dynamic> _buildMap(Map<String, dynamic>? data) {
+      final map = <int, dynamic>{};
+      if (data == null) return map;
+      for (final h in (data['hadiths'] as List? ?? [])) {
+        if (h is Map) map[h['hadithnumber'] as int] = h;
       }
+      return map;
     }
 
-    // Merge English + Arabic hadiths
+    final arMap = _buildMap(arData);
+    final urMap = _buildMap(urData);
+
+    // Merge English + Arabic + Urdu hadiths
     final hadiths = (enData['hadiths'] as List? ?? []).map((h) {
       final num = h['hadithnumber'] as int;
       final entries = <Map<String, dynamic>>[
@@ -217,6 +230,14 @@ class BookDownloadService extends ChangeNotifier {
           'lang': 'ar',
           'narrator': arH['narrator']?.toString() ?? '',
           'body': arH['text']?.toString() ?? '',
+        });
+      }
+      final urH = urMap[num];
+      if (urH != null) {
+        entries.add({
+          'lang': 'ur',
+          'narrator': urH['narrator']?.toString() ?? '',
+          'body': urH['text']?.toString() ?? '',
         });
       }
       return {
