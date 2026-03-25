@@ -1596,6 +1596,9 @@ class _HomeBookCardState extends State<_HomeBookCard> {
       case BookDownloadState.downloaded:
         badge = _readingProgress > 0 ? 'Continue' : 'Start reading';
         break;
+      case BookDownloadState.failed:
+        badge = 'Tap to retry';
+        break;
     }
 
     return GestureDetector(
@@ -1606,7 +1609,8 @@ class _HomeBookCardState extends State<_HomeBookCard> {
             MaterialPageRoute(
                 builder: (_) => BookDetailScreen(book: widget.book)),
           );
-        } else if (state == BookDownloadState.notDownloaded) {
+        } else if (state == BookDownloadState.notDownloaded ||
+            state == BookDownloadState.failed) {
           final shown = await widget.svc.wasPromptShown(widget.book.id);
           if (!shown) {
             await widget.svc.markPromptShown(widget.book.id);
