@@ -231,9 +231,10 @@ class _BookCardState extends State<_BookCard> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.border),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Spine
             Container(
               width: 48,
@@ -323,7 +324,8 @@ class _BookCardState extends State<_BookCard> {
               ),
             ),
           ],
-        ),
+          ), // Row
+        ), // IntrinsicHeight
       ),
     );
   }
