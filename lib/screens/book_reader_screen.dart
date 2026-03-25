@@ -60,8 +60,11 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
         entries = _stubHadiths(chapterNum);
       }
     } else {
-      // Seerah: load chapter text
-      entries = _stubSeerahChapter(chapterNum);
+      // Seerah: load chapter text from bundled JSON asset
+      entries = await svc.loadSeerahChapter(widget.book, chapterNum);
+      if (entries.isEmpty) {
+        entries = _stubSeerahChapter(chapterNum);
+      }
     }
 
     if (mounted) {

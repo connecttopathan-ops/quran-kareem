@@ -187,6 +187,43 @@ class BookDownloadService extends ChangeNotifier {
     return [];
   }
 
+  /// Load a single seerah chapter by number (1-indexed).
+  /// Returns a list with one entry containing `type: 'seerah'` and `paragraphs`.
+  Future<List<Map<String, dynamic>>> loadSeerahChapter(
+      IslamicBook book, int chapterNumber) async {
+    try {
+      final path = await _bookFilePath(book.id);
+      final content = await File(path).readAsString();
+      final data = jsonDecode(content) as Map<String, dynamic>;
+      final chapters = data['chapters'] as List? ?? [];
+      // chapters are 1-indexed via the 'number' field
+      final ch = chapters.firstWhere(
+        (c) => c is Map && (c['number'] == chapterNumber),
+        orElse: () => null,
+      );
+      if (ch != null && ch['content'] != null) {
+        final text = ch['content'].toString();
+        // Split into paragraphs of ~500 chars at sentence boundaries for readability
+        final sentences = text.split(RegExp(r'(?<=[.?!])\s+'));
+        final paragraphs = <String>[];
+        final buf = StringBuffer();
+        for (final s in sentences) {
+          buf.write(s);
+          buf.write(' ');
+          if (buf.length >= 500) {
+            paragraphs.add(buf.toString().trim());
+            buf.clear();
+          }
+        }
+        if (buf.isNotEmpty) paragraphs.add(buf.toString().trim());
+        return [
+          {'type': 'seerah', 'paragraphs': paragraphs}
+        ];
+      }
+    } catch (_) {}
+    return [];
+  }
+
   Future<List<Map<String, dynamic>>> loadHadiths(
       IslamicBook book, int bookNumber, {int page = 1}) async {
     if (book.isLocal) return [];
