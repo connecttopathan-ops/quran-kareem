@@ -134,39 +134,107 @@ class BookDownloadService extends ChangeNotifier {
   }
 
   Future<void> _downloadFromSunnah(IslamicBook book) async {
-    // sunnah.com public API — replace with your API key for production
-    const apiKey = 'SqD712P3E82xnwOAEOkGd5JZH8s9wRNx';
-    const baseUrl = 'https://api.sunnah.com/v1';
+    const base =
+        'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
+    final col = book.collectionKey;
 
-    // Fetch books index (table of contents) only — content loaded per chapter
-    final url = Uri.parse(
-        '$baseUrl/collections/${book.collectionKey}/books?limit=${book.totalBooks ?? 100}&page=1');
-    final response = await http.get(url, headers: {'X-API-Key': apiKey});
+    _progress[book.id] = 0.05;
+    notifyListeners();
 
-    Map<String, dynamic> saved;
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      saved = {
-        'title': book.title,
-        'collection': book.collectionKey,
-        'lang': _language,
-        'books': data['data'] ?? [],
-      };
-    } else {
-      // API unavailable — store minimal stub so UI shows downloaded state
-      saved = {
-        'title': book.title,
-        'collection': book.collectionKey,
-        'lang': _language,
-        'books': List.generate(book.totalBooks ?? book.totalItems, (i) => {
-              'bookNumber': i + 1,
-              'book': [{'lang': 'en', 'name': 'Chapter ${i + 1}'}],
-              'hadithsCount': 0,
-            }),
-      };
+    final enResp =
+        await http.get(Uri.parse('$base/eng-$col.min.json'));
+    _progress[book.id] = 0.45;
+    notifyListeners();
+
+    final arResp =
+        await http.get(Uri.parse('$base/ara-$col.min.json'));
+    _progress[book.id] = 0.75;
+    notifyListeners();
+
+    if (enResp.statusCode != 200) {
+      throw Exception('Download failed (${enResp.statusCode})');
     }
 
-    _progress[book.id] = 0.8;
+    final enData = jsonDecode(enResp.body) as Map<String, dynamic>;
+    final arData = arResp.statusCode == 200
+        ? jsonDecode(arResp.body) as Map<String, dynamic>
+        : null;
+
+    final meta = enData['metadata'] as Map<String, dynamic>;
+    final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
+    final sectionDetails =
+        (meta['section_details'] as Map<String, dynamic>?) ?? {};
+
+    // Build books list (table of contents)
+    final books = sections.entries.map((e) {
+      final detail = sectionDetails[e.key] as Map<String, dynamic>?;
+      final first = detail?['hadithnumber_first'] as int? ?? 0;
+      final last = detail?['hadithnumber_last'] as int? ?? 0;
+      return {
+        'bookNumber': int.tryParse(e.key) ?? 0,
+        'book': [
+          {'lang': 'en', 'name': e.value.toString()}
+        ],
+        'hadithsCount': (last - first + 1).clamp(0, 9999),
+      };
+    }).toList()
+      ..sort((a, b) =>
+          (a['bookNumber'] as int).compareTo(b['bookNumber'] as int));
+
+    // Build hadith-number → section-number lookup
+    final hadithSection = <int, int>{};
+    for (final e in sectionDetails.entries) {
+      final sNum = int.tryParse(e.key) ?? 0;
+      final d = e.value as Map<String, dynamic>;
+      final first = d['hadithnumber_first'] as int? ?? 0;
+      final last = d['hadithnumber_last'] as int? ?? 0;
+      for (int i = first; i <= last; i++) {
+        hadithSection[i] = sNum;
+      }
+    }
+
+    // Build Arabic lookup by hadith number
+    final arMap = <int, dynamic>{};
+    if (arData != null) {
+      for (final h in (arData['hadiths'] as List? ?? [])) {
+        if (h is Map) arMap[h['hadithnumber'] as int] = h;
+      }
+    }
+
+    // Merge English + Arabic hadiths
+    final hadiths = (enData['hadiths'] as List? ?? []).map((h) {
+      final num = h['hadithnumber'] as int;
+      final entries = <Map<String, dynamic>>[
+        {
+          'lang': 'en',
+          'narrator': h['narrator']?.toString() ?? '',
+          'body': h['text']?.toString() ?? '',
+        },
+      ];
+      final arH = arMap[num];
+      if (arH != null) {
+        entries.add({
+          'lang': 'ar',
+          'narrator': arH['narrator']?.toString() ?? '',
+          'body': arH['text']?.toString() ?? '',
+        });
+      }
+      return {
+        'hadithNumber': num.toString(),
+        'sectionNumber': hadithSection[num] ?? 0,
+        'hadith': entries,
+      };
+    }).toList();
+
+    final saved = {
+      'title': meta['name']?.toString() ?? book.title,
+      'collection': col,
+      'source': 'fawazahmed0',
+      'books': books,
+      'hadiths': hadiths,
+    };
+
+    _progress[book.id] = 0.92;
     notifyListeners();
     final path = await _bookFilePath(book.id);
     await File(path).writeAsString(jsonEncode(saved));
@@ -227,15 +295,20 @@ class BookDownloadService extends ChangeNotifier {
   Future<List<Map<String, dynamic>>> loadHadiths(
       IslamicBook book, int bookNumber, {int page = 1}) async {
     if (book.isLocal) return [];
-    const apiKey = 'SqD712P3E82xnwOAEOkGd5JZH8s9wRNx';
-    const baseUrl = 'https://api.sunnah.com/v1';
     try {
-      final url = Uri.parse(
-          '$baseUrl/collections/${book.collectionKey}/books/$bookNumber/hadiths?limit=20&page=$page');
-      final response = await http.get(url, headers: {'X-API-Key': apiKey});
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return (data['data'] as List? ?? []).cast<Map<String, dynamic>>();
+      final path = await _bookFilePath(book.id);
+      final content = await File(path).readAsString();
+      final data = jsonDecode(content) as Map<String, dynamic>;
+      if (data['source'] == 'fawazahmed0') {
+        final all = (data['hadiths'] as List? ?? [])
+            .whereType<Map>()
+            .where((h) => h['sectionNumber'] == bookNumber)
+            .cast<Map<String, dynamic>>()
+            .toList();
+        const pageSize = 20;
+        final start = (page - 1) * pageSize;
+        if (start >= all.length) return [];
+        return all.sublist(start, (start + pageSize).clamp(0, all.length));
       }
     } catch (_) {}
     return [];
