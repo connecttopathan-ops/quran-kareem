@@ -192,6 +192,8 @@ class _BookCardState extends State<_BookCard> {
       final shown = await widget.svc.wasPromptShown(widget.book.id);
       if (!shown && context.mounted) {
         await _showDownloadSheet(context);
+      } else if (shown) {
+        widget.svc.startDownload(widget.book);
       }
       return;
     }
@@ -210,7 +212,7 @@ class _BookCardState extends State<_BookCard> {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _DownloadSheet(book: widget.book, svc: widget.svc),
+      builder: (ctx) => BookDownloadSheet(book: widget.book, svc: widget.svc),
     );
   }
 
@@ -361,7 +363,7 @@ class _StateButton extends StatelessWidget {
                 await showModalBottomSheet(
                   context: context,
                   backgroundColor: Colors.transparent,
-                  builder: (ctx) => _DownloadSheet(book: book, svc: svc),
+                  builder: (ctx) => BookDownloadSheet(book: book, svc: svc),
                 );
               }
             } else {
@@ -454,11 +456,11 @@ class _StateButton extends StatelessWidget {
 }
 
 // ── Download Sheet ─────────────────────────────────────────────────────────
-class _DownloadSheet extends StatelessWidget {
+class BookDownloadSheet extends StatelessWidget {
   final IslamicBook book;
   final BookDownloadService svc;
 
-  const _DownloadSheet({required this.book, required this.svc});
+  const BookDownloadSheet({super.key, required this.book, required this.svc});
 
   @override
   Widget build(BuildContext context) {

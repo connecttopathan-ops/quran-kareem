@@ -1513,11 +1513,6 @@ class _BooksHomeSectionState extends State<_BooksHomeSection> {
                   return _HomeBookCard(
                     book: book,
                     svc: svc,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const IslamicBooksScreen()),
-                    ),
                   );
                 },
               ),
@@ -1567,10 +1562,8 @@ class _FilterChip extends StatelessWidget {
 class _HomeBookCard extends StatefulWidget {
   final IslamicBook book;
   final BookDownloadService svc;
-  final VoidCallback onTap;
 
-  const _HomeBookCard(
-      {required this.book, required this.svc, required this.onTap});
+  const _HomeBookCard({required this.book, required this.svc});
 
   @override
   State<_HomeBookCard> createState() => _HomeBookCardState();
@@ -1606,15 +1599,28 @@ class _HomeBookCardState extends State<_HomeBookCard> {
     }
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (state == BookDownloadState.downloaded) {
           Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (_) => BookDetailScreen(book: widget.book)),
           );
-        } else {
-          widget.onTap();
+        } else if (state == BookDownloadState.notDownloaded) {
+          final shown = await widget.svc.wasPromptShown(widget.book.id);
+          if (!shown) {
+            await widget.svc.markPromptShown(widget.book.id);
+            if (context.mounted) {
+              await showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) =>
+                    BookDownloadSheet(book: widget.book, svc: widget.svc),
+              );
+            }
+          } else {
+            widget.svc.startDownload(widget.book);
+          }
         }
       },
       child: Container(
