@@ -25,6 +25,16 @@ jobs:
         run: python3 scripts/download_ur_roman.py
       - name: Download all 46 bundled translations (alquran.cloud)
         run: python3 scripts/download_all_translations.py
+      - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
+        run: |
+          BASE="https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions"
+          for col in bukhari muslim; do
+            for lang in eng ara urd; do
+              curl -fsSL "$BASE/${lang}-${col}.min.json" \
+                -o "assets/books/${lang}-${col}.min.json" \
+                || echo "Skipping ${lang}-${col} (not available)"
+            done
+          done
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
       - name: Decode keystore
@@ -71,6 +81,16 @@ jobs:
         run: python3 scripts/download_ur_roman.py
       - name: Download all 46 bundled translations (alquran.cloud)
         run: python3 scripts/download_all_translations.py
+      - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
+        run: |
+          BASE="https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions"
+          for col in bukhari muslim; do
+            for lang in eng ara urd; do
+              curl -fsSL "$BASE/${lang}-${col}.min.json" \
+                -o "assets/books/${lang}-${col}.min.json" \
+                || echo "Skipping ${lang}-${col} (not available)"
+            done
+          done
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
       - name: Install CocoaPods dependencies

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show ChangeNotifier, compute, debugPrint;
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/islamic_book.dart';
@@ -152,26 +151,23 @@ class BookDownloadService extends ChangeNotifier {
   }
 
   Future<void> _downloadFromSunnah(IslamicBook book) async {
-    const base =
-        'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
     final col = book.collectionKey;
-    const timeout = Duration(seconds: 90);
 
     // ── Step 1: English (also contains metadata) ──────────────────────────
     _progress[book.id] = 0.05;
     notifyListeners();
 
-    final enResp = await http
-        .get(Uri.parse('$base/eng-$col.min.json'))
-        .timeout(timeout);
-    if (enResp.statusCode != 200) {
-      throw Exception('Download failed (${enResp.statusCode})');
+    final String enBody;
+    try {
+      enBody = await rootBundle.loadString('assets/books/eng-$col.min.json');
+    } catch (_) {
+      throw Exception('Hadith data for $col is not bundled in this build');
     }
-    _progress[book.id] = 0.20;
+    _progress[book.id] = 0.25;
     notifyListeners();
 
     final enData = await compute(
-        (String s) => jsonDecode(s) as Map<String, dynamic>, enResp.body);
+        (String s) => jsonDecode(s) as Map<String, dynamic>, enBody);
     final meta = enData['metadata'] as Map<String, dynamic>;
     final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
     final sectionDetails =
@@ -217,32 +213,30 @@ class BookDownloadService extends ChangeNotifier {
     // Save English hadiths grouped by section
     await _saveHadithsBySection(
         enData['hadiths'] as List, hadithSection, 'en', book.id);
-    _progress[book.id] = 0.45;
+    _progress[book.id] = 0.50;
     notifyListeners();
 
     // ── Step 2: Arabic ─────────────────────────────────────────────────────
-    final arResp = await http
-        .get(Uri.parse('$base/ara-$col.min.json'))
-        .timeout(timeout);
-    if (arResp.statusCode == 200) {
+    try {
+      final arBody =
+          await rootBundle.loadString('assets/books/ara-$col.min.json');
       final arData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, arResp.body);
+          (String s) => jsonDecode(s) as Map<String, dynamic>, arBody);
       await _saveHadithsBySection(
           arData['hadiths'] as List, hadithSection, 'ar', book.id);
-    }
-    _progress[book.id] = 0.72;
+    } catch (_) {}
+    _progress[book.id] = 0.75;
     notifyListeners();
 
     // ── Step 3: Urdu ───────────────────────────────────────────────────────
-    final urResp = await http
-        .get(Uri.parse('$base/urd-$col.min.json'))
-        .timeout(timeout);
-    if (urResp.statusCode == 200) {
+    try {
+      final urBody =
+          await rootBundle.loadString('assets/books/urd-$col.min.json');
       final urData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, urResp.body);
+          (String s) => jsonDecode(s) as Map<String, dynamic>, urBody);
       await _saveHadithsBySection(
           urData['hadiths'] as List, hadithSection, 'ur', book.id);
-    }
+    } catch (_) {}
     _progress[book.id] = 0.95;
     notifyListeners();
   }
