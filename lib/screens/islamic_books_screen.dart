@@ -207,6 +207,31 @@ class _BookCardState extends State<_BookCard> {
     }
   }
 
+  Future<void> _handleLongPress(BuildContext context) async {
+    final state = widget.svc.stateFor(widget.book.id);
+    if (state != BookDownloadState.downloaded) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Re-download?'),
+        content: Text(
+            'This will delete the saved copy of "${widget.book.title}" and download it fresh.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Re-download')),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await widget.svc.deleteBook(widget.book.id);
+      widget.svc.startDownload(widget.book);
+    }
+  }
+
   Future<void> _showDownloadSheet(BuildContext context) async {
     await widget.svc.markPromptShown(widget.book.id);
     if (!context.mounted) return;
@@ -225,6 +250,7 @@ class _BookCardState extends State<_BookCard> {
 
     return GestureDetector(
       onTap: () => _handleTap(context),
+      onLongPress: () => _handleLongPress(context),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
