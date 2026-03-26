@@ -196,7 +196,7 @@ class BookDownloadService extends ChangeNotifier {
       final first = (detail?['hadithnumber_first'] as num?)?.toInt() ?? 0;
       final last = (detail?['hadithnumber_last'] as num?)?.toInt() ?? 0;
       return {
-        'bookNumber': sectionKey,
+        'bookNumber': sectionKey + 1,
         'book': [
           {'lang': 'en', 'name': e.value.toString()}
         ],
