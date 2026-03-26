@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,132 +151,144 @@ class BookDownloadService extends ChangeNotifier {
     }
   }
 
+  static const _kHadithApiKey =
+      r'$2y$10$i0Y8DwcA9IKOd9kM0for4eX6RGOOAFQ9Mvd8etx5p2UDWZH8rNK6';
+
   Future<void> _downloadFromSunnah(IslamicBook book) async {
-    const base =
-        'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
-    final col = book.collectionKey;
-    const timeout = Duration(seconds: 90);
+    final slug = book.collectionKey; // e.g. 'sahih-bukhari'
+    const timeout = Duration(seconds: 60);
 
-    // ── Step 1: English (also contains metadata) ──────────────────────────
-    _progress[book.id] = 0.05;
+    // ── Step 1: Chapter list ──────────────────────────────────────────────
+    _progress[book.id] = 0.02;
     notifyListeners();
 
-    final enResp = await http
-        .get(Uri.parse('$base/eng-$col.min.json'))
+    final chapResp = await http
+        .get(Uri.https('hadithapi.com', '/api/$slug/chapters',
+            {'apiKey': _kHadithApiKey}))
         .timeout(timeout);
-    if (enResp.statusCode != 200) {
-      throw Exception('Download failed (${enResp.statusCode})');
-    }
-    _progress[book.id] = 0.20;
-    notifyListeners();
-
-    final enData = await compute(
-        (String s) => jsonDecode(s) as Map<String, dynamic>, enResp.body);
-    final meta = enData['metadata'] as Map<String, dynamic>;
-    final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
-    final sectionDetails =
-        (meta['section_details'] as Map<String, dynamic>?) ?? {};
-
-    // Build hadith-number → 1-indexed section lookup
-    final hadithSection = <int, int>{};
-    for (final e in sectionDetails.entries) {
-      final sNum = (int.tryParse(e.key) ?? 0) + 1;
-      final d = e.value as Map<String, dynamic>;
-      final first = (d['hadithnumber_first'] as num?)?.toInt() ?? 0;
-      final last = (d['hadithnumber_last'] as num?)?.toInt() ?? 0;
-      for (int i = first; i <= last; i++) {
-        hadithSection[i] = sNum;
-      }
+    if (chapResp.statusCode != 200) {
+      throw Exception('Chapter list fetch failed (${chapResp.statusCode})');
     }
 
-    // Write small index file (books list only)
-    final books = sections.entries.map((e) {
-      final sectionKey = int.tryParse(e.key) ?? 0;
-      final detail = sectionDetails[e.key] as Map<String, dynamic>?;
-      final first = (detail?['hadithnumber_first'] as num?)?.toInt() ?? 0;
-      final last = (detail?['hadithnumber_last'] as num?)?.toInt() ?? 0;
+    final chapJson = jsonDecode(chapResp.body) as Map<String, dynamic>;
+    final chapters =
+        (chapJson['chapters'] as List).cast<Map<String, dynamic>>();
+
+    final indexBooks = chapters.map((ch) {
+      final chNum = int.tryParse(ch['chapterNumber'].toString()) ?? 0;
       return {
-        'bookNumber': sectionKey + 1,
+        'bookNumber': chNum,
         'book': [
-          {'lang': 'en', 'name': e.value.toString()}
+          {'lang': 'en', 'name': ch['chapterEnglish']?.toString() ?? ''},
+          {'lang': 'ar', 'name': ch['chapterArabic']?.toString() ?? ''},
         ],
-        'hadithsCount': (last - first + 1).clamp(0, 9999),
+        'hadithsCount': int.tryParse(ch['hadithCount'].toString()) ?? 0,
       };
     }).toList()
       ..sort((a, b) =>
           (a['bookNumber'] as int).compareTo(b['bookNumber'] as int));
 
-    final title = meta['name']?.toString() ?? book.title;
     await File(await _bookIndexPath(book.id)).writeAsString(jsonEncode({
-      'title': title,
-      'collection': col,
-      'source': 'fawazahmed0_v2',
-      'books': books,
+      'title': book.title,
+      'collection': slug,
+      'source': 'hadithapi_v1',
+      'books': indexBooks,
     }));
 
-    // Save English hadiths grouped by section
-    await _saveHadithsBySection(
-        enData['hadiths'] as List, hadithSection, 'en', book.id);
-    _progress[book.id] = 0.45;
+    _progress[book.id] = 0.05;
     notifyListeners();
 
-    // ── Step 2: Arabic ─────────────────────────────────────────────────────
-    final arResp = await http
-        .get(Uri.parse('$base/ara-$col.min.json'))
-        .timeout(timeout);
-    if (arResp.statusCode == 200) {
-      final arData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, arResp.body);
-      await _saveHadithsBySection(
-          arData['hadiths'] as List, hadithSection, 'ar', book.id);
-    }
-    _progress[book.id] = 0.72;
-    notifyListeners();
+    // ── Step 2: Hadiths per chapter ───────────────────────────────────────
+    final enSections = <String, List<Map<String, dynamic>>>{};
+    final arSections = <String, List<Map<String, dynamic>>>{};
+    final urSections = <String, List<Map<String, dynamic>>>{};
 
-    // ── Step 3: Urdu ───────────────────────────────────────────────────────
-    final urResp = await http
-        .get(Uri.parse('$base/urd-$col.min.json'))
-        .timeout(timeout);
-    if (urResp.statusCode == 200) {
-      final urData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, urResp.body);
-      await _saveHadithsBySection(
-          urData['hadiths'] as List, hadithSection, 'ur', book.id);
-    }
-    _progress[book.id] = 0.95;
-    notifyListeners();
-  }
+    final total = chapters.length;
+    for (int i = 0; i < total; i++) {
+      final ch = chapters[i];
+      final chNum = int.tryParse(ch['chapterNumber'].toString()) ?? 0;
+      final chKey = chNum.toString();
 
-  /// Groups hadiths by 1-indexed section number and writes to a per-language file.
-  /// Memory: processes one language at a time — no merging.
-  Future<void> _saveHadithsBySection(
-    List hadiths,
-    Map<int, int> hadithSection,
-    String lang,
-    String bookId,
-  ) async {
-    final bySection = <String, List<Map<String, dynamic>>>{};
-    for (final h in hadiths) {
-      if (h is! Map) continue;
-      final hadithNum = (h['hadithnumber'] as num?)?.toInt() ?? 0;
-      final sNum = hadithSection[hadithNum] ?? 0;
-      if (sNum == 0) continue;
-      bySection.putIfAbsent(sNum.toString(), () => []).add({
-        'hadithNumber': hadithNum.toString(),
-        'hadith': [
-          {
-            'lang': lang,
-            'narrator': h['narrator']?.toString() ?? '',
-            'body': h['text']?.toString() ?? '',
+      int page = 1;
+      while (true) {
+        final hResp = await http
+            .get(Uri.https('hadithapi.com', '/api/hadiths', {
+              'apiKey': _kHadithApiKey,
+              'book': slug,
+              'chapter': chKey,
+              'paginate': '100',
+              'page': page.toString(),
+            }))
+            .timeout(timeout);
+        if (hResp.statusCode != 200) break;
+
+        final hJson = jsonDecode(hResp.body) as Map<String, dynamic>;
+        final paged = hJson['hadiths'] as Map<String, dynamic>;
+        final hadiths = (paged['data'] as List).cast<Map<String, dynamic>>();
+        final lastPage = int.tryParse(paged['last_page'].toString()) ?? 1;
+
+        for (final h in hadiths) {
+          final hNum = h['hadithNumber']?.toString() ?? '';
+          final narrator = h['englishNarrator']?.toString() ?? '';
+
+          final enBody = h['hadithEnglish']?.toString() ?? '';
+          if (enBody.isNotEmpty) {
+            enSections.putIfAbsent(chKey, () => []).add({
+              'hadithNumber': hNum,
+              'hadith': [
+                {'lang': 'en', 'narrator': narrator, 'body': enBody}
+              ],
+            });
           }
-        ],
-      });
+
+          final arBody = h['hadithArabic']?.toString() ?? '';
+          if (arBody.isNotEmpty) {
+            arSections.putIfAbsent(chKey, () => []).add({
+              'hadithNumber': hNum,
+              'hadith': [
+                {'lang': 'ar', 'narrator': narrator, 'body': arBody}
+              ],
+            });
+          }
+
+          final urBody = h['hadithUrdu']?.toString() ?? '';
+          if (urBody.isNotEmpty) {
+            urSections.putIfAbsent(chKey, () => []).add({
+              'hadithNumber': hNum,
+              'hadith': [
+                {'lang': 'ur', 'narrator': narrator, 'body': urBody}
+              ],
+            });
+          }
+        }
+
+        if (page >= lastPage) break;
+        page++;
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      _progress[book.id] = 0.05 + 0.93 * (i + 1) / total;
+      notifyListeners();
     }
-    await File(await _bookLangPath(bookId, lang)).writeAsString(jsonEncode({
-      'source': 'fawazahmed0_v2',
-      'lang': lang,
-      'sections': bySection,
-    }));
+
+    // ── Step 3: Write lang files ──────────────────────────────────────────
+    await Future.wait([
+      File(await _bookLangPath(book.id, 'en')).writeAsString(jsonEncode({
+        'source': 'hadithapi_v1',
+        'lang': 'en',
+        'sections': enSections,
+      })),
+      File(await _bookLangPath(book.id, 'ar')).writeAsString(jsonEncode({
+        'source': 'hadithapi_v1',
+        'lang': 'ar',
+        'sections': arSections,
+      })),
+      File(await _bookLangPath(book.id, 'ur')).writeAsString(jsonEncode({
+        'source': 'hadithapi_v1',
+        'lang': 'ur',
+        'sections': urSections,
+      })),
+    ]);
   }
 
   Future<List<Map<String, dynamic>>> loadChapterIndex(IslamicBook book) async {
@@ -353,7 +365,8 @@ class BookDownloadService extends ChangeNotifier {
         if (!await file.exists()) continue;
         final data =
             jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-        if (data['source'] != 'fawazahmed0_v2') continue;
+        if (data['source'] != 'fawazahmed0_v2' &&
+            data['source'] != 'hadithapi_v1') continue;
         final sections = data['sections'] as Map<String, dynamic>? ?? {};
         final all = (sections[bookNumber.toString()] as List? ?? [])
             .whereType<Map>()
