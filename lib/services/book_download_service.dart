@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/foundation.dart' show ChangeNotifier, compute, debugPrint;
+import 'package:flutter/foundation.dart' show ChangeNotifier, debugPrint;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/islamic_book.dart';
@@ -151,125 +151,50 @@ class BookDownloadService extends ChangeNotifier {
   }
 
   Future<void> _downloadFromSunnah(IslamicBook book) async {
-    final col = book.collectionKey;
+    final id = book.id;
 
-    // ── Step 1: English (also contains metadata) ──────────────────────────
-    _progress[book.id] = 0.05;
+    // The CI script (scripts/bundle_hadiths.py) has already downloaded and
+    // processed the data from hadithapi.com into assets/books/. We just copy
+    // the pre-processed files into the app's documents directory.
+
+    _progress[book.id] = 0.10;
     notifyListeners();
 
-    final String enBody;
+    // Index file (required)
     try {
-      enBody = await rootBundle.loadString('assets/books/eng-$col.min.json');
+      final data = await rootBundle.loadString('assets/books/${id}_index.json');
+      await File(await _bookIndexPath(id)).writeAsString(data);
     } catch (_) {
-      throw Exception('Hadith data for $col is not bundled in this build');
+      throw Exception('Hadith data for "$id" is not bundled in this build');
     }
-    _progress[book.id] = 0.25;
+    _progress[book.id] = 0.35;
     notifyListeners();
 
-    final enData = await compute(
-        (String s) => jsonDecode(s) as Map<String, dynamic>, enBody);
-    final meta = enData['metadata'] as Map<String, dynamic>;
-    final sections = (meta['sections'] as Map<String, dynamic>?) ?? {};
-    final sectionDetails =
-        (meta['section_details'] as Map<String, dynamic>?) ?? {};
-
-    // Build hadith-number → 1-indexed section lookup
-    final hadithSection = <int, int>{};
-    for (final e in sectionDetails.entries) {
-      final sNum = (int.tryParse(e.key) ?? 0) + 1;
-      final d = e.value as Map<String, dynamic>;
-      final first = (d['hadithnumber_first'] as num?)?.toInt() ?? 0;
-      final last = (d['hadithnumber_last'] as num?)?.toInt() ?? 0;
-      for (int i = first; i <= last; i++) {
-        hadithSection[i] = sNum;
-      }
-    }
-
-    // Write small index file (books list only)
-    final books = sections.entries.map((e) {
-      final sectionKey = int.tryParse(e.key) ?? 0;
-      final detail = sectionDetails[e.key] as Map<String, dynamic>?;
-      final first = (detail?['hadithnumber_first'] as num?)?.toInt() ?? 0;
-      final last = (detail?['hadithnumber_last'] as num?)?.toInt() ?? 0;
-      return {
-        'bookNumber': sectionKey + 1,
-        'book': [
-          {'lang': 'en', 'name': e.value.toString()}
-        ],
-        'hadithsCount': (last - first + 1).clamp(0, 9999),
-      };
-    }).toList()
-      ..sort((a, b) =>
-          (a['bookNumber'] as int).compareTo(b['bookNumber'] as int));
-
-    final title = meta['name']?.toString() ?? book.title;
-    await File(await _bookIndexPath(book.id)).writeAsString(jsonEncode({
-      'title': title,
-      'collection': col,
-      'source': 'fawazahmed0_v2',
-      'books': books,
-    }));
-
-    // Save English hadiths grouped by section
-    await _saveHadithsBySection(
-        enData['hadiths'] as List, hadithSection, 'en', book.id);
-    _progress[book.id] = 0.50;
-    notifyListeners();
-
-    // ── Step 2: Arabic ─────────────────────────────────────────────────────
+    // English lang file (required)
     try {
-      final arBody =
-          await rootBundle.loadString('assets/books/ara-$col.min.json');
-      final arData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, arBody);
-      await _saveHadithsBySection(
-          arData['hadiths'] as List, hadithSection, 'ar', book.id);
+      final data = await rootBundle.loadString('assets/books/${id}_en.json');
+      await File(await _bookLangPath(id, 'en')).writeAsString(data);
+    } catch (_) {
+      throw Exception('English hadith data for "$id" is not bundled');
+    }
+    _progress[book.id] = 0.65;
+    notifyListeners();
+
+    // Arabic lang file (optional)
+    try {
+      final data = await rootBundle.loadString('assets/books/${id}_ar.json');
+      await File(await _bookLangPath(id, 'ar')).writeAsString(data);
     } catch (_) {}
-    _progress[book.id] = 0.75;
+    _progress[book.id] = 0.82;
     notifyListeners();
 
-    // ── Step 3: Urdu ───────────────────────────────────────────────────────
+    // Urdu lang file (optional)
     try {
-      final urBody =
-          await rootBundle.loadString('assets/books/urd-$col.min.json');
-      final urData = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, urBody);
-      await _saveHadithsBySection(
-          urData['hadiths'] as List, hadithSection, 'ur', book.id);
+      final data = await rootBundle.loadString('assets/books/${id}_ur.json');
+      await File(await _bookLangPath(id, 'ur')).writeAsString(data);
     } catch (_) {}
     _progress[book.id] = 0.95;
     notifyListeners();
-  }
-
-  /// Groups hadiths by 1-indexed section number and writes to a per-language file.
-  Future<void> _saveHadithsBySection(
-    List hadiths,
-    Map<int, int> hadithSection,
-    String lang,
-    String bookId,
-  ) async {
-    final bySection = <String, List<Map<String, dynamic>>>{};
-    for (final h in hadiths) {
-      if (h is! Map) continue;
-      final hadithNum = (h['hadithnumber'] as num?)?.toInt() ?? 0;
-      final sNum = hadithSection[hadithNum] ?? 0;
-      if (sNum == 0) continue;
-      bySection.putIfAbsent(sNum.toString(), () => []).add({
-        'hadithNumber': hadithNum.toString(),
-        'hadith': [
-          {
-            'lang': lang,
-            'narrator': h['narrator']?.toString() ?? '',
-            'body': h['text']?.toString() ?? '',
-          }
-        ],
-      });
-    }
-    await File(await _bookLangPath(bookId, lang)).writeAsString(jsonEncode({
-      'source': 'fawazahmed0_v2',
-      'lang': lang,
-      'sections': bySection,
-    }));
   }
 
   Future<List<Map<String, dynamic>>> loadChapterIndex(IslamicBook book) async {
