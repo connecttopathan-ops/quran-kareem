@@ -33,7 +33,6 @@ void main() async {
       config: const audio_svc_pkg.AudioServiceConfig(
         androidNotificationChannelId: 'co.getquran.app.audio',
         androidNotificationChannelName: 'Quran Audio',
-        androidNotificationOngoing: true,
         androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
       ),
