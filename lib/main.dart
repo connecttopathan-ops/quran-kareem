@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart' as audio_svc_pkg;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'models/app_state.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
+import 'services/audio_handler.dart';
 import 'services/quran_service.dart';
 import 'services/translation_service.dart';
 import 'services/notification_service.dart';
@@ -24,14 +26,24 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
+  final handler = await audio_svc_pkg.AudioService.init<QuranAudioHandler>(
+    builder: () => QuranAudioHandler(),
+    config: const audio_svc_pkg.AudioServiceConfig(
+      androidNotificationChannelId: 'co.getquran.app.audio',
+      androidNotificationChannelName: 'Quran Audio',
+      androidNotificationOngoing: true,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+    ),
+  );
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
-  runApp(const QuranApp());
+  runApp(QuranApp(handler: handler));
 }
 
 class QuranApp extends StatelessWidget {
-  const QuranApp({super.key});
+  final QuranAudioHandler handler;
+  const QuranApp({super.key, required this.handler});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +51,7 @@ class QuranApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AppState()),
         ChangeNotifierProvider(create: (_) => LocationService()),
-        ChangeNotifierProvider(create: (_) => AudioService()),
+        ChangeNotifierProvider(create: (_) => AudioService(handler)),
         ChangeNotifierProvider(create: (_) => QuranService()),
         ChangeNotifierProvider(create: (_) => TranslationService()),
         ChangeNotifierProvider(create: (_) => BookDownloadService()),

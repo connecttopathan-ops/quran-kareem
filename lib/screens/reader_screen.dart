@@ -418,6 +418,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
             Expanded(child: _buildBody(state)),
             _ModeChipsBar(state: state, surah: widget.surah),
+            _SurahAudioBar(surah: widget.surah, readerTheme: rt),
           ]),
         ),
       );
@@ -995,6 +996,124 @@ class _SurahNavStrip extends StatelessWidget {
         ),
       ]),
     );
+  }
+}
+
+// ── Surah Audio Bar ────────────────────────────────────────────────────────────
+
+class _SurahAudioBar extends StatelessWidget {
+  final Surah surah;
+  final ReaderTheme readerTheme;
+  const _SurahAudioBar({required this.surah, required this.readerTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AudioService>(builder: (context, audio, _) {
+      final np = audio.nowPlaying;
+      if (np == null) return const SizedBox.shrink();
+
+      return Container(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        decoration: BoxDecoration(
+          color: _RC.surface2(readerTheme),
+          border: Border(top: BorderSide(color: _RC.border(readerTheme))),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(children: [
+              // Previous surah
+              GestureDetector(
+                onTap: np.surahNumber > 1 ? audio.previousSurah : null,
+                child: Opacity(
+                  opacity: np.surahNumber > 1 ? 1.0 : 0.3,
+                  child: SizedBox(
+                    width: 32, height: 32,
+                    child: Center(
+                        child: QIcon.previousVerse(size: 15, color: AppColors.gold)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Play / pause
+              GestureDetector(
+                onTap: audio.togglePlayPause,
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: const BoxDecoration(
+                      color: AppColors.gold, shape: BoxShape.circle),
+                  child: Center(
+                    child: audio.isLoading
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 1.5, color: Colors.white))
+                        : (audio.isPlaying
+                            ? QIcon.pause(size: 13, color: Colors.white)
+                            : QIcon.play(size: 13, color: Colors.white)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Next surah
+              GestureDetector(
+                onTap: np.surahNumber < 114 ? audio.nextSurah : null,
+                child: Opacity(
+                  opacity: np.surahNumber < 114 ? 1.0 : 0.3,
+                  child: SizedBox(
+                    width: 32, height: 32,
+                    child: Center(
+                        child: QIcon.nextVerse(size: 15, color: AppColors.gold)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(np.surahName,
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'serif',
+                            fontWeight: FontWeight.w500,
+                            color: _RC.text(readerTheme))),
+                    Text('Verse ${np.verseNumber} / ${np.totalVerses}',
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontFamily: 'sans-serif',
+                            color: _RC.textDim(readerTheme))),
+                  ],
+                ),
+              ),
+            ]),
+            const SizedBox(height: 6),
+            // Progress bar
+            StreamBuilder<Duration>(
+              stream: audio.positionStream,
+              builder: (_, posSnap) => StreamBuilder<Duration?>(
+                stream: audio.durationStream,
+                builder: (_, durSnap) {
+                  final pos = posSnap.data?.inMilliseconds ?? 0;
+                  final dur = durSnap.data?.inMilliseconds ?? 0;
+                  final progress =
+                      dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
+                  return LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: _RC.border(readerTheme),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                    minHeight: 2,
+                    borderRadius: BorderRadius.circular(1),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 

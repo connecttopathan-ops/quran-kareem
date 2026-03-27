@@ -214,6 +214,10 @@ class MiniAudioPlayer extends StatelessWidget {
         final np = audio.nowPlaying;
         if (np == null) return const SizedBox.shrink();
 
+        final surah = kSurahs[np.surahNumber - 1];
+        void openReader() => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => ReaderScreen(surah: surah)));
+
         return Container(
           decoration: BoxDecoration(
             color: context.surface,
@@ -222,71 +226,105 @@ class MiniAudioPlayer extends StatelessWidget {
               bottom: BorderSide(color: context.border),
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Surah/verse info
-              Container(
-                width: 34, height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.goldDim.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.goldDim.withOpacity(0.4)),
-                ),
-                child: Center(
-                  child: audio.isLoading
-                      ? SizedBox(width: 14, height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 1.5, color: AppColors.gold))
-                      : Text('${np.verseNumber}',
-                          style: TextStyle(fontFamily: 'Playfair Display',
-                              fontSize: 12, color: AppColors.gold)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(np.surahName,
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
-                            color: context.text)),
-                    Text('${audio.reciter.name} \u00b7 Verse ${np.verseNumber}/${np.totalVerses}',
-                        style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
-                            color: context.textDim)),
-                  ],
-                ),
-              ),
-              // Controls
-              _MiniBtn(
-                icon: QIcon.previousVerse(size: 15, color: context.textDim),
-                onTap: audio.previousVerse,
-              ),
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: audio.togglePlayPause,
-                child: Container(
-                  width: 34, height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.gold,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: audio.isPlaying
-                        ? QIcon.pause(size: 14, color: Colors.white)
-                        : QIcon.play(size: 14, color: Colors.white),
+              Row(children: [
+                // Verse badge — tap opens reader
+                GestureDetector(
+                  onTap: openReader,
+                  child: Container(
+                    width: 34, height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.goldDim.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.goldDim.withOpacity(0.4)),
+                    ),
+                    child: Center(
+                      child: audio.isLoading
+                          ? const SizedBox(
+                              width: 14, height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 1.5, color: AppColors.gold))
+                          : Text('${np.verseNumber}',
+                              style: const TextStyle(
+                                  fontFamily: 'Playfair Display',
+                                  fontSize: 12, color: AppColors.gold)),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              _MiniBtn(
-                icon: QIcon.nextVerse(size: 15, color: context.textDim),
-                onTap: audio.nextVerse,
-              ),
-              const SizedBox(width: 6),
-              _MiniBtn(
-                icon: QIcon.close(size: 14, color: context.textDim),
-                onTap: audio.stop,
+                const SizedBox(width: 10),
+                // Info — tap opens reader
+                Expanded(
+                  child: GestureDetector(
+                    onTap: openReader,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(np.surahName,
+                            style: TextStyle(fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: context.text)),
+                        Text('${audio.reciter.name} · Verse ${np.verseNumber}/${np.totalVerses}',
+                            style: TextStyle(fontSize: 9,
+                                fontFamily: 'sans-serif',
+                                color: context.textDim)),
+                      ],
+                    ),
+                  ),
+                ),
+                // Controls
+                _MiniBtn(
+                  icon: QIcon.previousVerse(size: 15, color: context.textDim),
+                  onTap: audio.previousVerse,
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: audio.togglePlayPause,
+                  child: Container(
+                    width: 34, height: 34,
+                    decoration: const BoxDecoration(
+                        color: AppColors.gold, shape: BoxShape.circle),
+                    child: Center(
+                      child: audio.isPlaying
+                          ? QIcon.pause(size: 14, color: Colors.white)
+                          : QIcon.play(size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                _MiniBtn(
+                  icon: QIcon.nextVerse(size: 15, color: context.textDim),
+                  onTap: audio.nextVerse,
+                ),
+                const SizedBox(width: 6),
+                _MiniBtn(
+                  icon: QIcon.close(size: 14, color: context.textDim),
+                  onTap: audio.stop,
+                ),
+              ]),
+              const SizedBox(height: 5),
+              // Playback progress bar
+              StreamBuilder<Duration>(
+                stream: audio.positionStream,
+                builder: (_, posSnap) => StreamBuilder<Duration?>(
+                  stream: audio.durationStream,
+                  builder: (_, durSnap) {
+                    final pos = posSnap.data?.inMilliseconds ?? 0;
+                    final dur = durSnap.data?.inMilliseconds ?? 0;
+                    final progress =
+                        dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
+                    return LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: context.border,
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                      minHeight: 2,
+                      borderRadius: BorderRadius.circular(1),
+                    );
+                  },
+                ),
               ),
             ],
           ),

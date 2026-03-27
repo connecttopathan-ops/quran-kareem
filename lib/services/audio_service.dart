@@ -1,7 +1,10 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import 'audio_handler.dart';
 
 class Reciter {
   final String id, name, arabicName, style;
@@ -14,7 +17,8 @@ class Reciter {
     Reciter('ar.husary',            'Mahmoud Khalil Al-Husary',  'محمود خليل الحصري',    'Murattal'),
     Reciter('ar.minshawi',          'Mohamed Siddiq Al-Minshawi','محمد صديق المنشاوي',   'Murattal'),
   ];
-  static Reciter byId(String id) => all.firstWhere((r) => r.id == id, orElse: () => all[0]);
+  static Reciter byId(String id) =>
+      all.firstWhere((r) => r.id == id, orElse: () => all[0]);
 }
 
 class NowPlaying {
@@ -38,7 +42,7 @@ class NowPlaying {
   int get absoluteVerseNumber => surahVerseOffset + verseNumber;
 }
 
-/// Compute the cumulative verse offset before [surahNumber].
+/// Compute cumulative verse offset before [surahNumber].
 int surahVerseOffset(int surahNumber) {
   int offset = 0;
   for (final s in kSurahs) {
@@ -49,10 +53,12 @@ int surahVerseOffset(int surahNumber) {
 }
 
 class AudioService extends ChangeNotifier {
-  final AudioPlayer _player = AudioPlayer();
+  final QuranAudioHandler _handler;
+
   String _reciterId = 'ar.alafasy';
   NowPlaying? _nowPlaying;
-  bool _isPlaying = false, _isLoading = false;
+  bool _isPlaying = false;
+  bool _isLoading = false;
   String? _error;
   double _playbackSpeed = 1.0;
 
@@ -65,18 +71,39 @@ class AudioService extends ChangeNotifier {
   double get playbackSpeed => _playbackSpeed;
   bool get hasAudio => _nowPlaying != null;
 
-  AudioService() {
+  /// Stream of current playback position (for progress bars).
+  Stream<Duration> get positionStream => _handler.player.positionStream;
+
+  /// Stream of total duration of current audio (for progress bars).
+  Stream<Duration?> get durationStream => _handler.player.durationStream;
+
+  AudioService(this._handler) {
     _loadPrefs();
-    _player.onPlayerStateChanged.listen((state) {
-      final playing = state == PlayerState.playing;
-      if (_isPlaying != playing) {
+    _handler.playbackState.listen((state) {
+      final playing = state.playing;
+      final loading = state.processingState == AudioProcessingState.loading ||
+          state.processingState == AudioProcessingState.buffering;
+      if (_isPlaying != playing || _isLoading != loading) {
         _isPlaying = playing;
+        _isLoading = loading;
         notifyListeners();
       }
     });
-    _player.onPlayerComplete.listen((_) {
-      _autoNextVerse();
-    });
+    _handler.commands.listen(_handleCommand);
+  }
+
+  Future<void> _handleCommand(String cmd) async {
+    switch (cmd) {
+      case 'autoNext':
+        await _autoNextVerse();
+        break;
+      case 'nextSurah':
+        await nextSurah();
+        break;
+      case 'prevSurah':
+        await previousSurah();
+        break;
+    }
   }
 
   Future<void> _loadPrefs() async {
@@ -86,8 +113,17 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _audioUrl(int absoluteVerse) =>
+  String _verseUrl(int absoluteVerse) =>
       'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
+
+  MediaItem _makeMediaItem(NowPlaying np) => MediaItem(
+    id: 'verse-${np.surahNumber}-${np.verseNumber}',
+    title: np.surahName,
+    artist: 'Get Quran · Verse ${np.verseNumber}/${np.totalVerses}',
+    album: 'The Holy Quran',
+    artUri: Uri.parse('asset:///assets/icon/icon.png'),
+    extras: {'surahNumber': np.surahNumber, 'verseNumber': np.verseNumber},
+  );
 
   Future<void> playVerse({
     required int surahNumber,
@@ -107,30 +143,28 @@ class AudioService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _player.stop();
-      await _player.setPlaybackRate(_playbackSpeed);
-      await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
-      _isLoading = false;
-      _isPlaying = true;
+      await _handler.playFromUrl(
+          _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+      await _handler.player.setSpeed(_playbackSpeed);
     } catch (e) {
       _isLoading = false;
       _isPlaying = false;
       _error = 'Failed to play audio';
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> togglePlayPause() async {
     if (_nowPlaying == null) return;
     if (_isPlaying) {
-      await _player.pause();
+      await _handler.pause();
     } else {
-      await _player.resume();
+      await _handler.play();
     }
   }
 
   Future<void> stop() async {
-    await _player.stop();
+    await _handler.stop();
     _nowPlaying = null;
     _isPlaying = false;
     notifyListeners();
@@ -139,11 +173,11 @@ class AudioService extends ChangeNotifier {
   Future<void> _autoNextVerse() async {
     if (_nowPlaying == null) return;
     if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
-      final next = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
-      _nowPlaying = next;
+      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
       notifyListeners();
       try {
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _handler.playFromUrl(
+            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       } catch (_) {}
     } else {
       _isPlaying = false;
@@ -157,8 +191,8 @@ class AudioService extends ChangeNotifier {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
       notifyListeners();
       try {
-        await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _handler.playFromUrl(
+            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       } catch (_) {}
     }
   }
@@ -169,21 +203,44 @@ class AudioService extends ChangeNotifier {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
       notifyListeners();
       try {
-        await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _handler.playFromUrl(
+            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       } catch (_) {}
     }
+  }
+
+  Future<void> nextSurah() async {
+    if (_nowPlaying == null) return;
+    final nextNum = _nowPlaying!.surahNumber + 1;
+    if (nextNum > 114) return;
+    final s = kSurahs[nextNum - 1];
+    await playVerse(
+        surahNumber: nextNum,
+        surahName: s.nameTransliteration,
+        verseNumber: 1,
+        totalVerses: s.verses);
+  }
+
+  Future<void> previousSurah() async {
+    if (_nowPlaying == null) return;
+    final prevNum = _nowPlaying!.surahNumber - 1;
+    if (prevNum < 1) return;
+    final s = kSurahs[prevNum - 1];
+    await playVerse(
+        surahNumber: prevNum,
+        surahName: s.nameTransliteration,
+        verseNumber: 1,
+        totalVerses: s.verses);
   }
 
   Future<void> setReciter(String id) async {
     _reciterId = id;
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
-    // Restart current verse with new reciter
     if (_nowPlaying != null) {
       try {
-        await _player.stop();
-        await _player.play(UrlSource(_audioUrl(_nowPlaying!.absoluteVerseNumber)));
+        await _handler.playFromUrl(
+            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       } catch (_) {}
     }
     notifyListeners();
@@ -193,7 +250,7 @@ class AudioService extends ChangeNotifier {
     _playbackSpeed = speed;
     final p = await SharedPreferences.getInstance();
     await p.setDouble('playbackSpeed', speed);
-    await _player.setPlaybackRate(speed);
+    await _handler.player.setSpeed(speed);
     notifyListeners();
   }
 
@@ -202,7 +259,7 @@ class AudioService extends ChangeNotifier {
 
   @override
   void dispose() {
-    _player.dispose();
+    _handler.dispose();
     super.dispose();
   }
 }

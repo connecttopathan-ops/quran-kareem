@@ -57,6 +57,10 @@
 	<string>This app uses your location to determine Qibla direction and prayer times.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app uses your location to determine Qibla direction and prayer times.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>NSMotionUsageDescription</key>
 	<string>This app uses motion sensors to display the Qibla compass direction.</string>
 	<key>UISupportedInterfaceOrientations</key>
