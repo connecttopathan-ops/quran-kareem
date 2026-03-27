@@ -121,7 +121,6 @@ class AudioService extends ChangeNotifier {
     title: np.surahName,
     artist: 'Get Quran · Verse ${np.verseNumber}/${np.totalVerses}',
     album: 'The Holy Quran',
-    artUri: Uri.parse('asset:///assets/icon/icon.png'),
     extras: {'surahNumber': np.surahNumber, 'verseNumber': np.verseNumber},
   );
 

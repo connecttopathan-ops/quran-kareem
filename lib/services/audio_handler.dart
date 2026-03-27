@@ -57,7 +57,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   Future<void> playFromUrl(String url, MediaItem item) async {
     mediaItem.add(item);
-    await _player.stop();
     await _player.setUrl(url);
     await _player.play();
   }
