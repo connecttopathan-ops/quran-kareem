@@ -26,15 +26,20 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
-  final handler = await audio_svc_pkg.AudioService.init<QuranAudioHandler>(
-    builder: () => QuranAudioHandler(),
-    config: const audio_svc_pkg.AudioServiceConfig(
-      androidNotificationChannelId: 'co.getquran.app.audio',
-      androidNotificationChannelName: 'Quran Audio',
-      androidNotificationOngoing: true,
-      androidNotificationIcon: 'mipmap/ic_launcher',
-    ),
-  );
+  QuranAudioHandler handler;
+  try {
+    handler = await audio_svc_pkg.AudioService.init<QuranAudioHandler>(
+      builder: () => QuranAudioHandler(),
+      config: const audio_svc_pkg.AudioServiceConfig(
+        androidNotificationChannelId: 'co.getquran.app.audio',
+        androidNotificationChannelName: 'Quran Audio',
+        androidNotificationOngoing: true,
+        androidNotificationIcon: 'mipmap/ic_launcher',
+      ),
+    );
+  } catch (_) {
+    handler = QuranAudioHandler();
+  }
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));
