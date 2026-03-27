@@ -34,10 +34,12 @@ void main() async {
         androidNotificationChannelId: 'co.getquran.app.audio',
         androidNotificationChannelName: 'Quran Audio',
         androidNotificationOngoing: true,
+        androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
       ),
     );
-  } catch (_) {
+  } catch (e) {
+    debugPrint('AudioService.init failed: $e');
     handler = QuranAudioHandler();
   }
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

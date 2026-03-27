@@ -46,7 +46,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
         MediaAction.seekForward,
         MediaAction.seekBackward,
       },
-      androidCompactActionIndices: const [0, 1, 2],
       processingState: processingState,
       playing: state.playing,
       updatePosition: _player.position,
