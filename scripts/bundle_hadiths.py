@@ -24,7 +24,8 @@ BOOKS = [
 def get(url, params, retries=4):
     for attempt in range(retries):
         try:
-            r = requests.get(url, params=params, timeout=60)
+            r = requests.get(url, params=params, timeout=60,
+                             headers={'Accept': 'application/json', 'Content-Type': 'application/json'})
             if r.status_code == 429:
                 wait = 30 * (attempt + 1)
                 print(f'  Rate limited — waiting {wait}s ...', flush=True)
