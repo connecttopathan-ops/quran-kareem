@@ -879,7 +879,9 @@ class _PrayerGridState extends State<_PrayerGrid>
                       padding: const EdgeInsets.symmetric(
                           vertical: 8, horizontal: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withOpacity(0.08),
+                        color: isCurrent
+                            ? AppColors.gold
+                            : AppColors.gold.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: isCurrent
                             ? Border.all(color: AppColors.gold, width: 2)
@@ -896,7 +898,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                       ? FontWeight.w700
                                       : FontWeight.normal,
                                   color: isCurrent
-                                      ? AppColors.gold
+                                      ? const Color(0xFF2C1A00)
                                       : context.textDim)),
                           const SizedBox(height: 3),
                           Text(
@@ -908,7 +910,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: isCurrent
-                                      ? AppColors.gold
+                                      ? const Color(0xFF2C1A00)
                                       : context.text)),
                           const SizedBox(height: 4),
                           Container(
@@ -916,7 +918,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                 horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: isCurrent
-                                  ? AppColors.gold.withOpacity(0.15)
+                                  ? const Color(0x332C1A00)
                                   : context.textDim.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -925,7 +927,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                     fontSize: 9,
                                     fontFamily: 'sans-serif',
                                     color: isCurrent
-                                        ? AppColors.gold
+                                        ? const Color(0xFF2C1A00)
                                         : context.textDim)),
                           ),
                         ],
