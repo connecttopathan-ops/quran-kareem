@@ -94,12 +94,14 @@ class AudioService extends ChangeNotifier {
   }
 
   Future<void> _handleCommand(String cmd) async {
+    print('[QuranService] _handleCommand cmd=$cmd nowPlaying=${_nowPlaying?.surahNumber}:${_nowPlaying?.verseNumber}');
     switch (cmd) {
       case 'autoNext':
         await _onAutoNext();
         break;
       case 'completed':
         // Last item in queue finished (end of Quran or no next preloaded).
+        print('[QuranService] completed — stopping playback display');
         _isPlaying = false;
         notifyListeners();
         break;
@@ -178,6 +180,7 @@ class AudioService extends ChangeNotifier {
   /// Called when just_audio gaplessly advances to the next queued track.
   /// Updates state and enqueues the track after the one now playing.
   Future<void> _onAutoNext() async {
+    print('[QuranService] _onAutoNext entry nowPlaying=${_nowPlaying?.surahNumber}:${_nowPlaying?.verseNumber}');
     if (_nowPlaying == null) return;
     final prev = _nowPlaying!;
 
@@ -201,6 +204,7 @@ class AudioService extends ChangeNotifier {
     }
 
     _nowPlaying = next;
+    print('[QuranService] _onAutoNext advanced to ${next.surahNumber}:${next.verseNumber}');
     // Update the lock screen / notification media item.
     _handler.mediaItem.add(_makeMediaItem(next));
     notifyListeners();
@@ -209,7 +213,10 @@ class AudioService extends ChangeNotifier {
     // is also gapless.
     final nextAbs = _nextAbsoluteVerseFor(next);
     if (nextAbs != null) {
+      print('[QuranService] _onAutoNext enqueuing abs=$nextAbs');
       await _handler.enqueueNext(_verseUrl(nextAbs));
+    } else {
+      print('[QuranService] _onAutoNext no next verse (end of Quran)');
     }
   }
 
