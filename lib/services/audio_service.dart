@@ -148,6 +148,7 @@ class AudioService extends ChangeNotifier {
   /// Pushes now-playing metadata to MPNowPlayingInfoCenter via the native plugin.
   void _updateNativeNowPlaying(NowPlaying np, {bool playing = true}) {
     final duration = _handler.player.duration;
+    print('[QuranService] _updateNativeNowPlaying title=${np.surahName} verse=${np.verseNumber} playing=$playing');
     _nowPlayingChannel.invokeMethod('setNowPlaying', {
       'title': np.surahName,
       'artist': 'Verse ${np.verseNumber} of ${np.totalVerses}',
@@ -155,7 +156,11 @@ class AudioService extends ChangeNotifier {
       if (duration != null) 'duration': duration.inMilliseconds / 1000.0,
       'position': _handler.player.position.inMilliseconds / 1000.0,
       'playing': playing,
-    }).catchError((_) {});
+    }).then((_) {
+      print('[QuranService] _updateNativeNowPlaying channel call succeeded');
+    }).catchError((e) {
+      print('[QuranService] _updateNativeNowPlaying channel error: $e');
+    });
   }
 
   Future<void> _loadPrefs() async {

@@ -10,6 +10,7 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
   private static var eventChannel: FlutterMethodChannel?
 
   static func register(with registrar: FlutterPluginRegistrar) {
+    NSLog("[NowPlayingPlugin] register called")
     let channel = FlutterMethodChannel(
       name: "co.getquran.app/nowplaying",
       binaryMessenger: registrar.messenger()
@@ -18,17 +19,18 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: channel)
     eventChannel = channel
 
-    // Ensure audio session category is .playback so the system shows
-    // the Now Playing widget on the lock screen.
+    // Activate audio session with .playback so MPNowPlayingInfoCenter works.
     do {
-      try AVAudioSession.sharedInstance().setCategory(
-        .playback, mode: .default, options: []
-      )
+      let session = AVAudioSession.sharedInstance()
+      try session.setCategory(.playback, mode: .default, options: [])
+      try session.setActive(true)
+      NSLog("[NowPlayingPlugin] AVAudioSession active, category=playback")
     } catch {
-      print("[NowPlayingPlugin] AVAudioSession setCategory error: \(error)")
+      NSLog("[NowPlayingPlugin] AVAudioSession error: \(error)")
     }
 
-    // Register remote command handlers so the lock screen controls work.
+    // Register remote command handlers — at least one must be enabled for
+    // the system to show the Now Playing widget.
     let cmd = MPRemoteCommandCenter.shared()
     cmd.playCommand.isEnabled = true
     cmd.pauseCommand.isEnabled = true
@@ -36,46 +38,63 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     cmd.previousTrackCommand.isEnabled = true
 
     cmd.playCommand.addTarget { _ in
+      NSLog("[NowPlayingPlugin] remoteCommand: play")
       eventChannel?.invokeMethod("play", arguments: nil)
       return .success
     }
     cmd.pauseCommand.addTarget { _ in
+      NSLog("[NowPlayingPlugin] remoteCommand: pause")
       eventChannel?.invokeMethod("pause", arguments: nil)
       return .success
     }
     cmd.nextTrackCommand.addTarget { _ in
+      NSLog("[NowPlayingPlugin] remoteCommand: next")
       eventChannel?.invokeMethod("next", arguments: nil)
       return .success
     }
     cmd.previousTrackCommand.addTarget { _ in
+      NSLog("[NowPlayingPlugin] remoteCommand: previous")
       eventChannel?.invokeMethod("previous", arguments: nil)
       return .success
     }
+    NSLog("[NowPlayingPlugin] remote commands registered")
   }
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    NSLog("[NowPlayingPlugin] handle: \(call.method)")
     switch call.method {
     case "setNowPlaying":
       let args = call.arguments as? [String: Any] ?? [:]
-      var info: [String: Any] = [:]
-      info[MPMediaItemPropertyTitle]     = args["title"]  as? String ?? ""
-      info[MPMediaItemPropertyArtist]    = args["artist"] as? String ?? ""
-      info[MPMediaItemPropertyAlbumTitle] = args["album"] as? String ?? ""
+      let title  = args["title"]  as? String ?? ""
+      let artist = args["artist"] as? String ?? ""
+      let album  = args["album"]  as? String ?? ""
+      let playing = args["playing"] as? Bool ?? true
+
+      var info: [String: Any] = [
+        MPMediaItemPropertyTitle:               title,
+        MPMediaItemPropertyArtist:              artist,
+        MPMediaItemPropertyAlbumTitle:          album,
+        MPNowPlayingInfoPropertyPlaybackRate:        playing ? 1.0 : 0.0,
+        MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
+      ]
       if let secs = args["duration"] as? Double, secs > 0 {
         info[MPMediaItemPropertyPlaybackDuration] = secs
       }
       if let pos = args["position"] as? Double {
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = pos
       }
-      let playing = args["playing"] as? Bool ?? true
-      info[MPNowPlayingInfoPropertyPlaybackRate]        = playing ? 1.0 : 0.0
-      info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
+
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-      print("[NowPlayingPlugin] nowPlayingInfo set: \(info[MPMediaItemPropertyTitle] ?? "") – \(info[MPMediaItemPropertyArtist] ?? "")")
+      // iOS 13+: also set playbackState on the center itself.
+      MPNowPlayingInfoCenter.default().playbackState = playing ? .playing : .paused
+
+      NSLog("[NowPlayingPlugin] nowPlayingInfo set: title=\(title) artist=\(artist) playing=\(playing)")
       result(nil)
 
     case "clearNowPlaying":
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+      MPNowPlayingInfoCenter.default().playbackState = .stopped
+      NSLog("[NowPlayingPlugin] nowPlayingInfo cleared")
       result(nil)
 
     default:
