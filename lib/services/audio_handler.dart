@@ -26,6 +26,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void _syncPlaybackState(PlayerState state) {
+    print('[QuranAudio] playerState playing=${state.playing} proc=${state.processingState}');
     final processingState = const {
       ProcessingState.idle: AudioProcessingState.idle,
       ProcessingState.loading: AudioProcessingState.loading,

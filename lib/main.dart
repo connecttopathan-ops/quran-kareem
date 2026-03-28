@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'models/app_state.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
@@ -23,11 +24,17 @@ void main() async {
   try {
     await NotificationService().init();
   } catch (_) {}
+  // Request POST_NOTIFICATIONS independently in case NotificationService.init()
+  // threw before its own permission request (Android 13+).
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await Permission.notification.request();
+  }
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
   QuranAudioHandler handler;
   try {
+    print('[QuranAudio] AudioService.init starting');
     handler = await audio_svc_pkg.AudioService.init<QuranAudioHandler>(
       builder: () => QuranAudioHandler(),
       config: const audio_svc_pkg.AudioServiceConfig(
@@ -37,8 +44,9 @@ void main() async {
         androidNotificationIcon: 'mipmap/ic_launcher',
       ),
     );
+    print('[QuranAudio] AudioService.init succeeded');
   } catch (e) {
-    debugPrint('AudioService.init failed: $e');
+    print('[QuranAudio] AudioService.init FAILED: $e');
     handler = QuranAudioHandler();
   }
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
