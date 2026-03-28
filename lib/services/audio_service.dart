@@ -62,7 +62,7 @@ class AudioService extends ChangeNotifier {
   String? _error;
   double _playbackSpeed = 1.0;
 
-  // Subscriptions held explicitly to prevent garbage collection.
+  // Held explicitly to prevent garbage collection cancelling the subscriptions.
   late final StreamSubscription _playbackStateSub;
   late final StreamSubscription _commandSub;
 
@@ -75,10 +75,7 @@ class AudioService extends ChangeNotifier {
   double get playbackSpeed => _playbackSpeed;
   bool get hasAudio => _nowPlaying != null;
 
-  /// Stream of current playback position (for progress bars).
   Stream<Duration> get positionStream => _handler.player.positionStream;
-
-  /// Stream of total duration of current audio (for progress bars).
   Stream<Duration?> get durationStream => _handler.player.durationStream;
 
   AudioService(this._handler) {
@@ -99,7 +96,12 @@ class AudioService extends ChangeNotifier {
   Future<void> _handleCommand(String cmd) async {
     switch (cmd) {
       case 'autoNext':
-        await _autoNextVerse();
+        await _onAutoNext();
+        break;
+      case 'completed':
+        // Last item in queue finished (end of Quran or no next preloaded).
+        _isPlaying = false;
+        notifyListeners();
         break;
       case 'nextSurah':
         await nextSurah();
@@ -128,6 +130,18 @@ class AudioService extends ChangeNotifier {
     extras: {'surahNumber': np.surahNumber, 'verseNumber': np.verseNumber},
   );
 
+  /// Returns the absolute verse number that comes after [np], crossing surah
+  /// boundaries. Returns null if [np] is the last verse of the Quran.
+  int? _nextAbsoluteVerseFor(NowPlaying np) {
+    if (np.verseNumber < np.totalVerses) {
+      return np.absoluteVerseNumber + 1;
+    }
+    if (np.surahNumber < 114) {
+      return surahVerseOffset(np.surahNumber + 1) + 1;
+    }
+    return null; // end of Quran
+  }
+
   Future<void> playVerse({
     required int surahNumber,
     required String surahName,
@@ -146,14 +160,56 @@ class AudioService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      final nextAbs = _nextAbsoluteVerseFor(_nowPlaying!);
       await _handler.playFromUrl(
-          _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _verseUrl(_nowPlaying!.absoluteVerseNumber),
+        _makeMediaItem(_nowPlaying!),
+        nextUrl: nextAbs != null ? _verseUrl(nextAbs) : null,
+      );
       await _handler.player.setSpeed(_playbackSpeed);
     } catch (e) {
       _isLoading = false;
       _isPlaying = false;
       _error = 'Failed to play audio';
       notifyListeners();
+    }
+  }
+
+  /// Called when just_audio gaplessly advances to the next queued track.
+  /// Updates state and enqueues the track after the one now playing.
+  Future<void> _onAutoNext() async {
+    if (_nowPlaying == null) return;
+    final prev = _nowPlaying!;
+
+    // Compute new NowPlaying — may cross a surah boundary.
+    final NowPlaying next;
+    if (prev.verseNumber < prev.totalVerses) {
+      next = prev.copyWith(verseNumber: prev.verseNumber + 1);
+    } else if (prev.surahNumber < 114) {
+      final nextSurahNum = prev.surahNumber + 1;
+      final s = kSurahs[nextSurahNum - 1];
+      next = NowPlaying(
+        surahNumber: nextSurahNum,
+        surahName: s.nameTransliteration,
+        verseNumber: 1,
+        totalVerses: s.verses,
+        surahVerseOffset: surahVerseOffset(nextSurahNum),
+      );
+    } else {
+      // End of Quran — queue will emit 'completed' when done.
+      return;
+    }
+
+    _nowPlaying = next;
+    // Update the lock screen / notification media item.
+    _handler.mediaItem.add(_makeMediaItem(next));
+    notifyListeners();
+
+    // Enqueue the verse after the one now playing so the next transition
+    // is also gapless.
+    final nextAbs = _nextAbsoluteVerseFor(next);
+    if (nextAbs != null) {
+      await _handler.enqueueNext(_verseUrl(nextAbs));
     }
   }
 
@@ -173,28 +229,18 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _autoNextVerse() async {
-    if (_nowPlaying == null) return;
-    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
-      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
-      notifyListeners();
-      try {
-        await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-      } catch (_) {}
-    } else {
-      await nextSurah();
-    }
-  }
-
   Future<void> nextVerse() async {
     if (_nowPlaying == null) return;
     if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
       notifyListeners();
       try {
+        final nextAbs = _nextAbsoluteVerseFor(_nowPlaying!);
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+          _verseUrl(_nowPlaying!.absoluteVerseNumber),
+          _makeMediaItem(_nowPlaying!),
+          nextUrl: nextAbs != null ? _verseUrl(nextAbs) : null,
+        );
       } catch (_) {}
     }
   }
@@ -205,8 +251,12 @@ class AudioService extends ChangeNotifier {
       _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
       notifyListeners();
       try {
+        final nextAbs = _nextAbsoluteVerseFor(_nowPlaying!);
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+          _verseUrl(_nowPlaying!.absoluteVerseNumber),
+          _makeMediaItem(_nowPlaying!),
+          nextUrl: nextAbs != null ? _verseUrl(nextAbs) : null,
+        );
       } catch (_) {}
     }
   }
@@ -241,8 +291,12 @@ class AudioService extends ChangeNotifier {
     await p.setString('reciterId', id);
     if (_nowPlaying != null) {
       try {
+        final nextAbs = _nextAbsoluteVerseFor(_nowPlaying!);
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+          _verseUrl(_nowPlaying!.absoluteVerseNumber),
+          _makeMediaItem(_nowPlaying!),
+          nextUrl: nextAbs != null ? _verseUrl(nextAbs) : null,
+        );
       } catch (_) {}
     }
     notifyListeners();

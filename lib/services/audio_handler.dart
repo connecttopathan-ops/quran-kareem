@@ -4,6 +4,8 @@ import 'package:just_audio/just_audio.dart';
 
 class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
+  final ConcatenatingAudioSource _queue =
+      ConcatenatingAudioSource(children: []);
   final StreamController<String> _commandController =
       StreamController<String>.broadcast();
 
@@ -18,15 +20,43 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _player.bufferedPositionStream.listen((pos) {
       playbackState.add(playbackState.value.copyWith(bufferedPosition: pos));
     });
+    // Gapless advance: player moved to next queued item — no silence gap on iOS.
+    _player.currentIndexStream.listen((index) {
+      if (index != null && index > 0) {
+        _commandController.add('autoNext');
+      }
+    });
+    // Entire queue finished (last verse of Quran or single verse with no next).
     _player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) {
-        _commandController.add('autoNext');
+        _commandController.add('completed');
       }
     });
   }
 
+  /// Start playing [url] immediately, with optional [nextUrl] preloaded for
+  /// gapless transition to the next verse. Clears any existing queue.
+  Future<void> playFromUrl(String url, MediaItem item,
+      {String? nextUrl}) async {
+    mediaItem.add(item);
+    await _queue.clear();
+    await _queue.add(AudioSource.uri(Uri.parse(url)));
+    if (nextUrl != null) {
+      await _queue.add(AudioSource.uri(Uri.parse(nextUrl)));
+    }
+    await _player.setAudioSource(_queue, preload: true);
+    await _player.play();
+  }
+
+  /// Append [url] to the end of the queue so just_audio can preload it
+  /// while the current verse plays, eliminating the silence gap on iOS.
+  Future<void> enqueueNext(String url) async {
+    await _queue.add(AudioSource.uri(Uri.parse(url)));
+  }
+
   void _syncPlaybackState(PlayerState state) {
-    print('[QuranAudio] playerState playing=${state.playing} proc=${state.processingState}');
+    print(
+        '[QuranAudio] playerState playing=${state.playing} proc=${state.processingState}');
     final processingState = const {
       ProcessingState.idle: AudioProcessingState.idle,
       ProcessingState.loading: AudioProcessingState.loading,
@@ -53,12 +83,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
     ));
-  }
-
-  Future<void> playFromUrl(String url, MediaItem item) async {
-    mediaItem.add(item);
-    await _player.setUrl(url);
-    await _player.play();
   }
 
   @override
