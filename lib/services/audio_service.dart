@@ -111,10 +111,14 @@ class AudioService extends ChangeNotifier {
         case 'pause':
           await _handler.pause();
           break;
+        case 'togglePlayPause':
+          await togglePlayPause();
+          break;
         case 'next':
-          await _autoNextVerse();
+          await nextSurah();
           break;
         case 'previous':
+          await previousSurah();
           break;
       }
     });

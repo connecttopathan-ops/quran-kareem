@@ -34,6 +34,7 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     let cmd = MPRemoteCommandCenter.shared()
     cmd.playCommand.isEnabled = true
     cmd.pauseCommand.isEnabled = true
+    cmd.togglePlayPauseCommand.isEnabled = true
     cmd.nextTrackCommand.isEnabled = true
     cmd.previousTrackCommand.isEnabled = true
 
@@ -45,6 +46,11 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     cmd.pauseCommand.addTarget { _ in
       NSLog("[NowPlayingPlugin] remoteCommand: pause")
       eventChannel?.invokeMethod("pause", arguments: nil)
+      return .success
+    }
+    cmd.togglePlayPauseCommand.addTarget { _ in
+      NSLog("[NowPlayingPlugin] remoteCommand: togglePlayPause")
+      eventChannel?.invokeMethod("togglePlayPause", arguments: nil)
       return .success
     }
     cmd.nextTrackCommand.addTarget { _ in
