@@ -36,6 +36,7 @@ void main() async {
         androidNotificationChannelName: 'Quran Audio',
         androidStopForegroundOnPause: false,
         androidNotificationIcon: 'mipmap/ic_launcher',
+        preloadArtwork: true,
       ),
     );
     print('[QuranAudio] AudioService.init succeeded');

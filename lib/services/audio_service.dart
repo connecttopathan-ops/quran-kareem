@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
 import 'audio_handler.dart';
@@ -61,6 +64,7 @@ class AudioService extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   double _playbackSpeed = 1.0;
+  Uri? _artworkUri;
 
   // Held explicitly to prevent garbage collection cancelling the subscriptions.
   late final StreamSubscription _playbackStateSub;
@@ -80,6 +84,7 @@ class AudioService extends ChangeNotifier {
 
   AudioService(this._handler) {
     _loadPrefs();
+    _loadArtwork();
     _playbackStateSub = _handler.playbackState.listen((state) {
       final playing = state.playing;
       final loading = state.processingState == AudioProcessingState.loading ||
@@ -108,6 +113,16 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadArtwork() async {
+    try {
+      final data = await rootBundle.load('assets/icon/icon.png');
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/quran_artwork.png');
+      await file.writeAsBytes(data.buffer.asUint8List());
+      _artworkUri = file.uri;
+    } catch (_) {}
+  }
+
   Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
     _reciterId = p.getString('reciterId') ?? 'ar.alafasy';
@@ -121,8 +136,9 @@ class AudioService extends ChangeNotifier {
   MediaItem _makeMediaItem(NowPlaying np) => MediaItem(
     id: 'verse-${np.surahNumber}-${np.verseNumber}',
     title: np.surahName,
-    artist: 'Get Quran · Verse ${np.verseNumber}/${np.totalVerses}',
+    artist: 'Verse ${np.verseNumber} of ${np.totalVerses}',
     album: 'The Holy Quran',
+    artUri: _artworkUri,
     extras: {'surahNumber': np.surahNumber, 'verseNumber': np.verseNumber},
   );
 
