@@ -9,6 +9,7 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
 
   private static var eventChannel: FlutterMethodChannel?
   private static var commandsRegistered = false
+  private static var setupCount = 0
 
   static func register(with registrar: FlutterPluginRegistrar) {
     NSLog("[NowPlayingPlugin] register called")
@@ -34,11 +35,14 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
 
   /// Re-registers remote command handlers, clearing any previously registered
   /// handlers (including those from just_audio_background) so ours take effect.
-  /// Called on first setNowPlaying, after just_audio_background has initialised.
+  /// Called on every setNowPlaying so we always override just_audio_background.
   private static func setupRemoteCommandsIfNeeded() {
-    guard !commandsRegistered else { return }
+    setupCount += 1
+    // Re-register on first call and every 5th call thereafter, in case
+    // just_audio_background re-registers its own handlers between verse changes.
+    guard !commandsRegistered || setupCount % 5 == 0 else { return }
     commandsRegistered = true
-    NSLog("[NowPlayingPlugin] setupRemoteCommands")
+    NSLog("[NowPlayingPlugin] setupRemoteCommands (call #\(setupCount))")
 
     let cmd = MPRemoteCommandCenter.shared()
 
