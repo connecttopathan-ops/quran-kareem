@@ -43,15 +43,15 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     let cmd = MPRemoteCommandCenter.shared()
 
     // Clear handlers registered by just_audio_background so ours are the only ones.
-    cmd.playCommand.removeAllTargets()
-    cmd.pauseCommand.removeAllTargets()
-    cmd.togglePlayPauseCommand.removeAllTargets()
-    cmd.nextTrackCommand.removeAllTargets()
-    cmd.previousTrackCommand.removeAllTargets()
-    cmd.stopCommand.removeAllTargets()
-    cmd.changePlaybackPositionCommand.removeAllTargets()
-    cmd.skipForwardCommand.removeAllTargets()
-    cmd.skipBackwardCommand.removeAllTargets()
+    cmd.playCommand.removeTarget(nil)
+    cmd.pauseCommand.removeTarget(nil)
+    cmd.togglePlayPauseCommand.removeTarget(nil)
+    cmd.nextTrackCommand.removeTarget(nil)
+    cmd.previousTrackCommand.removeTarget(nil)
+    cmd.stopCommand.removeTarget(nil)
+    cmd.changePlaybackPositionCommand.removeTarget(nil)
+    cmd.skipForwardCommand.removeTarget(nil)
+    cmd.skipBackwardCommand.removeTarget(nil)
 
     cmd.playCommand.isEnabled = true
     cmd.pauseCommand.isEnabled = true
