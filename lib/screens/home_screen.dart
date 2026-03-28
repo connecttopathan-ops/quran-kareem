@@ -880,7 +880,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                           vertical: 8, horizontal: 2),
                       decoration: BoxDecoration(
                         color: isCurrent
-                            ? AppColors.gold
+                            ? (context.isDark ? const Color(0xFF1a1508) : const Color(0xFFf5e8cc))
                             : AppColors.gold.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: isCurrent
@@ -898,7 +898,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                       ? FontWeight.w700
                                       : FontWeight.normal,
                                   color: isCurrent
-                                      ? const Color(0xFF2C1A00)
+                                      ? (context.isDark ? AppColors.gold : const Color(0xFF2a1e08))
                                       : context.textDim)),
                           const SizedBox(height: 3),
                           Text(
@@ -910,7 +910,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: isCurrent
-                                      ? const Color(0xFF2C1A00)
+                                      ? (context.isDark ? AppColors.gold : const Color(0xFF2a1e08))
                                       : context.text)),
                           const SizedBox(height: 4),
                           Container(
@@ -918,7 +918,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                 horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: isCurrent
-                                  ? const Color(0x332C1A00)
+                                  ? (context.isDark ? AppColors.gold.withOpacity(0.15) : const Color(0x332a1e08))
                                   : context.textDim.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
