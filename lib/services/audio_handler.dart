@@ -7,20 +7,22 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   final StreamController<String> _commandController =
       StreamController<String>.broadcast();
 
-  // iOS 26: setUpPlayerItemStatusObservation Swift continuation leaks, meaning
-  // processingState.completed may never fire AND playing may never go false.
+  // iOS 26: setUpPlayerItemStatusObservation Swift continuation leaks.
+  // processingState.completed may never fire; playing may never go false.
   // Three-layer detection:
-  //   1. processingState.completed stream
+  //   1. processingState.completed
   //   2. playing true→false transition
-  //   3. Position-staleness watchdog (position stops advancing = audio ended)
+  //   3. Timer.periodic position-staleness watchdog
   bool _completionFired = false;
   bool _intentionalStop = false;
   bool _wasPlaying = false;
 
-  // Watchdog: detect end-of-track when neither event fires (iOS 26 worst case).
-  Duration? _watchdogLastPos;
+  // Watchdog: Timer.periodic polls _player.position directly every 300 ms.
+  // Uses millisecond tolerance to avoid microsecond jitter false-negatives.
+  Timer? _watchdogTimer;
+  int? _watchdogLastMs;
   int _watchdogStaleTicks = 0;
-  static const int _kStaleTicks = 5; // ~1 s at just_audio's 200 ms poll rate
+  static const int _kStaleTicks = 5; // 5 × 300 ms = 1.5 s of no movement
 
   Stream<String> get commands => _commandController.stream;
   AudioPlayer get player => _player;
@@ -29,12 +31,11 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _player.playerStateStream.listen(_syncPlaybackState);
     _player.positionStream.listen((pos) {
       playbackState.add(playbackState.value.copyWith(updatePosition: pos));
-      _tickWatchdog(pos);
     });
     _player.bufferedPositionStream.listen((pos) {
       playbackState.add(playbackState.value.copyWith(bufferedPosition: pos));
     });
-    // Primary completion detection (may not fire on iOS 26).
+    // Layer 1: primary completion detection (may not fire on iOS 26).
     _player.processingStateStream.listen((state) {
       print('[QuranAudio] processingStateStream state=$state');
       if (state == ProcessingState.completed) {
@@ -43,35 +44,36 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  // Layer 3: position-staleness watchdog.
-  // Fires autoNext when position stops advancing while supposedly playing.
-  // Skip the first 500 ms of a track (position naturally starts at 0).
-  void _tickWatchdog(Duration pos) {
-    if (_intentionalStop || !_wasPlaying) {
-      _resetWatchdog();
-      return;
-    }
-    if (pos.inMilliseconds < 500) {
-      _resetWatchdog();
-      return;
-    }
-    if (_watchdogLastPos == pos) {
-      _watchdogStaleTicks++;
-      print('[QuranAudio] watchdog stale tick $_watchdogStaleTicks at $pos');
-      if (_watchdogStaleTicks >= _kStaleTicks) {
-        print('[QuranAudio] watchdog fired at $pos');
-        _resetWatchdog();
-        _fireAutoNext('position-stale');
-      }
-    } else {
-      _watchdogStaleTicks = 0;
-      _watchdogLastPos = pos;
-    }
-  }
-
-  void _resetWatchdog() {
-    _watchdogLastPos = null;
+  void _startWatchdog() {
+    _watchdogTimer?.cancel();
+    _watchdogLastMs = null;
     _watchdogStaleTicks = 0;
+    _watchdogTimer = Timer.periodic(const Duration(milliseconds: 300), (t) {
+      if (_intentionalStop || !_wasPlaying) {
+        _watchdogLastMs = null;
+        _watchdogStaleTicks = 0;
+        return;
+      }
+      final posMs = _player.position.inMilliseconds;
+      if (posMs < 200) return; // Skip silence at track start
+
+      final lastMs = _watchdogLastMs;
+      final delta = lastMs == null ? 999 : (posMs - lastMs).abs();
+      if (delta < 100) {
+        // Position hasn't moved meaningfully — track may have ended
+        _watchdogStaleTicks++;
+        print('[QuranAudio] watchdog tick $_watchdogStaleTicks at ${posMs}ms');
+        if (_watchdogStaleTicks >= _kStaleTicks) {
+          t.cancel();
+          _watchdogLastMs = null;
+          _watchdogStaleTicks = 0;
+          _fireAutoNext('position-stale');
+        }
+      } else {
+        _watchdogStaleTicks = 0;
+        _watchdogLastMs = posMs;
+      }
+    });
   }
 
   void _fireAutoNext(String source) {
@@ -119,21 +121,24 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     ));
   }
 
-  /// Load [url] and start playing. Sets _intentionalStop during the load so
-  /// state transitions during URL switching don't trigger autoNext.
-  /// Times out after 10 s in case iOS 26's continuation hangs indefinitely.
+  /// Load [url] and play. Uses a 300 ms timeout on setUrl so the 10-second
+  /// iOS 26 continuation-leak hang doesn't create a gap between verses.
+  /// AVPlayer continues loading in the background; play() streams when ready.
   Future<void> playFromUrl(String url, MediaItem item) async {
     print('[QuranAudio] playFromUrl url=$url');
     _intentionalStop = true;
     _completionFired = false;
     _wasPlaying = false;
-    _resetWatchdog();
+    _watchdogTimer?.cancel();
+    _watchdogLastMs = null;
+    _watchdogStaleTicks = 0;
     mediaItem.add(item);
     try {
-      await _player.setUrl(url).timeout(const Duration(seconds: 10));
+      // Short timeout: iOS 26 continuation leaks, but AVPlayer still loads.
+      await _player.setUrl(url).timeout(const Duration(milliseconds: 300));
       print('[QuranAudio] setUrl done');
     } catch (e) {
-      print('[QuranAudio] setUrl error/timeout: $e — calling play anyway');
+      print('[QuranAudio] setUrl timeout (expected on iOS 26) — playing anyway');
     }
     try {
       await _player.play().timeout(const Duration(seconds: 5));
@@ -141,7 +146,8 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
       print('[QuranAudio] play() error/timeout: $e');
     }
     _intentionalStop = false;
-    print('[QuranAudio] play() returned, all detection layers active');
+    _startWatchdog();
+    print('[QuranAudio] play() returned, watchdog started');
   }
 
   @override
@@ -153,12 +159,14 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> pause() async {
     _intentionalStop = true;
+    _watchdogTimer?.cancel();
     await _player.pause();
   }
 
   @override
   Future<void> stop() async {
     _intentionalStop = true;
+    _watchdogTimer?.cancel();
     await _player.stop();
     await super.stop();
   }
@@ -182,6 +190,7 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void dispose() {
+    _watchdogTimer?.cancel();
     _commandController.close();
     _player.dispose();
   }
