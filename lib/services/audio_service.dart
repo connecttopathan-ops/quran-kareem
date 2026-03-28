@@ -62,6 +62,10 @@ class AudioService extends ChangeNotifier {
   String? _error;
   double _playbackSpeed = 1.0;
 
+  // Subscriptions held explicitly to prevent garbage collection.
+  late final StreamSubscription _playbackStateSub;
+  late final StreamSubscription _commandSub;
+
   String get reciterId => _reciterId;
   Reciter get reciter => Reciter.byId(_reciterId);
   NowPlaying? get nowPlaying => _nowPlaying;
@@ -79,7 +83,7 @@ class AudioService extends ChangeNotifier {
 
   AudioService(this._handler) {
     _loadPrefs();
-    _handler.playbackState.listen((state) {
+    _playbackStateSub = _handler.playbackState.listen((state) {
       final playing = state.playing;
       final loading = state.processingState == AudioProcessingState.loading ||
           state.processingState == AudioProcessingState.buffering;
@@ -89,7 +93,7 @@ class AudioService extends ChangeNotifier {
         notifyListeners();
       }
     });
-    _handler.commands.listen(_handleCommand);
+    _commandSub = _handler.commands.listen(_handleCommand);
   }
 
   Future<void> _handleCommand(String cmd) async {
@@ -179,8 +183,7 @@ class AudioService extends ChangeNotifier {
             _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       } catch (_) {}
     } else {
-      _isPlaying = false;
-      notifyListeners();
+      await nextSurah();
     }
   }
 
@@ -258,6 +261,8 @@ class AudioService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _playbackStateSub.cancel();
+    _commandSub.cancel();
     _handler.dispose();
     super.dispose();
   }
