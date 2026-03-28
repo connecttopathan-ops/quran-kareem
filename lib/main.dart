@@ -1,4 +1,3 @@
-import 'package:audio_service/audio_service.dart' as audio_svc_pkg;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,25 +38,9 @@ void main() async {
   } catch (e) {
     print('[QuranAudio] JustAudioBackground.init FAILED: $e');
   }
-  // audio_service still needed for command routing (autoNext, skip)
-  QuranAudioHandler handler;
-  try {
-    print('[QuranAudio] AudioService.init starting');
-    handler = await audio_svc_pkg.AudioService.init<QuranAudioHandler>(
-      builder: () => QuranAudioHandler(),
-      config: const audio_svc_pkg.AudioServiceConfig(
-        androidNotificationChannelId: 'co.getquran.app.audio',
-        androidNotificationChannelName: 'Quran Audio',
-        androidStopForegroundOnPause: false,
-        androidNotificationIcon: 'mipmap/ic_launcher',
-        preloadArtwork: true,
-      ),
-    );
-    print('[QuranAudio] AudioService.init succeeded');
-  } catch (e) {
-    print('[QuranAudio] AudioService.init FAILED: $e');
-    handler = QuranAudioHandler();
-  }
+  // just_audio_background manages the audio session and lock screen widget;
+  // no AudioService.init needed — create the handler directly.
+  final handler = QuranAudioHandler();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
   ));

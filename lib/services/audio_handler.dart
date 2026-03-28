@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
-class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
+class QuranAudioHandler {
   final AudioPlayer _player = AudioPlayer();
   final StreamController<String> _commandController =
       StreamController<String>.broadcast();
@@ -32,22 +32,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
 
   QuranAudioHandler() {
     _player.playerStateStream.listen(_syncPlaybackState);
-    _player.positionStream.listen((pos) {
-      playbackState.add(playbackState.value.copyWith(updatePosition: pos));
-    });
-    _player.bufferedPositionStream.listen((pos) {
-      playbackState.add(playbackState.value.copyWith(bufferedPosition: pos));
-    });
-    // Propagate duration to MediaItem so iOS shows the Now Playing widget
-    // on the lock screen and Control Center with a progress bar.
-    _player.durationStream.listen((duration) {
-      if (duration != null) {
-        final current = mediaItem.value;
-        if (current != null && current.duration != duration) {
-          mediaItem.add(current.copyWith(duration: duration));
-        }
-      }
-    });
     // Layer 1
     _player.processingStateStream.listen((state) {
       print('[QuranAudio] processingState=$state');
@@ -118,33 +102,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     _wasPlaying = state.playing;
-
-    final processingState = const {
-      ProcessingState.idle: AudioProcessingState.idle,
-      ProcessingState.loading: AudioProcessingState.loading,
-      ProcessingState.buffering: AudioProcessingState.buffering,
-      ProcessingState.ready: AudioProcessingState.ready,
-      ProcessingState.completed: AudioProcessingState.completed,
-    }[state.processingState]!;
-
-    playbackState.add(playbackState.value.copyWith(
-      controls: [
-        MediaControl.skipToPrevious,
-        state.playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.skipToNext,
-        MediaControl.stop,
-      ],
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      },
-      processingState: processingState,
-      playing: state.playing,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-    ));
   }
 
   Future<void> playFromUrl(String url, MediaItem item) async {
@@ -156,7 +113,6 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _watchdogTimer?.cancel();
     _watchdogLastMs = null;
     _watchdogStaleTicks = 0;
-    mediaItem.add(item);
     try {
       // Use setAudioSource with tag so just_audio_background populates
       // MPNowPlayingInfoCenter for the iOS lock screen widget.
@@ -178,38 +134,27 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     print('[QuranAudio] watchdog started');
   }
 
-  @override
   Future<void> play() async {
     _intentionalStop = false;
     await _player.play();
   }
 
-  @override
   Future<void> pause() async {
     _intentionalStop = true;
     _watchdogTimer?.cancel();
     await _player.pause();
   }
 
-  @override
   Future<void> stop() async {
     _intentionalStop = true;
     _watchdogTimer?.cancel();
     await _player.stop();
-    await super.stop();
   }
 
-  @override
   Future<void> seek(Duration position) => _player.seek(position);
 
-  @override
   Future<void> skipToNext() async => _commandController.add('nextSurah');
-
-  @override
   Future<void> skipToPrevious() async => _commandController.add('prevSurah');
-
-  @override
-  Future<void> onTaskRemoved() async => stop();
 
   void dispose() {
     _watchdogTimer?.cancel();

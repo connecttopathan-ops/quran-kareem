@@ -85,10 +85,10 @@ class AudioService extends ChangeNotifier {
   AudioService(this._handler) {
     _loadPrefs();
     _loadArtwork();
-    _playbackStateSub = _handler.playbackState.listen((state) {
+    _playbackStateSub = _handler.player.playerStateStream.listen((state) {
       final playing = state.playing;
-      final loading = state.processingState == AudioProcessingState.loading ||
-          state.processingState == AudioProcessingState.buffering;
+      final loading = state.processingState == ProcessingState.loading ||
+          state.processingState == ProcessingState.buffering;
       if (_isPlaying != playing || _isLoading != loading) {
         _isPlaying = playing;
         _isLoading = loading;
