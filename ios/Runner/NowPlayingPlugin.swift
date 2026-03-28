@@ -8,6 +8,7 @@ import Flutter
 class NowPlayingPlugin: NSObject, FlutterPlugin {
 
   private static var eventChannel: FlutterMethodChannel?
+  private static var commandsRegistered = false
 
   static func register(with registrar: FlutterPluginRegistrar) {
     NSLog("[NowPlayingPlugin] register called")
@@ -19,7 +20,8 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: channel)
     eventChannel = channel
 
-    // Activate audio session with .playback so MPNowPlayingInfoCenter works.
+    // Activate audio session with .playback so background audio and
+    // MPNowPlayingInfoCenter work correctly.
     do {
       let session = AVAudioSession.sharedInstance()
       try session.setCategory(.playback, mode: .default, options: [])
@@ -28,15 +30,38 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     } catch {
       NSLog("[NowPlayingPlugin] AVAudioSession error: \(error)")
     }
+  }
 
-    // Register remote command handlers — at least one must be enabled for
-    // the system to show the Now Playing widget.
+  /// Re-registers remote command handlers, clearing any previously registered
+  /// handlers (including those from just_audio_background) so ours take effect.
+  /// Called on first setNowPlaying, after just_audio_background has initialised.
+  private static func setupRemoteCommandsIfNeeded() {
+    guard !commandsRegistered else { return }
+    commandsRegistered = true
+    NSLog("[NowPlayingPlugin] setupRemoteCommands")
+
     let cmd = MPRemoteCommandCenter.shared()
+
+    // Clear handlers registered by just_audio_background so ours are the only ones.
+    cmd.playCommand.removeAllTargets()
+    cmd.pauseCommand.removeAllTargets()
+    cmd.togglePlayPauseCommand.removeAllTargets()
+    cmd.nextTrackCommand.removeAllTargets()
+    cmd.previousTrackCommand.removeAllTargets()
+    cmd.stopCommand.removeAllTargets()
+    cmd.changePlaybackPositionCommand.removeAllTargets()
+    cmd.skipForwardCommand.removeAllTargets()
+    cmd.skipBackwardCommand.removeAllTargets()
+
     cmd.playCommand.isEnabled = true
     cmd.pauseCommand.isEnabled = true
     cmd.togglePlayPauseCommand.isEnabled = true
     cmd.nextTrackCommand.isEnabled = true
     cmd.previousTrackCommand.isEnabled = true
+    cmd.stopCommand.isEnabled = false
+    cmd.changePlaybackPositionCommand.isEnabled = false
+    cmd.skipForwardCommand.isEnabled = false
+    cmd.skipBackwardCommand.isEnabled = false
 
     cmd.playCommand.addTarget { _ in
       NSLog("[NowPlayingPlugin] remoteCommand: play")
@@ -70,6 +95,10 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     NSLog("[NowPlayingPlugin] handle: \(call.method)")
     switch call.method {
     case "setNowPlaying":
+      // Register remote commands now — just_audio_background has already
+      // initialised by the time the first setNowPlaying call arrives.
+      NowPlayingPlugin.setupRemoteCommandsIfNeeded()
+
       let args = call.arguments as? [String: Any] ?? [:]
       let title  = args["title"]  as? String ?? ""
       let artist = args["artist"] as? String ?? ""
@@ -77,11 +106,11 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
       let playing = args["playing"] as? Bool ?? true
 
       var info: [String: Any] = [
-        MPMediaItemPropertyTitle:               title,
-        MPMediaItemPropertyArtist:              artist,
-        MPMediaItemPropertyAlbumTitle:          album,
-        MPNowPlayingInfoPropertyPlaybackRate:        playing ? 1.0 : 0.0,
-        MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
+        MPMediaItemPropertyTitle:                    title,
+        MPMediaItemPropertyArtist:                   artist,
+        MPMediaItemPropertyAlbumTitle:               album,
+        MPNowPlayingInfoPropertyPlaybackRate:         playing ? 1.0 : 0.0,
+        MPNowPlayingInfoPropertyDefaultPlaybackRate:  1.0,
       ]
       if let secs = args["duration"] as? Double, secs > 0 {
         info[MPMediaItemPropertyPlaybackDuration] = secs
@@ -91,7 +120,6 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
       }
 
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-      // iOS 13+: also set playbackState on the center itself.
       MPNowPlayingInfoCenter.default().playbackState = playing ? .playing : .paused
 
       NSLog("[NowPlayingPlugin] nowPlayingInfo set: title=\(title) artist=\(artist) playing=\(playing)")
