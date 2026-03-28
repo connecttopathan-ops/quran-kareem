@@ -26,7 +26,12 @@ jobs:
       - name: Download all 46 bundled translations (alquran.cloud)
         run: python3 scripts/download_all_translations.py
       - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
-        run: pip install requests && python3 scripts/bundle_hadiths.py
+        run: |
+          if [ -f assets/books/bukhari_index.json ] && [ -f assets/books/muslim_index.json ]; then
+            echo "Hadith assets already present in repo — skipping download."
+          else
+            pip install requests && python3 scripts/bundle_hadiths.py
+          fi
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
       - name: Decode keystore
@@ -75,9 +80,13 @@ jobs:
         run: python3 scripts/download_all_translations.py
       - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
         run: |
-          python3 -m venv /tmp/hadith-venv
-          /tmp/hadith-venv/bin/pip install requests
-          /tmp/hadith-venv/bin/python scripts/bundle_hadiths.py
+          if [ -f assets/books/bukhari_index.json ] && [ -f assets/books/muslim_index.json ]; then
+            echo "Hadith assets already present in repo — skipping download."
+          else
+            python3 -m venv /tmp/hadith-venv
+            /tmp/hadith-venv/bin/pip install requests
+            /tmp/hadith-venv/bin/python scripts/bundle_hadiths.py
+          fi
       - name: Generate launcher icons
         run: flutter pub run flutter_launcher_icons
       - name: Install CocoaPods dependencies
