@@ -12,5 +12,10 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    // Register our custom Now Playing plugin that bypasses the audio_service
+    // UIApplicationDelegate hooks (which don't fire in the iOS 26 scene architecture).
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "NowPlayingPlugin") {
+      NowPlayingPlugin.register(with: registrar)
+    }
   }
 }

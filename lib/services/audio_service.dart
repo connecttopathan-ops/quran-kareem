@@ -58,6 +58,9 @@ int surahVerseOffset(int surahNumber) {
 class AudioService extends ChangeNotifier {
   final QuranAudioHandler _handler;
 
+  static const _nowPlayingChannel =
+      MethodChannel('co.getquran.app/nowplaying');
+
   String _reciterId = 'ar.alafasy';
   NowPlaying? _nowPlaying;
   bool _isPlaying = false;
@@ -93,9 +96,28 @@ class AudioService extends ChangeNotifier {
         _isPlaying = playing;
         _isLoading = loading;
         notifyListeners();
+        // Keep lock screen playback rate in sync with actual play/pause state.
+        if (_nowPlaying != null) _updateNativeNowPlaying(_nowPlaying!, playing: playing);
       }
     });
     _commandSub = _handler.commands.listen(_handleCommand);
+    // Handle remote commands sent back from the native Now Playing plugin
+    // (lock screen play/pause/next/previous buttons).
+    _nowPlayingChannel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'play':
+          await _handler.play();
+          break;
+        case 'pause':
+          await _handler.pause();
+          break;
+        case 'next':
+          await _autoNextVerse();
+          break;
+        case 'previous':
+          break;
+      }
+    });
   }
 
   Future<void> _handleCommand(String cmd) async {
@@ -121,6 +143,19 @@ class AudioService extends ChangeNotifier {
       await file.writeAsBytes(data.buffer.asUint8List());
       _artworkUri = file.uri;
     } catch (_) {}
+  }
+
+  /// Pushes now-playing metadata to MPNowPlayingInfoCenter via the native plugin.
+  void _updateNativeNowPlaying(NowPlaying np, {bool playing = true}) {
+    final duration = _handler.player.duration;
+    _nowPlayingChannel.invokeMethod('setNowPlaying', {
+      'title': np.surahName,
+      'artist': 'Verse ${np.verseNumber} of ${np.totalVerses}',
+      'album': 'The Holy Quran',
+      if (duration != null) 'duration': duration.inMilliseconds / 1000.0,
+      'position': _handler.player.position.inMilliseconds / 1000.0,
+      'playing': playing,
+    }).catchError((_) {});
   }
 
   Future<void> _loadPrefs() async {
@@ -163,6 +198,7 @@ class AudioService extends ChangeNotifier {
       await _handler.playFromUrl(
           _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       await _handler.player.setSpeed(_playbackSpeed);
+      _updateNativeNowPlaying(_nowPlaying!);
     } catch (e) {
       print('[QuranService] playVerse error: $e');
       _isLoading = false;
@@ -184,6 +220,7 @@ class AudioService extends ChangeNotifier {
       try {
         await _handler.playFromUrl(
             _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _updateNativeNowPlaying(_nowPlaying!);
       } catch (e) {
         print('[QuranService] _autoNextVerse error: $e');
       }
@@ -217,6 +254,7 @@ class AudioService extends ChangeNotifier {
       try {
         await _handler.playFromUrl(
             _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
   }
@@ -229,6 +267,7 @@ class AudioService extends ChangeNotifier {
       try {
         await _handler.playFromUrl(
             _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
   }
@@ -265,6 +304,7 @@ class AudioService extends ChangeNotifier {
       try {
         await _handler.playFromUrl(
             _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
     notifyListeners();
