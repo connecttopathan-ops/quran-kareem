@@ -272,11 +272,8 @@ class _QiblaScreenState extends State<QiblaScreen>
                                           sin(needleAngle) * 90,
                                           -cos(needleAngle) * 90,
                                         ),
-                                        child: Image.asset(
-                                          'assets/icon/kaaba.png',
-                                          width: 28,
-                                          height: 28,
-                                        ),
+                                        child: const Text('🕋',
+                                            style: TextStyle(fontSize: 24)),
                                       ),
                                     ],
                                   ),
@@ -325,11 +322,8 @@ class _QiblaScreenState extends State<QiblaScreen>
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Image.asset(
-                                        'assets/icon/kaaba.png',
-                                        width: 20,
-                                        height: 20,
-                                      ),
+                                      const Text('🕋',
+                                          style: TextStyle(fontSize: 18)),
                                       const SizedBox(width: 8),
                                       Text(
                                         onTarget
@@ -501,10 +495,10 @@ class _AccuracyIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, icon, color) = level == 2
-        ? ('High', Icons.check_circle, Colors.green)
+        ? ('Accuracy: High', Icons.check_circle, Colors.green)
         : level == 1
-            ? ('Medium', Icons.warning_amber, Colors.orange)
-            : ('Low', Icons.cancel, Colors.red);
+            ? ('Accuracy: Medium', Icons.warning_amber, Colors.orange)
+            : ('Accuracy: Low', Icons.cancel, Colors.red);
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Row(
