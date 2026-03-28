@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart' as audio_svc_pkg;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'models/app_state.dart';
@@ -26,6 +27,22 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
+  // just_audio_background handles lock screen controls (MPNowPlayingInfoCenter)
+  // more reliably than audio_service alone on iOS 26.
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'co.getquran.app.audio',
+      androidNotificationChannelName: 'Quran Audio',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: false,
+      notificationColor: const Color(0xFF0C0C12),
+      preloadArtwork: true,
+    );
+    print('[QuranAudio] JustAudioBackground.init succeeded');
+  } catch (e) {
+    print('[QuranAudio] JustAudioBackground.init FAILED: $e');
+  }
+  // audio_service still needed for command routing (autoNext, skip)
   QuranAudioHandler handler;
   try {
     print('[QuranAudio] AudioService.init starting');

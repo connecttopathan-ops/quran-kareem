@@ -158,11 +158,15 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _watchdogStaleTicks = 0;
     mediaItem.add(item);
     try {
+      // Use setAudioSource with tag so just_audio_background populates
+      // MPNowPlayingInfoCenter for the iOS lock screen widget.
       // Short timeout: iOS 26 continuation leaks but AVPlayer still loads.
-      await _player.setUrl(url).timeout(const Duration(milliseconds: 300));
-      print('[QuranAudio] setUrl done');
+      await _player
+          .setAudioSource(AudioSource.uri(Uri.parse(url), tag: item))
+          .timeout(const Duration(milliseconds: 300));
+      print('[QuranAudio] setAudioSource done');
     } catch (e) {
-      print('[QuranAudio] setUrl timeout (iOS 26 expected) — playing anyway');
+      print('[QuranAudio] setAudioSource timeout (iOS 26 expected) — playing anyway');
     }
     try {
       await _player.play().timeout(const Duration(seconds: 5));
