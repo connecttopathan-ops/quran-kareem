@@ -26,17 +26,22 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
-  // just_audio_background handles lock screen controls (MPNowPlayingInfoCenter)
-  // more reliably than audio_service alone on iOS 26.
-  try {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'co.getquran.app.audio',
-      androidNotificationChannelName: 'Quran Audio',
-      preloadArtwork: true,
-    );
-    print('[QuranAudio] JustAudioBackground.init succeeded');
-  } catch (e) {
-    print('[QuranAudio] JustAudioBackground.init FAILED: $e');
+  // On iOS, our native NowPlayingPlugin manages AVAudioSession and
+  // MPRemoteCommandCenter directly. Skipping JustAudioBackground.init on iOS
+  // prevents it from overwriting our MPRemoteCommandCenter handlers (which
+  // causes the lock screen transport controls to disappear).
+  // On Android, JustAudioBackground is still needed for the media notification.
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'co.getquran.app.audio',
+        androidNotificationChannelName: 'Quran Audio',
+        preloadArtwork: true,
+      );
+      print('[QuranAudio] JustAudioBackground.init succeeded');
+    } catch (e) {
+      print('[QuranAudio] JustAudioBackground.init FAILED: $e');
+    }
   }
   // just_audio_background manages the audio session and lock screen widget;
   // no AudioService.init needed — create the handler directly.
