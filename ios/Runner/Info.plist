@@ -61,6 +61,8 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required by an audio framework used in this app.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>This app uses motion sensors to display the Qibla compass direction.</string>
 	<key>UISupportedInterfaceOrientations</key>
