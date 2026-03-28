@@ -119,6 +119,28 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
         info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = pos
       }
 
+      // Set a light-background artwork so iOS renders the control icons
+      // (play/pause/skip) in a contrasting dark colour that is visible.
+      let artSize = CGSize(width: 300, height: 300)
+      UIGraphicsBeginImageContextWithOptions(artSize, false, 0)
+      if let ctx = UIGraphicsGetCurrentContext() {
+        // Gold crescent background matching the app theme
+        UIColor(red: 0.96, green: 0.84, blue: 0.50, alpha: 1.0).setFill()
+        ctx.fill(CGRect(origin: .zero, size: artSize))
+        let label = "Quran" as NSString
+        let attrs: [NSAttributedString.Key: Any] = [
+          .font: UIFont.boldSystemFont(ofSize: 48),
+          .foregroundColor: UIColor(red: 0.1, green: 0.05, blue: 0.0, alpha: 1.0),
+        ]
+        let textSize = label.size(withAttributes: attrs)
+        label.draw(at: CGPoint(x: (artSize.width - textSize.width) / 2,
+                               y: (artSize.height - textSize.height) / 2),
+                   withAttributes: attrs)
+      }
+      let artImage = UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+      UIGraphicsEndImageContext()
+      info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: artSize) { _ in artImage }
+
       MPNowPlayingInfoCenter.default().nowPlayingInfo = info
       MPNowPlayingInfoCenter.default().playbackState = playing ? .playing : .paused
 
