@@ -38,6 +38,16 @@ class QuranAudioHandler extends BaseAudioHandler with SeekHandler {
     _player.bufferedPositionStream.listen((pos) {
       playbackState.add(playbackState.value.copyWith(bufferedPosition: pos));
     });
+    // Propagate duration to MediaItem so iOS shows the Now Playing widget
+    // on the lock screen and Control Center with a progress bar.
+    _player.durationStream.listen((duration) {
+      if (duration != null) {
+        final current = mediaItem.value;
+        if (current != null && current.duration != duration) {
+          mediaItem.add(current.copyWith(duration: duration));
+        }
+      }
+    });
     // Layer 1
     _player.processingStateStream.listen((state) {
       print('[QuranAudio] processingState=$state');
