@@ -33,9 +33,6 @@ void main() async {
     await JustAudioBackground.init(
       androidNotificationChannelId: 'co.getquran.app.audio',
       androidNotificationChannelName: 'Quran Audio',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: false,
-      notificationColor: const Color(0xFF0C0C12),
       preloadArtwork: true,
     );
     print('[QuranAudio] JustAudioBackground.init succeeded');
