@@ -6,8 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../data/quran_data.dart';
 import 'audio_handler.dart';
+import 'audio_download_service.dart';
 
 class Reciter {
   final String id, name, arabicName, style;
@@ -174,8 +176,12 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _verseUrl(int absoluteVerse) =>
-      'https://cdn.islamic.network/quran/audio/128/$_reciterId/$absoluteVerse.mp3';
+  Future<String> _verseUrl(int absoluteVerse) async {
+    final local = await AudioDownloadService()
+        .localFilePath(_reciterId, absoluteVerse);
+    if (local != null) return 'file://$local';
+    return '${AppConfig.audioCdnBaseUrl}/$_reciterId/$absoluteVerse.mp3';
+  }
 
   MediaItem _makeMediaItem(NowPlaying np) => MediaItem(
     id: 'verse-${np.surahNumber}-${np.verseNumber}',
@@ -205,7 +211,7 @@ class AudioService extends ChangeNotifier {
     notifyListeners();
     try {
       await _handler.playFromUrl(
-          _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+          await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
       await _handler.player.setSpeed(_playbackSpeed);
       _updateNativeNowPlaying(_nowPlaying!);
     } catch (e) {

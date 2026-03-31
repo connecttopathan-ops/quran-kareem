@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../data/quran_data.dart';
 import '../widgets/q_icons.dart';
+import '../services/audio_service.dart';
+import '../services/audio_download_service.dart';
 import 'reader_screen.dart';
 
 class SurahListScreen extends StatefulWidget {
@@ -133,6 +135,13 @@ class _SurahTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dl = context.watch<AudioDownloadService>();
+    final audio = context.watch<AudioService>();
+    final reciterId = audio.reciterId;
+    final downloaded = dl.isDownloaded(reciterId, surah.number);
+    final downloading = dl.isDownloading(reciterId, surah.number);
+    final progress = dl.progress(reciterId, surah.number);
+
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -208,6 +217,67 @@ class _SurahTile extends StatelessWidget {
                         color: context.textDim,
                         fontFamily: 'sans-serif')),
               ],
+            ),
+            const SizedBox(width: 8),
+            // Download button
+            GestureDetector(
+              onTap: () {
+                if (downloading) {
+                  dl.cancelDownload(reciterId, surah.number);
+                } else if (downloaded) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Delete download?'),
+                      content: Text(
+                          'Remove offline audio for ${surah.nameTransliteration}?'),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel')),
+                        TextButton(
+                            onPressed: () {
+                              dl.deleteSurah(
+                                  reciterId: reciterId,
+                                  surahNumber: surah.number);
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Delete',
+                                style: TextStyle(color: Colors.red))),
+                      ],
+                    ),
+                  );
+                } else {
+                  dl.downloadSurah(
+                      reciterId: reciterId, surahNumber: surah.number);
+                }
+              },
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: downloading
+                    ? Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 2,
+                            color: AppColors.gold,
+                          ),
+                          Icon(Icons.close,
+                              size: 12, color: context.textDim),
+                        ],
+                      )
+                    : Icon(
+                        downloaded
+                            ? Icons.download_done
+                            : Icons.download_outlined,
+                        size: 20,
+                        color: downloaded
+                            ? AppColors.gold
+                            : context.textDim,
+                      ),
+              ),
             ),
           ],
         ),

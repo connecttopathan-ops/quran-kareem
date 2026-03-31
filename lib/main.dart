@@ -12,6 +12,7 @@ import 'services/quran_service.dart';
 import 'services/translation_service.dart';
 import 'services/notification_service.dart';
 import 'services/book_download_service.dart';
+import 'services/audio_download_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/duas_screen.dart';
 import 'screens/prayer_notification_settings_screen.dart';
@@ -23,6 +24,7 @@ void main() async {
   try {
     await NotificationService().init();
   } catch (_) {}
+  await AudioDownloadService().init();
   if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
@@ -63,6 +65,7 @@ class QuranApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => QuranService()),
         ChangeNotifierProvider(create: (_) => TranslationService()),
         ChangeNotifierProvider(create: (_) => BookDownloadService()),
+        ChangeNotifierProvider(create: (_) => AudioDownloadService()),
       ],
       child: Consumer<AppState>(
         builder: (context, state, _) {
