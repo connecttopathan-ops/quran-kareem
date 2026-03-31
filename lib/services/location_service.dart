@@ -111,6 +111,7 @@ class LocationService extends ChangeNotifier {
     if (lat != null && lng != null && city != null) {
       _prayerTimes = _calc(lat, lng, city);
       notifyListeners();
+      await _saveWidgetData(_prayerTimes!); // populate widget on every app open
     } else {
       // No stored location — silently auto-fetch if permission already granted
       final permission = await Geolocator.checkPermission();
