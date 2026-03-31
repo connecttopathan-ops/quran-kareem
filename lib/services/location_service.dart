@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -173,7 +174,94 @@ class LocationService extends ChangeNotifier {
     await p.setDouble('lat', lat);
     await p.setDouble('lng', lng);
     await p.setString('cityName', city);
+    await _saveWidgetData(_prayerTimes!);
     notifyListeners();
+  }
+
+  /// Saves prayer times and qibla data to SharedPreferences so Android/iOS
+  /// home screen widgets can read them without launching the full app.
+  Future<void> _saveWidgetData(PrayerTimes pt) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString('widget_fajr',    pt.fajrStr);
+      await p.setString('widget_dhuhr',   pt.dhuhrStr);
+      await p.setString('widget_asr',     pt.asrStr);
+      await p.setString('widget_maghrib', pt.maghribStr);
+      await p.setString('widget_isha',    pt.ishaStr);
+      await p.setString('widget_city',    pt.cityName);
+      await p.setString('widget_next_prayer', pt.nextPrayerName);
+      // Qibla bearing
+      final bearing = _calcQiblaBearing(pt.lat, pt.lng);
+      await p.setDouble('widget_qibla_degrees', bearing);
+      // Hijri date (simple calculation)
+      await p.setString('widget_hijri', _hijriDate());
+      // Trigger Android widget refresh via MethodChannel (best-effort)
+      try {
+        await const MethodChannel('co.getquran.app/widget')
+            .invokeMethod('updateWidgets');
+      } catch (_) {}
+    } catch (_) {}
+  }
+
+  String _hijriDate() {
+    // Simple Hijri approximation (±1 day accuracy)
+    final now = DateTime.now();
+    final jd = _julianDay(now.year, now.month, now.day);
+    final z = (jd - 1948439.5).floor();
+    final a = ((z - 122.1) / 365.25).floor();
+    final b = z - (365.25 * a).floor();
+    final c = ((b - 0.1) / 30.6001).floor();
+    final day = b - (30.6001 * c).floor();
+    final rawMonth = c < 14 ? c - 1 : c - 13;
+    final rawYear = rawMonth > 2 ? a - 4716 : a - 4715;
+    // Convert Gregorian JD to Hijri
+    final l = z + 68569 + 60;
+    final n = (4 * l ~/ 146097);
+    final l2 = l - (146097 * n + 3) ~/ 4;
+    final i = 4000 * (l2 + 1) ~/ 1461001;
+    final l3 = l2 - 1461 * i ~/ 4 + 31;
+    final j = 80 * l3 ~/ 2447;
+    final d = l3 - 2447 * j ~/ 80;
+    final l4 = j ~/ 11;
+    final m = j + 2 - 12 * l4;
+    final y = 100 * (n - 49) + i + l4;
+    // Hijri conversion
+    final jdHijri = jd.floor();
+    final l5 = jdHijri - 1948440 + 10632;
+    final n2 = (l5 - 1) ~/ 10631;
+    final l6 = l5 - 10631 * n2 + 354;
+    final j2 = ((10985 - l6) ~/ 5316) * ((50 * l6) ~/ 17719) +
+        (l6 ~/ 5670) * ((43 * l6) ~/ 15238);
+    final l7 = l6 - ((30 - j2) ~/ 15) * ((17719 * j2) ~/ 50) -
+        (j2 ~/ 16) * ((15238 * j2) ~/ 43) + 29;
+    final month = 24 * l7 ~/ 709;
+    final day2 = l7 - 709 * month ~/ 24;
+    final year = 30 * n2 + j2 - 30;
+    const months = [
+      'Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II',
+      'Rajab','Sha\'ban','Ramadan','Shawwal','Dhu al-Qi\'dah','Dhu al-Hijjah'
+    ];
+    final mIdx = (month - 1).clamp(0, 11);
+    return '$day2 ${months[mIdx]} $year';
+  }
+
+  double _julianDay(int y, int m, int d) {
+    if (m <= 2) { y -= 1; m += 12; }
+    final a = y ~/ 100;
+    final b = 2 - a + a ~/ 4;
+    return (365.25 * (y + 4716)).floor() +
+        (30.6001 * (m + 1)).floor() + d + b - 1524.5;
+  }
+
+  double _calcQiblaBearing(double lat, double lng) {
+    const mLat = 21.4225 * pi / 180;
+    const mLon = 39.8262 * pi / 180;
+    final uLat = lat * pi / 180;
+    final uLon = lng * pi / 180;
+    final dLon = mLon - uLon;
+    final y = sin(dLon) * cos(mLat);
+    final x = cos(uLat) * sin(mLat) - sin(uLat) * cos(mLat) * cos(dLon);
+    return (atan2(y, x) * 180 / pi + 360) % 360;
   }
 
   Future<void> setCalcMethod(String id) async {
@@ -182,6 +270,7 @@ class LocationService extends ChangeNotifier {
     await p.setString('calcMethod', id);
     if (_prayerTimes != null) {
       _prayerTimes = _calc(_prayerTimes!.lat, _prayerTimes!.lng, _prayerTimes!.cityName);
+      await _saveWidgetData(_prayerTimes!);
     }
     notifyListeners();
   }

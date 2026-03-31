@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_widget_mosque"
+            android:layout_marginEnd="6dp"/>
+
+        <TextView
+            android:id="@+id/city_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Prayer Times"
+            android:textColor="#9A8060"
+            android:textSize="10sp"/>
+
+        <TextView
+            android:id="@+id/hijri_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#9A8060"
+            android:textSize="9sp"/>
+    </LinearLayout>
+
+    <!-- Prayer rows -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <!-- Left column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+
+            <LinearLayout android:id="@+id/row_fajr"
+                android:layout_width="match_parent" android:layout_height="0dp"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="center_vertical" android:paddingStart="4dp" android:paddingEnd="4dp">
+                <TextView android:id="@+id/lbl_fajr"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Fajr"
+                    android:textColor="#9A8060" android:textSize="10sp"/>
+                <TextView android:id="@+id/time_fajr"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="--:--" android:textColor="#F5ECD7" android:textSize="10sp" android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/row_dhuhr"
+                android:layout_width="match_parent" android:layout_height="0dp"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="center_vertical" android:paddingStart="4dp" android:paddingEnd="4dp">
+                <TextView android:id="@+id/lbl_dhuhr"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Dhuhr"
+                    android:textColor="#9A8060" android:textSize="10sp"/>
+                <TextView android:id="@+id/time_dhuhr"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="--:--" android:textColor="#F5ECD7" android:textSize="10sp" android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/row_asr"
+                android:layout_width="match_parent" android:layout_height="0dp"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="center_vertical" android:paddingStart="4dp" android:paddingEnd="4dp">
+                <TextView android:id="@+id/lbl_asr"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Asr"
+                    android:textColor="#9A8060" android:textSize="10sp"/>
+                <TextView android:id="@+id/time_asr"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="--:--" android:textColor="#F5ECD7" android:textSize="10sp" android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/row_maghrib"
+                android:layout_width="match_parent" android:layout_height="0dp"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="center_vertical" android:paddingStart="4dp" android:paddingEnd="4dp">
+                <TextView android:id="@+id/lbl_maghrib"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Maghrib"
+                    android:textColor="#9A8060" android:textSize="10sp"/>
+                <TextView android:id="@+id/time_maghrib"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="--:--" android:textColor="#F5ECD7" android:textSize="10sp" android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/row_isha"
+                android:layout_width="match_parent" android:layout_height="0dp"
+                android:layout_weight="1" android:orientation="horizontal"
+                android:gravity="center_vertical" android:paddingStart="4dp" android:paddingEnd="4dp">
+                <TextView android:id="@+id/lbl_isha"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:text="Isha"
+                    android:textColor="#9A8060" android:textSize="10sp"/>
+                <TextView android:id="@+id/time_isha"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="--:--" android:textColor="#F5ECD7" android:textSize="10sp" android:textStyle="bold"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
