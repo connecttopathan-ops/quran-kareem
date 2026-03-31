@@ -1,6 +1,19 @@
 import WidgetKit
 import SwiftUI
 
+// MARK: - iOS 17 containerBackground compatibility
+
+extension View {
+    @ViewBuilder
+    func widgetBackground(_ color: Color) -> some View {
+        if #available(iOS 17.0, *) {
+            containerBackground(color, for: .widget)
+        } else {
+            background(color)
+        }
+    }
+}
+
 // MARK: - Shared Data
 
 private let appGroup = "group.co.getquran.app"
@@ -144,7 +157,7 @@ struct PrayerWidgetSmallView: View {
             }
             .padding(8)
         }
-        .containerBackground(Color.widgetBg, for: .widget)
+        .widgetBackground(Color.widgetBg)
     }
 }
 
@@ -194,7 +207,7 @@ struct PrayerWidgetMediumView: View {
             }
             .padding(10)
         }
-        .containerBackground(Color.widgetBg, for: .widget)
+        .widgetBackground(Color.widgetBg)
     }
 }
 
@@ -261,7 +274,7 @@ struct PrayerWidgetLargeView: View {
             }
             .padding(12)
         }
-        .containerBackground(Color.widgetBg, for: .widget)
+        .widgetBackground(Color.widgetBg)
     }
 }
 
@@ -302,7 +315,7 @@ struct QiblaWidgetView: View {
             }
             .padding(8)
         }
-        .containerBackground(Color.widgetBg, for: .widget)
+        .widgetBackground(Color.widgetBg)
     }
 }
 
