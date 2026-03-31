@@ -48,9 +48,9 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iOSSettings =
         DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -95,6 +95,12 @@ class NotificationService {
 
     // Request POST_NOTIFICATIONS permission on Android 13+
     await Permission.notification.request();
+
+    // Request SCHEDULE_EXACT_ALARM permission on Android 12+
+    // Without this, exactAllowWhileIdle silently fails to schedule
+    if (await Permission.scheduleExactAlarm.isDenied) {
+      await Permission.scheduleExactAlarm.request();
+    }
   }
 
   Future<void> scheduleAllPrayers(
@@ -199,7 +205,17 @@ class NotificationService {
         );
     }
 
-    return NotificationDetails(android: androidDetails);
+    // iOS notification details
+    // Note: iOS notification sounds must be <30s in .caf/.aiff format.
+    // The full adhan MP3s are too long — iOS will play the default sound.
+    // The notification still arrives and the user can open the app for full adhan.
+    final DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: mode != PrayerNotificationMode.off,
+    );
+
+    return NotificationDetails(android: androidDetails, iOS: iOSDetails);
   }
 
   Future<void> cancelAll() async {

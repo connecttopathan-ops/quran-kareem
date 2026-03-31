@@ -261,7 +261,7 @@ class _PrayerNotificationSettingsScreenState
         Icons.mosque,
         'Makkah',
         'Masjid al-Haram · Sheikh Mishary Rashid Alafasy',
-        'audio/adhan_makkah.mp3',
+        'assets/audio/adhan_makkah.mp3',
       ),
       (
         AdhanType.madinah,
@@ -269,7 +269,7 @@ class _PrayerNotificationSettingsScreenState
         Icons.mosque_outlined,
         'Madinah',
         'Masjid an-Nabawi · Sheikh Ahmad al-Nafees',
-        'audio/adhan_madinah.mp3',
+        'assets/audio/adhan_madinah.mp3',
       ),
     ];
 
