@@ -234,7 +234,7 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
       try {
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
         _updateNativeNowPlaying(_nowPlaying!);
       } catch (e) {
         print('[QuranService] _autoNextVerse error: $e');
@@ -268,7 +268,7 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
       try {
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
         _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
@@ -281,7 +281,7 @@ class AudioService extends ChangeNotifier {
       notifyListeners();
       try {
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
         _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
@@ -318,7 +318,7 @@ class AudioService extends ChangeNotifier {
     if (_nowPlaying != null) {
       try {
         await _handler.playFromUrl(
-            _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
         _updateNativeNowPlaying(_nowPlaying!);
       } catch (_) {}
     }
