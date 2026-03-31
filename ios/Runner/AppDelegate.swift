@@ -17,5 +17,8 @@ import UIKit
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "NowPlayingPlugin") {
       NowPlayingPlugin.register(with: registrar)
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "WidgetPlugin") {
+      WidgetPlugin.register(with: registrar)
+    }
   }
 }

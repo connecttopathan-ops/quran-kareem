@@ -178,27 +178,46 @@ class LocationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Saves prayer times and qibla data to SharedPreferences so Android/iOS
-  /// home screen widgets can read them without launching the full app.
+  /// Saves prayer times and qibla data so home screen widgets can read them.
+  /// - Android: writes to FlutterSharedPreferences (keys prefixed `flutter.`)
+  ///            and broadcasts widget update via MethodChannel.
+  /// - iOS:     passes data through MethodChannel so native WidgetPlugin writes
+  ///            to the shared App Group UserDefaults and reloads WidgetKit timelines.
   Future<void> _saveWidgetData(PrayerTimes pt) async {
     try {
-      final p = await SharedPreferences.getInstance();
-      await p.setString('widget_fajr',    pt.fajrStr);
-      await p.setString('widget_dhuhr',   pt.dhuhrStr);
-      await p.setString('widget_asr',     pt.asrStr);
-      await p.setString('widget_maghrib', pt.maghribStr);
-      await p.setString('widget_isha',    pt.ishaStr);
-      await p.setString('widget_city',    pt.cityName);
-      await p.setString('widget_next_prayer', pt.nextPrayerName);
-      // Qibla bearing
       final bearing = _calcQiblaBearing(pt.lat, pt.lng);
+      final hijri   = _hijriDate();
+
+      // Android: write to Flutter SharedPreferences (widgets read these directly)
+      final p = await SharedPreferences.getInstance();
+      await p.setString('widget_fajr',         pt.fajrStr);
+      await p.setString('widget_dhuhr',         pt.dhuhrStr);
+      await p.setString('widget_asr',           pt.asrStr);
+      await p.setString('widget_maghrib',       pt.maghribStr);
+      await p.setString('widget_isha',          pt.ishaStr);
+      await p.setString('widget_city',          pt.cityName);
+      await p.setString('widget_next_prayer',   pt.nextPrayerName);
       await p.setDouble('widget_qibla_degrees', bearing);
-      // Hijri date (simple calculation)
-      await p.setString('widget_hijri', _hijriDate());
-      // Trigger Android widget refresh via MethodChannel (best-effort)
+      await p.setString('widget_hijri',         hijri);
+
+      // Trigger widget refresh via MethodChannel.
+      // On Android → MainActivity broadcasts update to AppWidgetProviders.
+      // On iOS     → WidgetPlugin writes to App Group UserDefaults + reloads WidgetKit.
       try {
-        await const MethodChannel('co.getquran.app/widget')
-            .invokeMethod('updateWidgets');
+        await const MethodChannel('co.getquran.app/widget').invokeMethod(
+          'updateWidgets',
+          {
+            'widget_fajr':         pt.fajrStr,
+            'widget_dhuhr':        pt.dhuhrStr,
+            'widget_asr':          pt.asrStr,
+            'widget_maghrib':      pt.maghribStr,
+            'widget_isha':         pt.ishaStr,
+            'widget_city':         pt.cityName,
+            'widget_next_prayer':  pt.nextPrayerName,
+            'widget_qibla_degrees': bearing,
+            'widget_hijri':        hijri,
+          },
+        );
       } catch (_) {}
     } catch (_) {}
   }
