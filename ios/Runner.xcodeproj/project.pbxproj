@@ -20,7 +20,6 @@
 		A9FEB598A71CA9B6D0EF994E /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 754BC6D725D064450ECE8F73 /* Pods_RunnerTests.framework */; };
 		BB1234560000000000000003 /* WidgetPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1234560000000000000002 /* WidgetPlugin.swift */; };
 		BB1234560000000000000005 /* QuranWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1234560000000000000004 /* QuranWidget.swift */; };
-		BB1234560000000000000007 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB1234560000000000000006 /* Info.plist */; };
 		BB123456000000000000000A /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB1234560000000000000009 /* WidgetKit.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		BB123456000000000000000B /* QuranWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = BB1234560000000000000008 /* QuranWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -353,7 +352,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB1234560000000000000007 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
