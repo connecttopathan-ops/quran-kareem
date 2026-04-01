@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_service/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -58,13 +59,22 @@ class _PrayerNotificationSettingsScreenState
     }
     await _audioPlayer!.stop();
     try {
-      await _audioPlayer!.setAsset(assetPath);
+      await _audioPlayer!.setAudioSource(
+        AudioSource.asset(
+          assetPath,
+          tag: MediaItem(
+            id: id,
+            title: id == 'makkah' ? 'Makkah Adhan' : 'Madinah Adhan',
+            album: 'Adhan Preview',
+          ),
+        ),
+      );
       await _audioPlayer!.play();
       setState(() => _playingId = id);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Audio file not yet installed')),
+          SnackBar(content: Text('Could not play preview: $e')),
         );
         setState(() => _playingId = null);
       }
