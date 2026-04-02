@@ -206,14 +206,21 @@ class NotificationService {
         );
     }
 
-    // iOS notification details
-    // Note: iOS notification sounds must be <30s in .caf/.aiff format.
-    // The full adhan MP3s are too long — iOS will play the default sound.
-    // The notification still arrives and the user can open the app for full adhan.
+    // iOS notification details — use short .caf clips (<30s) bundled in the app
+    String? iOSSound;
+    if (mode == PrayerNotificationMode.adhan) {
+      iOSSound = prayerName == 'Fajr'
+          ? 'adhan_makkah_fajr_notification.caf'
+          : (adhanType == AdhanType.makkah
+              ? 'adhan_makkah_notification.caf'
+              : 'adhan_madinah_notification.caf');
+    }
+
     final DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: mode != PrayerNotificationMode.off,
+      sound: iOSSound,
     );
 
     return NotificationDetails(android: androidDetails, iOS: iOSDetails);
