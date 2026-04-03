@@ -25,8 +25,9 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  static const String _adhanChannelId = 'prayer_times_adhan';
-  static const String _adhanChannelName = 'Prayer Times (Adhan)';
+  static const String _adhanMakkahChannelId = 'prayer_times_adhan_makkah';
+  static const String _adhanMadinahChannelId = 'prayer_times_adhan_madinah';
+  static const String _adhanFajrChannelId = 'prayer_times_adhan_fajr';
   static const String _vibrationChannelId = 'prayer_times_vibration';
   static const String _vibrationChannelName = 'Prayer Times (Vibration)';
 
@@ -62,24 +63,46 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    // Always delete old channels to force recreation with correct sound.
-    // Android caches channel settings after first creation — deleting ensures
-    // the channel is recreated with the correct sound/vibration config.
+    // Delete old channels so they are recreated with the correct sound.
+    // Android caches channel settings — must delete to update sound.
     await androidPlugin?.deleteNotificationChannel('prayer_times');
-    await androidPlugin?.deleteNotificationChannel(_adhanChannelId);
+    await androidPlugin?.deleteNotificationChannel('prayer_times_adhan');
+    await androidPlugin?.deleteNotificationChannel(_adhanMakkahChannelId);
+    await androidPlugin?.deleteNotificationChannel(_adhanMadinahChannelId);
+    await androidPlugin?.deleteNotificationChannel(_adhanFajrChannelId);
     await androidPlugin?.deleteNotificationChannel(_vibrationChannelId);
 
-    // Channel 1 — adhan (with sound)
-    const AndroidNotificationChannel adhanChannel = AndroidNotificationChannel(
-      _adhanChannelId,
-      _adhanChannelName,
-      description: 'Adhan audio at prayer times',
+    // One channel per sound — Android locks sound at channel creation time.
+    const AndroidNotificationChannel adhanMakkahChannel =
+        AndroidNotificationChannel(
+      _adhanMakkahChannelId,
+      'Prayer Times (Makkah Adhan)',
+      description: 'Makkah adhan at prayer times',
       importance: Importance.max,
       playSound: true,
+      sound: RawResourceAndroidNotificationSound('adhan_makkah'),
       enableVibration: true,
     );
-
-    // Channel 2 — vibration only (no sound)
+    const AndroidNotificationChannel adhanMadinahChannel =
+        AndroidNotificationChannel(
+      _adhanMadinahChannelId,
+      'Prayer Times (Madinah Adhan)',
+      description: 'Madinah adhan at prayer times',
+      importance: Importance.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('adhan_madinah'),
+      enableVibration: true,
+    );
+    const AndroidNotificationChannel adhanFajrChannel =
+        AndroidNotificationChannel(
+      _adhanFajrChannelId,
+      'Prayer Times (Fajr Adhan)',
+      description: 'Fajr adhan at prayer times',
+      importance: Importance.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('adhan_makkah_fajr'),
+      enableVibration: true,
+    );
     const AndroidNotificationChannel vibrationChannel =
         AndroidNotificationChannel(
       _vibrationChannelId,
@@ -90,7 +113,9 @@ class NotificationService {
       enableVibration: true,
     );
 
-    await androidPlugin?.createNotificationChannel(adhanChannel);
+    await androidPlugin?.createNotificationChannel(adhanMakkahChannel);
+    await androidPlugin?.createNotificationChannel(adhanMadinahChannel);
+    await androidPlugin?.createNotificationChannel(adhanFajrChannel);
     await androidPlugin?.createNotificationChannel(vibrationChannel);
 
     // Request POST_NOTIFICATIONS permission on Android 13+
@@ -167,14 +192,27 @@ class NotificationService {
 
     switch (mode) {
       case PrayerNotificationMode.adhan:
-        // Fajr always uses adhan_makkah_fajr regardless of adhanType
-        final soundFile = prayerName == 'Fajr'
-            ? 'adhan_makkah_fajr'
-            : (adhanType == AdhanType.makkah ? 'adhan_makkah' : 'adhan_madinah');
+        // Each prayer uses the channel whose sound was set at creation time.
+        // Fajr always uses the Fajr channel regardless of adhanType.
+        final String channelId;
+        final String channelName;
+        final String soundFile;
+        if (prayerName == 'Fajr') {
+          channelId = _adhanFajrChannelId;
+          channelName = 'Prayer Times (Fajr Adhan)';
+          soundFile = 'adhan_makkah_fajr';
+        } else if (adhanType == AdhanType.makkah) {
+          channelId = _adhanMakkahChannelId;
+          channelName = 'Prayer Times (Makkah Adhan)';
+          soundFile = 'adhan_makkah';
+        } else {
+          channelId = _adhanMadinahChannelId;
+          channelName = 'Prayer Times (Madinah Adhan)';
+          soundFile = 'adhan_madinah';
+        }
         androidDetails = AndroidNotificationDetails(
-          _adhanChannelId,
-          _adhanChannelName,
-          channelDescription: 'Adhan audio at prayer times',
+          channelId,
+          channelName,
           importance: Importance.max,
           priority: Priority.max,
           playSound: true,
@@ -206,8 +244,8 @@ class NotificationService {
 
       case PrayerNotificationMode.off:
         androidDetails = const AndroidNotificationDetails(
-          _adhanChannelId,
-          _adhanChannelName,
+          _adhanMakkahChannelId,
+          'Prayer Times (Makkah Adhan)',
         );
     }
 
