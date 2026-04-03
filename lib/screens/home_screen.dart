@@ -86,6 +86,24 @@ class _HomeScreenState extends State<HomeScreen> {
     };
     await NotificationService()
         .scheduleAllPrayers(times, mode, adhanType: adhanType);
+
+    // Refresh ayah of the day (30-day window — renew on each app open)
+    final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
+    await NotificationService().scheduleAyahNotifications(
+      enabled: ayahEnabled,
+      hour: prefs.getInt('ayah_notification_hour') ?? 19,
+      minute: prefs.getInt('ayah_notification_minute') ?? 0,
+    );
+
+    // Refresh daily reading reminders
+    await NotificationService().scheduleDailyReminders(
+      morningEnabled: prefs.getBool('reminder_morning_enabled') ?? false,
+      morningHour: prefs.getInt('reminder_morning_hour') ?? 6,
+      morningMinute: prefs.getInt('reminder_morning_minute') ?? 0,
+      eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? false,
+      eveningHour: prefs.getInt('reminder_evening_hour') ?? 20,
+      eveningMinute: prefs.getInt('reminder_evening_minute') ?? 0,
+    );
   }
 
   Future<void> _checkFirstLaunchLocation() async {

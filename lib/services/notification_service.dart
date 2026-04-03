@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import '../data/curated_ayahs.dart';
 
 enum PrayerNotificationMode { adhan, vibration, singleVibration, off }
 
@@ -31,6 +32,10 @@ class NotificationService {
   static const String _vibrationChannelId = 'prayer_times_vibration';
   static const String _vibrationChannelName = 'Prayer Times (Vibration)';
 
+  static const String _reminderChannelId = 'daily_reminders';
+  static const String _ayahChannelId = 'ayah_of_the_day';
+
+  // Notification IDs
   static const List<int> _prayerIds = [1, 2, 3, 4, 5];
   static const List<String> _prayerNames = [
     'Fajr',
@@ -117,10 +122,33 @@ class NotificationService {
       enableVibration: true,
     );
 
+    const AndroidNotificationChannel reminderChannel =
+        AndroidNotificationChannel(
+      _reminderChannelId,
+      'Daily Reminders',
+      description: 'Daily Quran reading reminders',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+    const AndroidNotificationChannel ayahChannel = AndroidNotificationChannel(
+      _ayahChannelId,
+      'Ayah of the Day',
+      description: 'Daily ayah notification',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    await androidPlugin?.deleteNotificationChannel(_reminderChannelId);
+    await androidPlugin?.deleteNotificationChannel(_ayahChannelId);
+
     await androidPlugin?.createNotificationChannel(adhanMakkahChannel);
     await androidPlugin?.createNotificationChannel(adhanMadinahChannel);
     await androidPlugin?.createNotificationChannel(adhanFajrChannel);
     await androidPlugin?.createNotificationChannel(vibrationChannel);
+    await androidPlugin?.createNotificationChannel(reminderChannel);
+    await androidPlugin?.createNotificationChannel(ayahChannel);
 
     // Request POST_NOTIFICATIONS permission on Android 13+
     // (permission dialog is now shown from UI with context — just init here)
@@ -273,6 +301,121 @@ class NotificationService {
     );
 
     return NotificationDetails(android: androidDetails, iOS: iOSDetails);
+  }
+
+  // ── Daily Reminders ────────────────────────────────────────────────────────
+
+  static const int _morningReminderId = 50;
+  static const int _eveningReminderId = 51;
+
+  Future<void> scheduleDailyReminders({
+    required bool morningEnabled,
+    required int morningHour,
+    required int morningMinute,
+    required bool eveningEnabled,
+    required int eveningHour,
+    required int eveningMinute,
+  }) async {
+    await _plugin.cancel(_morningReminderId);
+    await _plugin.cancel(_eveningReminderId);
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _reminderChannelId,
+        'Daily Reminders',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+      ),
+      iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+    );
+
+    final now = tz.TZDateTime.now(tz.local);
+
+    if (morningEnabled) {
+      tz.TZDateTime morning = tz.TZDateTime(
+          tz.local, now.year, now.month, now.day, morningHour, morningMinute);
+      if (morning.isBefore(now)) morning = morning.add(const Duration(days: 1));
+      await _plugin.zonedSchedule(
+        _morningReminderId,
+        'Time to Read Quran 📖',
+        'Start your morning with the words of Allah',
+        morning,
+        details,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+
+    if (eveningEnabled) {
+      tz.TZDateTime evening = tz.TZDateTime(
+          tz.local, now.year, now.month, now.day, eveningHour, eveningMinute);
+      if (evening.isBefore(now)) evening = evening.add(const Duration(days: 1));
+      await _plugin.zonedSchedule(
+        _eveningReminderId,
+        'Evening Quran Reminder 🌙',
+        'End your day with the words of Allah',
+        evening,
+        details,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+  }
+
+  // ── Ayah of the Day ────────────────────────────────────────────────────────
+
+  // IDs 100–129 reserved for ayah of the day (30 days pre-scheduled)
+  static const int _ayahBaseId = 100;
+
+  Future<void> scheduleAyahNotifications({
+    required bool enabled,
+    required int hour,
+    required int minute,
+  }) async {
+    // Cancel all previously scheduled ayah notifications
+    for (int i = 0; i < 30; i++) {
+      await _plugin.cancel(_ayahBaseId + i);
+    }
+    if (!enabled) return;
+
+    final now = tz.TZDateTime.now(tz.local);
+    // Starting ayah index: based on day-of-year so it advances daily
+    final startIndex = now.difference(tz.TZDateTime(tz.local, now.year, 1, 1)).inDays %
+        curatedAyahs.length;
+
+    for (int i = 0; i < 30; i++) {
+      final ayah = curatedAyahs[(startIndex + i) % curatedAyahs.length];
+      tz.TZDateTime scheduled = tz.TZDateTime(
+          tz.local, now.year, now.month, now.day, hour, minute);
+      scheduled = scheduled.add(Duration(days: i));
+      if (scheduled.isBefore(now)) scheduled = scheduled.add(const Duration(days: 1));
+
+      await _plugin.zonedSchedule(
+        _ayahBaseId + i,
+        '✨ Ayah of the Day — ${ayah.surahName} ${ayah.surah}:${ayah.ayah}',
+        '${ayah.translation}\n\n${ayah.message}',
+        scheduled,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _ayahChannelId,
+            'Ayah of the Day',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            styleInformation: BigTextStyleInformation(''),
+          ),
+          iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+        ),
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
   }
 
   Future<void> cancelAll() async {

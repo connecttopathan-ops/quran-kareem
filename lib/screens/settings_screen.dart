@@ -101,6 +101,7 @@ class SettingsScreen extends StatelessWidget {
                       _ManageDownloadsTile(),
                       _SectionHeader('Notifications'),
                       _NotificationTile(),
+                      _DailyRemindersTile(),
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
@@ -276,6 +277,47 @@ class _NotificationTile extends StatelessWidget {
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
                   Text('Adhan, vibration, or silent alerts',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textDim, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyRemindersTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/daily-reminders'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.notifications_active_outlined,
+                color: AppColors.gold, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Daily Reminders',
+                      style: TextStyle(fontSize: 14, color: context.text)),
+                  const SizedBox(height: 2),
+                  Text('Quran reading & Ayah of the Day',
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
