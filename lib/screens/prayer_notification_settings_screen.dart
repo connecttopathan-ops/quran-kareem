@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
@@ -90,10 +91,103 @@ class _PrayerNotificationSettingsScreenState
     }
   }
 
+  Future<bool> _ensurePermissions() async {
+    final svc = NotificationService();
+
+    // ── 1. Notification permission ────────────────────────────────────────────
+    if (!await svc.hasNotificationPermission()) {
+      if (!mounted) return false;
+      final proceed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Allow Notifications'),
+          content: const Text(
+            'Prayer time alerts require notification permission. '
+            'Without it, you will not receive any prayer reminders.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Allow'),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true) return false;
+      await svc.hasNotificationPermission(); // triggers system dialog
+    }
+
+    // ── 2. Exact alarm permission (Android only) ──────────────────────────────
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      if (!await svc.hasExactAlarmPermission()) {
+        if (!mounted) return false;
+        final proceed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Precise Alarm Permission'),
+            content: const Text(
+              'To notify you exactly at Fajr, Dhuhr, Asr, Maghrib and Isha, '
+              'this app needs permission to schedule precise alarms.\n\n'
+              'Without it, notifications may arrive 15–60 minutes late '
+              'or not at all.\n\n'
+              'You will be taken to Settings — enable '
+              '"Alarms & reminders" for Get Quran.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Skip'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Go to Settings'),
+              ),
+            ],
+          ),
+        );
+        if (proceed == true) {
+          final granted = await svc.requestExactAlarmPermission();
+          if (!granted && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  '⚠️ Precise alarm not granted — notifications may arrive late.',
+                ),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
   Future<void> _save() async {
+    // Always save the preference first regardless of permissions
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('prayer_notification_mode', _mode.name);
     await prefs.setString('adhan_type', _adhanType.name);
+
+    if (_mode == PrayerNotificationMode.off) {
+      await NotificationService().cancelAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Notifications turned off')));
+      }
+      return;
+    }
+
+    // Check & request permissions with rationale dialogs
+    final ok = await _ensurePermissions();
+    if (!ok || !mounted) return;
 
     final pt = context.read<LocationService>().prayerTimes;
     if (pt != null) {

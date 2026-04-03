@@ -94,13 +94,29 @@ class NotificationService {
     await androidPlugin?.createNotificationChannel(vibrationChannel);
 
     // Request POST_NOTIFICATIONS permission on Android 13+
+    // (permission dialog is now shown from UI with context — just init here)
     await Permission.notification.request();
 
-    // Request SCHEDULE_EXACT_ALARM permission on Android 12+
-    // Without this, exactAllowWhileIdle silently fails to schedule
-    if (await Permission.scheduleExactAlarm.isDenied) {
-      await Permission.scheduleExactAlarm.request();
-    }
+    // SCHEDULE_EXACT_ALARM is requested from UI with rationale dialog
+    // so we don't blindly request it here anymore
+  }
+
+  /// Returns true if POST_NOTIFICATIONS is granted (or not needed pre-Android 13).
+  Future<bool> hasNotificationPermission() async {
+    final status = await Permission.notification.status;
+    return status.isGranted || status.isLimited;
+  }
+
+  /// Returns true if SCHEDULE_EXACT_ALARM is granted (or not needed pre-Android 12).
+  Future<bool> hasExactAlarmPermission() async {
+    final status = await Permission.scheduleExactAlarm.status;
+    return status.isGranted;
+  }
+
+  /// Requests SCHEDULE_EXACT_ALARM. Returns true if granted after request.
+  Future<bool> requestExactAlarmPermission() async {
+    final result = await Permission.scheduleExactAlarm.request();
+    return result.isGranted;
   }
 
   Future<void> scheduleAllPrayers(
