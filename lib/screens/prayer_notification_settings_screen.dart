@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
@@ -118,7 +119,7 @@ class _PrayerNotificationSettingsScreenState
         ),
       );
       if (proceed != true) return false;
-      await svc.hasNotificationPermission(); // triggers system dialog
+      await Permission.notification.request(); // show system permission dialog
     }
 
     return true;

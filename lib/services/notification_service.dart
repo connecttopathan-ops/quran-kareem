@@ -155,7 +155,9 @@ class NotificationService {
       final parsed = _parseTimeString(timeStr);
       if (parsed == null) continue;
 
-      final scheduledDate = tz.TZDateTime(
+      // Build scheduled time for today; if already passed, schedule for tomorrow.
+      // matchDateTimeComponents: DateTimeComponents.time will repeat daily after that.
+      tz.TZDateTime scheduledDate = tz.TZDateTime(
         tz.local,
         now.year,
         now.month,
@@ -163,9 +165,9 @@ class NotificationService {
         parsed.$1,
         parsed.$2,
       );
-
-      // Skip if time has already passed today
-      if (scheduledDate.isBefore(now)) continue;
+      if (scheduledDate.isBefore(now)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
 
       final details = _buildNotificationDetails(name, mode, adhanType);
 
