@@ -37,14 +37,17 @@ class _PrayerNotificationSettingsScreenState
 
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
+    final modeStr = prefs.getString('prayer_notification_mode');
     final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
     if (!mounted) return;
     setState(() {
-      _mode = PrayerNotificationMode.values.firstWhere(
-        (e) => e.name == modeStr,
-        orElse: () => PrayerNotificationMode.off,
-      );
+      // Default to singleVibration on first launch (not off)
+      _mode = modeStr == null
+          ? PrayerNotificationMode.singleVibration
+          : PrayerNotificationMode.values.firstWhere(
+              (e) => e.name == modeStr,
+              orElse: () => PrayerNotificationMode.singleVibration,
+            );
       _adhanType = AdhanType.values.firstWhere(
         (e) => e.name == adhanStr,
         orElse: () => AdhanType.makkah,
@@ -91,77 +94,54 @@ class _PrayerNotificationSettingsScreenState
     }
   }
 
-  Future<bool> _ensurePermissions() async {
-    final svc = NotificationService();
-
-    // ── 1. Notification permission ────────────────────────────────────────────
-    if (!await svc.hasNotificationPermission()) {
-      if (!mounted) return false;
-      final proceed = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Allow Notifications'),
-          content: const Text(
-            'Prayer time alerts require notification permission. '
-            'Without it, you will not receive any prayer reminders.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Allow'),
-            ),
-          ],
-        ),
-      );
-      if (proceed != true) return false;
-      await Permission.notification.request(); // show system permission dialog
-    }
-
-    return true;
-  }
 
   Future<void> _save() async {
-    // Always save the preference first regardless of permissions
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('prayer_notification_mode', _mode.name);
-    await prefs.setString('adhan_type', _adhanType.name);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('prayer_notification_mode', _mode.name);
+      await prefs.setString('adhan_type', _adhanType.name);
 
-    if (_mode == PrayerNotificationMode.off) {
-      await NotificationService().cancelAll();
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Notifications turned off')));
+      if (_mode == PrayerNotificationMode.off) {
+        await NotificationService().cancelAll();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notifications turned off')));
+        }
+        return;
       }
-      return;
-    }
 
-    // Check & request permissions with rationale dialogs
-    final ok = await _ensurePermissions();
-    if (!ok || !mounted) return;
+      // Ensure notification permission — request if not yet granted
+      final hasPermission = await NotificationService().hasNotificationPermission();
+      if (!hasPermission) {
+        if (!mounted) return;
+        await Permission.notification.request();
+        // Continue even if denied — Android will silently not show notifications
+      }
 
-    final pt = context.read<LocationService>().prayerTimes;
-    if (pt != null) {
-      final times = {
-        'Fajr': pt.fajrStr,
-        'Dhuhr': pt.dhuhrStr,
-        'Asr': pt.asrStr,
-        'Maghrib': pt.maghribStr,
-        'Isha': pt.ishaStr,
-      };
-      await NotificationService()
-          .scheduleAllPrayers(times, _mode, adhanType: _adhanType);
-    }
+      final pt = context.read<LocationService>().prayerTimes;
+      if (pt != null) {
+        final times = {
+          'Fajr': pt.fajrStr,
+          'Dhuhr': pt.dhuhrStr,
+          'Asr': pt.asrStr,
+          'Maghrib': pt.maghribStr,
+          'Isha': pt.ishaStr,
+        };
+        await NotificationService()
+            .scheduleAllPrayers(times, _mode, adhanType: _adhanType);
+      }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("✓ Notifications scheduled for today's prayers")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✓ Notifications scheduled')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
