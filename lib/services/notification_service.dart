@@ -107,23 +107,6 @@ class NotificationService {
     return status.isGranted || status.isLimited;
   }
 
-  /// Returns true if exact alarms can be scheduled (Android 12+ check).
-  /// Uses flutter_local_notifications which queries AlarmManager directly.
-  Future<bool> hasExactAlarmPermission() async {
-    final android = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) return true; // not Android
-    final canSchedule = await android.canScheduleExactNotifications();
-    return canSchedule ?? true;
-  }
-
-  /// Requests SCHEDULE_EXACT_ALARM. Opens the system Settings page.
-  /// Returns true if granted when the user returns to the app.
-  Future<bool> requestExactAlarmPermission() async {
-    final result = await Permission.scheduleExactAlarm.request();
-    return result.isGranted;
-  }
 
   Future<void> scheduleAllPrayers(
     Map<String, String> prayerTimes,
