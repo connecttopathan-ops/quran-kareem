@@ -204,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<AppState>(
       builder: (context, state, _) {
         final screens = [
-          const _HomeTab(),
+          _HomeTab(scrollController: _scrollController, ayahKey: _ayahKey),
           const SurahListScreen(),
           const SettingsScreen(),
         ];
@@ -394,7 +394,9 @@ class _MiniBtn extends StatelessWidget {
 // HOME TAB
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+  final ScrollController scrollController;
+  final GlobalKey ayahKey;
+  const _HomeTab({required this.scrollController, required this.ayahKey});
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +446,7 @@ class _HomeTab extends StatelessWidget {
             // Body
             Expanded(
               child: ListView(
-                controller: _scrollController,
+                controller: scrollController,
                 padding: const EdgeInsets.fromLTRB(13, 12, 13, 24),
                 children: [
                   const _CalPrayerCard(),
@@ -453,7 +455,7 @@ class _HomeTab extends StatelessWidget {
                   const SizedBox(height: 12),
                   const _ContinueCard(),
                   const SizedBox(height: 12),
-                  _DailyAyah(key: _ayahKey),
+                  _DailyAyah(key: ayahKey),
                   const SizedBox(height: 12),
                   const _BooksHomeSection(),
                   const SizedBox(height: 12),
