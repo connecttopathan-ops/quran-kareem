@@ -58,7 +58,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       _SectionHeader('Translation'),
                       _LanguageSelector(state: state),
-                      _TranslationSourceTile(state: state),
+                      _TranslationSourceTile(),
                       _SectionHeader('Reading'),
                       _TextSettingsTile(),
                       _SettingTile(
@@ -587,8 +587,7 @@ class _ManageDownloadsSheet extends StatelessWidget {
 // ── Translation Source tile ───────────────────────────────────────────────────
 
 class _TranslationSourceTile extends StatefulWidget {
-  final AppState state;
-  const _TranslationSourceTile({required this.state});
+  const _TranslationSourceTile();
 
   @override
   State<_TranslationSourceTile> createState() => _TranslationSourceTileState();
@@ -614,64 +613,74 @@ class _TranslationSourceTileState extends State<_TranslationSourceTile> {
   }
 
   Future<void> _setSource(String langCode, String editionId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('translation_source_$langCode', editionId);
-    if (!mounted) return;
     setState(() {
       if (langCode == 'en') _enSource = editionId;
       if (langCode == 'ur') _urSource = editionId;
     });
-    // Notify QuranService so it re-fetches with new source
-    if (mounted) {
-      context.read<QuranService>().setTranslationSource(langCode, editionId);
-    }
+    context.read<QuranService>().setTranslationSource(langCode, editionId);
   }
 
   @override
   Widget build(BuildContext context) {
-    final lang = widget.state.langCode;
-    final isEn = lang == 'en';
-    final isUr = lang == 'ur';
-    if (!isEn && !isUr) return const SizedBox.shrink();
+    return Consumer<AppState>(
+      builder: (context, appState, _) {
+        final lang = appState.langCode;
+        final isEn = lang == 'en';
+        final isUr = lang == 'ur';
+        if (!isEn && !isUr) return const SizedBox.shrink();
 
-    final sources = isEn
-        ? QuranService.kEnTranslationSources
-        : QuranService.kUrTranslationSources;
-    final currentSource = isEn ? _enSource : _urSource;
+        final sources = isEn
+            ? QuranService.kEnTranslationSources
+            : QuranService.kUrTranslationSources;
+        final currentSource = isEn ? _enSource : _urSource;
+        final effectiveSource =
+            sources.containsKey(currentSource) ? currentSource : sources.keys.first;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Translation Source',
-              style: TextStyle(fontSize: 14, color: context.text)),
-          const SizedBox(height: 8),
-          DropdownButton<String>(
-            value: sources.containsKey(currentSource) ? currentSource : sources.keys.first,
-            isExpanded: true,
-            dropdownColor: context.surface,
-            underline: const SizedBox(),
-            style: TextStyle(
-                fontSize: 13, color: context.text, fontFamily: 'serif'),
-            items: sources.entries
-                .map((e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ))
-                .toList(),
-            onChanged: (id) {
-              if (id != null) _setSource(isEn ? 'en' : 'ur', id);
-            },
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+          decoration: BoxDecoration(
+            color: context.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: context.border),
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                child: Text('Translation Source',
+                    style: TextStyle(fontSize: 14, color: context.text)),
+              ),
+              ...sources.entries.map((e) {
+                final selected = e.key == effectiveSource;
+                return GestureDetector(
+                  onTap: () => _setSource(isEn ? 'en' : 'ur', e.key),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: context.border)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(e.value,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: selected ? AppColors.gold : context.text,
+                                  fontFamily: 'serif')),
+                        ),
+                        if (selected)
+                          Icon(Icons.check, size: 16, color: AppColors.gold),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 4),
+            ],
+          ),
+        );
+      },
     );
   }
 }
