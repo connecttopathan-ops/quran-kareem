@@ -7,6 +7,7 @@
 // Uninstall → reinstall → go to Prayer Notifications → Save & Schedule.
 
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -25,6 +26,10 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+
+  /// Emits the payload of the last tapped notification.
+  /// HomeScreen listens to scroll to the relevant section.
+  static final ValueNotifier<String?> notificationPayload = ValueNotifier(null);
 
   static const String _adhanMakkahChannelId = 'prayer_times_adhan_makkah';
   static const String _adhanMadinahChannelId = 'prayer_times_adhan_madinah';
@@ -62,7 +67,14 @@ class NotificationService {
       android: androidSettings,
       iOS: iOSSettings,
     );
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (details) {
+        if (details.payload != null) {
+          notificationPayload.value = details.payload;
+        }
+      },
+    );
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
@@ -414,6 +426,7 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'ayah_of_the_day',
       );
     }
   }

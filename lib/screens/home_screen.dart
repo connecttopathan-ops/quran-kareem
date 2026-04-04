@@ -22,6 +22,7 @@ import 'book_detail_screen.dart';
 import 'book_language_screen.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
+import '../data/curated_ayahs.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   Timer? _clockTimer;
   LocationService? _locationService;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _ayahKey = GlobalKey();
 
   @override
   void initState() {
@@ -40,13 +43,39 @@ class _HomeScreenState extends State<HomeScreen> {
     _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
-    // Record app open for streak tracking
+    NotificationService.notificationPayload.addListener(_onNotificationTap);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<AppState>().recordAppOpen();
         _checkFirstLaunchLocation();
+        // Handle tap if app was launched from notification
+        _onNotificationTap();
       }
     });
+  }
+
+  void _onNotificationTap() {
+    final payload = NotificationService.notificationPayload.value;
+    if (payload == 'ayah_of_the_day') {
+      NotificationService.notificationPayload.value = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _ayahKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(ctx,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    NotificationService.notificationPayload.removeListener(_onNotificationTap);
+    _scrollController.dispose();
+    _locationService?.removeListener(_onPrayerTimesUpdated);
+    _clockTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -91,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
     await NotificationService().scheduleAyahNotifications(
       enabled: ayahEnabled,
-      hour: prefs.getInt('ayah_notification_hour') ?? 19,
+      hour: prefs.getInt('ayah_notification_hour') ?? 11,
       minute: prefs.getInt('ayah_notification_minute') ?? 0,
     );
 
@@ -169,12 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _locationService?.removeListener(_onPrayerTimesUpdated);
-    _clockTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -421,6 +444,7 @@ class _HomeTab extends StatelessWidget {
             // Body
             Expanded(
               child: ListView(
+                controller: _scrollController,
                 padding: const EdgeInsets.fromLTRB(13, 12, 13, 24),
                 children: [
                   const _CalPrayerCard(),
@@ -429,7 +453,7 @@ class _HomeTab extends StatelessWidget {
                   const SizedBox(height: 12),
                   const _ContinueCard(),
                   const SizedBox(height: 12),
-                  const _DailyAyah(),
+                  _DailyAyah(key: _ayahKey),
                   const SizedBox(height: 12),
                   const _BooksHomeSection(),
                   const SizedBox(height: 12),
@@ -1247,10 +1271,16 @@ class _ContinueCard extends StatelessWidget {
   }
 }
 class _DailyAyah extends StatelessWidget {
-  const _DailyAyah();
+  const _DailyAyah({super.key});
+
+  static CuratedAyah get _todaysAyah {
+    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
+    return curatedAyahs[dayOfYear % curatedAyahs.length];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final ayah = _todaysAyah;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
       decoration: BoxDecoration(
@@ -1267,33 +1297,26 @@ class _DailyAyah extends StatelessWidget {
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark,
                 fontFamily: 'sans-serif')),
         const SizedBox(height: 8),
-        Text('وَمَن يَتَوَكَّلْ عَلَى ٱللَّهِ فَهُوَ حَسْبُهُۥ',
+        Text(ayah.arabic,
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 18, height: 2,
                 color: context.isDark ? AppColors.goldLight : const Color(0xFF2a1e08))),
         Divider(color: AppColors.goldDim.withOpacity(0.25)),
-        Text("Wa man yatawakkal 'alal-laahi fahuwa hasbuh",
-            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic,
-                color: context.isDark ? const Color(0xFF888888) : const Color(0xFF806840))),
-        const SizedBox(height: 6),
-        // English translation
+        const SizedBox(height: 4),
         Text(
-          '"And whoever relies upon Allah — then He is sufficient for him."',
+          '"${ayah.translation}"',
           style: TextStyle(fontSize: 12, fontFamily: 'sans-serif',
               color: context.isDark ? const Color(0xFFb0a080) : const Color(0xFF5a4020)),
         ),
-        const SizedBox(height: 4),
-        // Urdu translation
+        const SizedBox(height: 6),
         Text(
-          'اور جو شخص اللہ پر بھروسہ کرے، وہ اس کے لیے کافی ہے۔',
-          textDirection: TextDirection.rtl,
-          textAlign: TextAlign.right,
-          style: TextStyle(fontFamily: 'Scheherazade', fontSize: 14, height: 1.8,
-              color: context.isDark ? const Color(0xFF908070) : const Color(0xFF4A3A20)),
+          ayah.message,
+          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic,
+              color: context.isDark ? const Color(0xFF888888) : const Color(0xFF806840)),
         ),
         const SizedBox(height: 6),
-        Text('Surah At-Talaq · 65:3',
+        Text('Surah ${ayah.surahName} · ${ayah.surah}:${ayah.ayah}',
             style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
       ]),

@@ -12,16 +12,16 @@ class DailyRemindersScreen extends StatefulWidget {
 
 class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
   // Morning reminder
-  bool _morningEnabled = false;
+  bool _morningEnabled = true;
   TimeOfDay _morningTime = const TimeOfDay(hour: 6, minute: 0);
 
   // Evening reminder
-  bool _eveningEnabled = false;
+  bool _eveningEnabled = true;
   TimeOfDay _eveningTime = const TimeOfDay(hour: 20, minute: 0);
 
   // Ayah of the day
-  bool _ayahEnabled = false;
-  TimeOfDay _ayahTime = const TimeOfDay(hour: 19, minute: 0);
+  bool _ayahEnabled = true;
+  TimeOfDay _ayahTime = const TimeOfDay(hour: 11, minute: 0);
 
   @override
   void initState() {
@@ -33,19 +33,19 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _morningEnabled = prefs.getBool('reminder_morning_enabled') ?? false;
+      _morningEnabled = prefs.getBool('reminder_morning_enabled') ?? true;
       _morningTime = TimeOfDay(
         hour: prefs.getInt('reminder_morning_hour') ?? 6,
         minute: prefs.getInt('reminder_morning_minute') ?? 0,
       );
-      _eveningEnabled = prefs.getBool('reminder_evening_enabled') ?? false;
+      _eveningEnabled = prefs.getBool('reminder_evening_enabled') ?? true;
       _eveningTime = TimeOfDay(
         hour: prefs.getInt('reminder_evening_hour') ?? 20,
         minute: prefs.getInt('reminder_evening_minute') ?? 0,
       );
-      _ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
+      _ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? true;
       _ayahTime = TimeOfDay(
-        hour: prefs.getInt('ayah_notification_hour') ?? 19,
+        hour: prefs.getInt('ayah_notification_hour') ?? 11,
         minute: prefs.getInt('ayah_notification_minute') ?? 0,
       );
     });
@@ -349,27 +349,6 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
                         size: 18, color: context.textDim),
                   ],
                 ),
-              ),
-            ),
-            Divider(height: 1, color: context.border),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline,
-                      color: AppColors.gold, size: 14),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '30 curated ayahs rotate daily with a short reflection. Recommended between Maghrib and Isha.',
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: context.textDim,
-                          fontFamily: 'sans-serif'),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
