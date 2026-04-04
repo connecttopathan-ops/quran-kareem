@@ -55,15 +55,24 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: current,
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: AppColors.gold,
-            surface: Theme.of(ctx).scaffoldBackgroundColor,
+      builder: (ctx, child) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: isDark
+                ? ColorScheme.dark(
+                    primary: AppColors.gold,
+                    surface: Theme.of(ctx).scaffoldBackgroundColor,
+                  )
+                : ColorScheme.light(
+                    primary: AppColors.gold,
+                    onPrimary: Colors.black,
+                    onSurface: Colors.black,
+                  ),
           ),
-        ),
-        child: child!,
-      ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) onPicked(picked);
   }
