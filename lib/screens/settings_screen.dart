@@ -722,9 +722,10 @@ class _AudioLanguageTile extends StatelessWidget {
                 ),
               ],
             ),
-            // Arabic: reciter dropdown; others: static reciter name
-            const Divider(height: 20),
+            // Arabic: show reciter dropdown (6 options)
+            // Other languages: only one reciter available — show nothing extra
             if (currentLang == 'ar') ...[
+              const Divider(height: 20),
               Text('Reciter',
                   style: TextStyle(
                       fontSize: 12,
@@ -747,22 +748,6 @@ class _AudioLanguageTile extends StatelessWidget {
                 onChanged: (id) {
                   if (id != null) audio.setReciter(id);
                 },
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  Text('Reciter',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: context.textDim,
-                          fontFamily: 'sans-serif')),
-                  const Spacer(),
-                  Text(audio.currentReciterName,
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: context.text,
-                          fontFamily: 'serif')),
-                ],
               ),
             ],
           ],
