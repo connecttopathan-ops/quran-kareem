@@ -586,101 +586,74 @@ class _ManageDownloadsSheet extends StatelessWidget {
 
 // ── Translation Source tile ───────────────────────────────────────────────────
 
-class _TranslationSourceTile extends StatefulWidget {
+class _TranslationSourceTile extends StatelessWidget {
   const _TranslationSourceTile();
 
-  @override
-  State<_TranslationSourceTile> createState() => _TranslationSourceTileState();
-}
+  static const List<(String, String)> _enSources = [
+    ('en.sahih',    'Sahih International'),
+    ('en.asad',     'Muhammad Asad'),
+    ('en.yusufali', 'Yusuf Ali'),
+    ('en.pickthall','Pickthall'),
+  ];
 
-class _TranslationSourceTileState extends State<_TranslationSourceTile> {
-  String _enSource = 'en.sahih';
-  String _urSource = 'ur.jalandhry';
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _enSource = prefs.getString('translation_source_en') ?? 'en.sahih';
-      _urSource = prefs.getString('translation_source_ur') ?? 'ur.jalandhry';
-    });
-  }
-
-  Future<void> _setSource(String langCode, String editionId) async {
-    setState(() {
-      if (langCode == 'en') _enSource = editionId;
-      if (langCode == 'ur') _urSource = editionId;
-    });
-    context.read<QuranService>().setTranslationSource(langCode, editionId);
-  }
+  static const List<(String, String)> _urSources = [
+    ('ur.jalandhry', 'Jalandhry'),
+    ('ur.junagarhi', 'Junagarhi'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(
-      builder: (context, appState, _) {
-        final lang = appState.langCode;
-        final isEn = lang == 'en';
-        final isUr = lang == 'ur';
-        if (!isEn && !isUr) return const SizedBox.shrink();
+    final appState = context.watch<AppState>();
+    final lang = appState.langCode;
+    if (lang != 'en' && lang != 'ur') return const SizedBox.shrink();
 
-        final sources = isEn
-            ? QuranService.kEnTranslationSources
-            : QuranService.kUrTranslationSources;
-        final currentSource = isEn ? _enSource : _urSource;
-        final effectiveSource =
-            sources.containsKey(currentSource) ? currentSource : sources.keys.first;
+    final qsvc = context.watch<QuranService>();
+    final currentSource = qsvc.editionForCode(lang);
+    final sources = lang == 'en' ? _enSources : _urSources;
 
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-          decoration: BoxDecoration(
-            color: context.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: context.border),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+            child: Text('Translation Source',
+                style: TextStyle(fontSize: 14, color: context.text)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                child: Text('Translation Source',
-                    style: TextStyle(fontSize: 14, color: context.text)),
+          for (final (id, name) in sources)
+            GestureDetector(
+              onTap: () => qsvc.setTranslationSource(lang, id),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: context.border)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(name,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: id == currentSource
+                                  ? AppColors.gold
+                                  : context.text,
+                              fontFamily: 'serif')),
+                    ),
+                    if (id == currentSource)
+                      Icon(Icons.check, size: 16, color: AppColors.gold),
+                  ],
+                ),
               ),
-              ...sources.entries.map((e) {
-                final selected = e.key == effectiveSource;
-                return GestureDetector(
-                  onTap: () => _setSource(isEn ? 'en' : 'ur', e.key),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: context.border)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(e.value,
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: selected ? AppColors.gold : context.text,
-                                  fontFamily: 'serif')),
-                        ),
-                        if (selected)
-                          Icon(Icons.check, size: 16, color: AppColors.gold),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-              const SizedBox(height: 4),
-            ],
-          ),
-        );
-      },
+            ),
+          const SizedBox(height: 4),
+        ],
+      ),
     );
   }
 }
