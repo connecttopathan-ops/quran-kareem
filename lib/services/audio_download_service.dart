@@ -104,7 +104,7 @@ class AudioDownloadService extends ChangeNotifier {
 
       if (!await file.exists()) {
         final url =
-            '${AppConfig.audioCdnBaseUrl}/$reciterId/$absoluteVerse.mp3';
+            '${AppConfig.audioCdnBaseUrl}/128/$reciterId/$absoluteVerse.mp3';
         try {
           final response = await http.get(Uri.parse(url));
           if (response.statusCode == 200) {

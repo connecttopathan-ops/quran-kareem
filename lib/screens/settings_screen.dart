@@ -6,7 +6,9 @@ import '../models/app_state.dart';
 import '../models/language.dart';
 import '../models/islamic_book.dart';
 import '../widgets/q_icons.dart';
+import '../services/audio_service.dart';
 import '../services/book_download_service.dart';
+import '../services/quran_service.dart';
 import 'text_settings_screen.dart';
 import 'book_language_screen.dart';
 
@@ -56,6 +58,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       _SectionHeader('Translation'),
                       _LanguageSelector(state: state),
+                      _TranslationSourceTile(state: state),
                       _SectionHeader('Reading'),
                       _TextSettingsTile(),
                       _SettingTile(
@@ -99,6 +102,8 @@ class SettingsScreen extends StatelessWidget {
                       _SectionHeader('Islamic Books'),
                       _IslamicBooksLanguageTile(),
                       _ManageDownloadsTile(),
+                      _SectionHeader('Quran Audio'),
+                      _AudioLanguageTile(),
                       _SectionHeader('Notifications'),
                       _NotificationTile(),
                       _DailyRemindersTile(),
@@ -576,5 +581,211 @@ class _ManageDownloadsSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Translation Source tile ───────────────────────────────────────────────────
+
+class _TranslationSourceTile extends StatefulWidget {
+  final AppState state;
+  const _TranslationSourceTile({required this.state});
+
+  @override
+  State<_TranslationSourceTile> createState() => _TranslationSourceTileState();
+}
+
+class _TranslationSourceTileState extends State<_TranslationSourceTile> {
+  String _enSource = 'en.sahih';
+  String _urSource = 'ur.jalandhry';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _enSource = prefs.getString('translation_source_en') ?? 'en.sahih';
+      _urSource = prefs.getString('translation_source_ur') ?? 'ur.jalandhry';
+    });
+  }
+
+  Future<void> _setSource(String langCode, String editionId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('translation_source_$langCode', editionId);
+    if (!mounted) return;
+    setState(() {
+      if (langCode == 'en') _enSource = editionId;
+      if (langCode == 'ur') _urSource = editionId;
+    });
+    // Notify QuranService so it re-fetches with new source
+    if (mounted) {
+      context.read<QuranService>().setTranslationSource(langCode, editionId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = widget.state.langCode;
+    final isEn = lang == 'en';
+    final isUr = lang == 'ur';
+    if (!isEn && !isUr) return const SizedBox.shrink();
+
+    final sources = isEn
+        ? QuranService.kEnTranslationSources
+        : QuranService.kUrTranslationSources;
+    final currentSource = isEn ? _enSource : _urSource;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Translation Source',
+              style: TextStyle(fontSize: 14, color: context.text)),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: sources.containsKey(currentSource) ? currentSource : sources.keys.first,
+            isExpanded: true,
+            dropdownColor: context.surface,
+            underline: const SizedBox(),
+            style: TextStyle(
+                fontSize: 13, color: context.text, fontFamily: 'serif'),
+            items: sources.entries
+                .map((e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ))
+                .toList(),
+            onChanged: (id) {
+              if (id != null) _setSource(isEn ? 'en' : 'ur', id);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Audio Language tile ───────────────────────────────────────────────────────
+
+class _AudioLanguageTile extends StatelessWidget {
+  const _AudioLanguageTile();
+
+  static const Map<String, String> _langNames = {
+    'ar': 'Arabic',
+    'en': 'English',
+    'ur': 'Urdu',
+    'fr': 'French',
+    'fa': 'Persian',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AudioService>(builder: (context, audio, _) {
+      final currentLang = audio.audioLanguage;
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Language row
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Audio Language',
+                          style: TextStyle(fontSize: 14, color: context.text)),
+                      const SizedBox(height: 2),
+                      Text('Language for Quran recitation',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: context.textDim,
+                              fontFamily: 'sans-serif')),
+                    ],
+                  ),
+                ),
+                DropdownButton<String>(
+                  value: currentLang,
+                  dropdownColor: context.surface,
+                  underline: const SizedBox(),
+                  style: TextStyle(
+                      fontSize: 13, color: context.text, fontFamily: 'serif'),
+                  items: _langNames.entries
+                      .map((e) => DropdownMenuItem(
+                            value: e.key,
+                            child: Text(e.value),
+                          ))
+                      .toList(),
+                  onChanged: (code) {
+                    if (code != null) audio.setAudioLanguage(code);
+                  },
+                ),
+              ],
+            ),
+            // Arabic: reciter dropdown; others: static reciter name
+            const Divider(height: 20),
+            if (currentLang == 'ar') ...[
+              Text('Reciter',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: context.textDim,
+                      fontFamily: 'sans-serif')),
+              const SizedBox(height: 6),
+              DropdownButton<String>(
+                value: audio.reciterId,
+                isExpanded: true,
+                dropdownColor: context.surface,
+                underline: const SizedBox(),
+                style: TextStyle(
+                    fontSize: 13, color: context.text, fontFamily: 'serif'),
+                items: Reciter.all
+                    .map((r) => DropdownMenuItem(
+                          value: r.id,
+                          child: Text('${r.name} — ${r.style}'),
+                        ))
+                    .toList(),
+                onChanged: (id) {
+                  if (id != null) audio.setReciter(id);
+                },
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Text('Reciter',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                  const Spacer(),
+                  Text(audio.currentReciterName,
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: context.text,
+                          fontFamily: 'serif')),
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
+    });
   }
 }

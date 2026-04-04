@@ -26,6 +26,33 @@ class Reciter {
       all.firstWhere((r) => r.id == id, orElse: () => all[0]);
 }
 
+/// Non-Arabic audio language options. Arabic uses the [Reciter] list above.
+class AudioLanguageOption {
+  final String langCode;
+  final String displayName;
+  final String editionId;
+  final int bitrate;
+  final String reciterName;
+
+  const AudioLanguageOption({
+    required this.langCode,
+    required this.displayName,
+    required this.editionId,
+    required this.bitrate,
+    required this.reciterName,
+  });
+
+  static const List<AudioLanguageOption> nonArabic = [
+    AudioLanguageOption(langCode: 'en', displayName: 'English', editionId: 'en.walk',                      bitrate: 192, reciterName: 'Ibrahim Walk'),
+    AudioLanguageOption(langCode: 'ur', displayName: 'Urdu',    editionId: 'ur.khan',                      bitrate: 64,  reciterName: 'Shamshad Ali Khan'),
+    AudioLanguageOption(langCode: 'fr', displayName: 'French',  editionId: 'fr.leclerc',                   bitrate: 128, reciterName: 'Youssouf Leclerc'),
+    AudioLanguageOption(langCode: 'fa', displayName: 'Persian', editionId: 'fa.hedayatfarfooladvand',       bitrate: 40,  reciterName: 'Fooladvand'),
+  ];
+
+  static AudioLanguageOption? byLangCode(String code) =>
+      nonArabic.where((o) => o.langCode == code).firstOrNull;
+}
+
 class NowPlaying {
   final int surahNumber, verseNumber, totalVerses, surahVerseOffset;
   final String surahName;
@@ -64,6 +91,7 @@ class AudioService extends ChangeNotifier {
       MethodChannel('co.getquran.app/nowplaying');
 
   String _reciterId = 'ar.alafasy';
+  String _audioLanguage = 'ar'; // 'ar' | 'en' | 'ur' | 'fr' | 'fa'
   NowPlaying? _nowPlaying;
   bool _isPlaying = false;
   bool _isLoading = false;
@@ -77,6 +105,14 @@ class AudioService extends ChangeNotifier {
 
   String get reciterId => _reciterId;
   Reciter get reciter => Reciter.byId(_reciterId);
+  String get audioLanguage => _audioLanguage;
+
+  /// Display name of the currently active reciter / reader.
+  String get currentReciterName {
+    if (_audioLanguage == 'ar') return reciter.name;
+    return AudioLanguageOption.byLangCode(_audioLanguage)?.reciterName ?? '';
+  }
+
   NowPlaying? get nowPlaying => _nowPlaying;
   bool get isPlaying => _isPlaying;
   bool get isLoading => _isLoading;
@@ -172,15 +208,23 @@ class AudioService extends ChangeNotifier {
   Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
     _reciterId = p.getString('reciterId') ?? 'ar.alafasy';
+    _audioLanguage = p.getString('audioLanguage') ?? 'ar';
     _playbackSpeed = p.getDouble('playbackSpeed') ?? 1.0;
     notifyListeners();
   }
 
   Future<String> _verseUrl(int absoluteVerse) async {
-    final local = await AudioDownloadService()
-        .localFilePath(_reciterId, absoluteVerse);
-    if (local != null) return 'file://$local';
-    return '${AppConfig.audioCdnBaseUrl}/$_reciterId/$absoluteVerse.mp3';
+    if (_audioLanguage == 'ar') {
+      final local = await AudioDownloadService()
+          .localFilePath(_reciterId, absoluteVerse);
+      if (local != null) return 'file://$local';
+      return '${AppConfig.audioCdnBaseUrl}/128/$_reciterId/$absoluteVerse.mp3';
+    }
+    final opt = AudioLanguageOption.byLangCode(_audioLanguage);
+    if (opt == null) {
+      return '${AppConfig.audioCdnBaseUrl}/128/$_reciterId/$absoluteVerse.mp3';
+    }
+    return '${AppConfig.audioCdnBaseUrl}/${opt.bitrate}/${opt.editionId}/$absoluteVerse.mp3';
   }
 
   MediaItem _makeMediaItem(NowPlaying np) => MediaItem(
@@ -315,6 +359,20 @@ class AudioService extends ChangeNotifier {
     _reciterId = id;
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
+    if (_nowPlaying != null) {
+      try {
+        await _handler.playFromUrl(
+            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+        _updateNativeNowPlaying(_nowPlaying!);
+      } catch (_) {}
+    }
+    notifyListeners();
+  }
+
+  Future<void> setAudioLanguage(String langCode) async {
+    _audioLanguage = langCode;
+    final p = await SharedPreferences.getInstance();
+    await p.setString('audioLanguage', langCode);
     if (_nowPlaying != null) {
       try {
         await _handler.playFromUrl(

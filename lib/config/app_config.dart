@@ -11,9 +11,9 @@ class AppConfig {
   static const String quranCdnBaseUrl =
       'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1';
 
-  // Audio CDN (public, no auth required)
+  // Audio CDN base (public, no auth required) — append /{bitrate}/{edition}/{verse}.mp3
   static const String audioCdnBaseUrl =
-      'https://cdn.islamic.network/quran/audio/128';
+      'https://cdn.islamic.network/quran/audio';
 
   // Geocoding (public, no auth required — respect usage policy)
   static const String nominatimBaseUrl =

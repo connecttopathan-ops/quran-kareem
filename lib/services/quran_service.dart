@@ -9,7 +9,7 @@ import '../data/quran_data.dart';
 class QuranService extends ChangeNotifier {
   // alquran.cloud edition IDs (fallback)
   static const Map<String, String> kEditionIds = {
-    'en':      'en.asad',
+    'en':      'en.sahih',
     'ur':      'ur.jalandhry',
     'ur-roman':'ur.junagarhi',
     'zh':      'zh.majian',
@@ -60,7 +60,7 @@ class QuranService extends ChangeNotifier {
 
   // fawazahmed0 CDN edition IDs (primary source)
   static const Map<String, String> kFawazEditions = {
-    'en':      'eng-abdullahyusufali',
+    'en':      'eng-sahih',
     'ur':      'urd-maududi',
     'ur-roman':'urd-maududi-la',
     'zh':      'zho-majian',
@@ -109,10 +109,76 @@ class QuranService extends ChangeNotifier {
     'el':      'ell-papadopoulos',
   };
 
+  // Translation source options shown in Settings (alquran.cloud edition ID → display name)
+  static const Map<String, String> kEnTranslationSources = {
+    'en.sahih':    'Sahih International',
+    'en.asad':     'Muhammad Asad',
+    'en.yusufali': 'Yusuf Ali',
+    'en.pickthall':'Pickthall',
+  };
+  static const Map<String, String> kUrTranslationSources = {
+    'ur.jalandhry': 'Jalandhry',
+    'ur.junagarhi': 'Junagarhi',
+  };
+
+  // Maps alquran.cloud edition IDs to fawazahmed0 IDs for the sources above.
+  static const Map<String, String> kSourceToFawaz = {
+    'en.sahih':     'eng-sahih',
+    'en.asad':      'eng-asad',
+    'en.yusufali':  'eng-abdullahyusufali',
+    'en.pickthall': 'eng-pickthall',
+    'ur.jalandhry': 'urd-jalandhry',
+    'ur.junagarhi': 'urd-junagarhi',
+  };
+
   static const Duration _cacheDuration = Duration(days: 7);
 
-  static String editionForCode(String langCode) =>
-      kEditionIds[langCode] ?? 'en.asad';
+  // Per-language translation source overrides (populated from SharedPreferences).
+  final Map<String, String> _translationSources = {};
+
+  String editionForCode(String langCode) {
+    final override = _translationSources[langCode];
+    if (override != null) return override;
+    return kEditionIds[langCode] ?? 'en.sahih';
+  }
+
+  static String defaultEditionForCode(String langCode) =>
+      kEditionIds[langCode] ?? 'en.sahih';
+
+  Future<void> loadTranslationSources() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enSource = prefs.getString('translation_source_en');
+    final urSource = prefs.getString('translation_source_ur');
+    if (enSource != null) _translationSources['en'] = enSource;
+    if (urSource != null) _translationSources['ur'] = urSource;
+  }
+
+  Future<void> setTranslationSource(String langCode, String editionId) async {
+    _translationSources[langCode] = editionId;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('translation_source_$langCode', editionId);
+
+    // Clear per-surah translation caches so the next load fetches the new source.
+    final keysToRemove = prefs.getKeys()
+        .where((k) => k.startsWith('trans_cache_') && k.endsWith('_$langCode'))
+        .toList();
+    for (final k in keysToRemove) {
+      await prefs.remove(k);
+    }
+    // Clear surah-level caches that bundle the translation
+    final surahCacheKeys = prefs.getKeys()
+        .where((k) => k.startsWith('surah3_') && k.endsWith('_$langCode'))
+        .toList();
+    for (final k in surahCacheKeys) {
+      await prefs.remove(k);
+    }
+
+    // Invalidate loaded translations so the next load re-fetches.
+    _loadedTranslations.removeWhere((k) => k.endsWith('_$langCode'));
+    notifyListeners();
+  }
+
+  String activeEditionForCode(String langCode) => editionForCode(langCode);
 
   /// Shared cache key for bulk-downloaded translations.
   static String _transCacheKey(String langCode, int surahNumber) =>
@@ -202,6 +268,7 @@ class QuranService extends ChangeNotifier {
 
   QuranService() {
     _verses.addAll(kQuranData);
+    loadTranslationSources();
   }
 
   List<Verse> getVerses(int surahNumber) => _verses[surahNumber] ?? [];
@@ -364,7 +431,11 @@ class QuranService extends ChangeNotifier {
 
       // ── Try fawazahmed0 (primary) ──────────────────────────────────────────
       if (texts == null) {
-        final fawazEdition = kFawazEditions[langCode];
+        // For 'en'/'ur', use the fawaz edition matching the active source.
+        final activeSource = _translationSources[langCode];
+        final fawazEdition = (activeSource != null && kSourceToFawaz.containsKey(activeSource))
+            ? kSourceToFawaz[activeSource]
+            : kFawazEditions[langCode];
         if (fawazEdition != null) {
           try {
             final uri = Uri.parse(
