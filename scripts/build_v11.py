@@ -370,3 +370,7 @@ with zipfile.ZipFile(OUT_ZIP, 'w', zipfile.ZIP_DEFLATED) as zf:
 size_mb = os.path.getsize(OUT_ZIP) / 1_000_000
 print(f'Done! {OUT_ZIP} ({size_mb:.1f} MB)')
 print(f'Contains: index.html + {total} surah pages + _headers')
+
+# ── Cleanup temp dir ───────────────────────────────────────────────────────────
+import shutil
+shutil.rmtree(WORK_DIR, ignore_errors=True)
