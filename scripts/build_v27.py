@@ -17,6 +17,15 @@ Zero HTML/CSS changes. All other files copied verbatim.
 
 import json, os, re, urllib.request, zipfile
 
+# Regex to match the IIFE fetch block (handles variable whitespace/newlines across surahs)
+IIFE_PATTERN = re.compile(
+    r'var res=await fetch\("/quran/"\+SNUM\+"\\.json",\{signal:ctrl\.signal\}\);'
+    r'\s*clearTimeout\(tmr\);if\(!res\.ok\)throw new Error\("HTTP "\+res\.status\);'
+    r'\s*var data=await res\.json\(\),vs=data\.verses\|\|\[\];'
+    r'\s*try\{localStorage\.setItem\("gq_ar_"\+SNUM,JSON\.stringify\(vs\.map\(function\(v\)\{return v\.text;\}\)\)\);\}catch\(e\)\{\}'
+    r'\s*try\{localStorage\.setItem\("gq_tl_"\+SNUM,JSON\.stringify\(vs\.map\(function\(v\)\{return v\.transliteration;\}\)\)\);\}catch\(e\)\{\}'
+)
+
 ROOT_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR   = os.path.join(ROOT_DIR, 'assets', 'translations')
 QURAN_DIR   = os.path.join(ROOT_DIR, 'assets', 'quran-chapters')
@@ -62,14 +71,6 @@ print(f'Loaded {len(TRANS_DATA)} languages')
 # - If cache hit: build vs[] from cache, skip network fetch entirely
 # - If cache miss: fetch from /quran/SNUM.json as before, save to cache
 
-IIFE_OLD = (
-    'var res=await fetch("/quran/"+SNUM+".json",{signal:ctrl.signal});\n'
-    '    clearTimeout(tmr);if(!res.ok)throw new Error("HTTP "+res.status);\n'
-    '    var data=await res.json(),vs=data.verses||[];\n'
-    '    try{localStorage.setItem("gq_ar_"+SNUM,JSON.stringify(vs.map(function(v){return v.text;})));}catch(e){}\n'
-    '    try{localStorage.setItem("gq_tl_"+SNUM,JSON.stringify(vs.map(function(v){return v.transliteration;})));}catch(e){}'
-)
-
 IIFE_NEW = (
     'var _ca=localStorage.getItem("gq_ar_"+SNUM),_ct=localStorage.getItem("gq_tl_"+SNUM);'
     'var vs;'
@@ -112,10 +113,9 @@ def patch_html(html):
     html = html.replace(CDN_URL, '/quran/')
     # 2. Increase timeout 12s -> 30s
     html = html.replace('},12000);', '},30000);')
-    # 3. Patch IIFE to check localStorage first
-    if IIFE_OLD in html:
-        html = html.replace(IIFE_OLD, IIFE_NEW, 1)
-    else:
+    # 3. Patch IIFE to check localStorage first (regex handles whitespace variations)
+    html, n = IIFE_PATTERN.subn(IIFE_NEW, html, count=1)
+    if n == 0:
         print('  WARNING: IIFE pattern not found — localStorage patch skipped')
     # 4. Inject fetchEdition override before </body>
     if '</body>' in html:
