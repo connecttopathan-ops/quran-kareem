@@ -33,9 +33,18 @@ class HifzLoopScreen extends StatefulWidget {
 }
 
 class _HifzLoopScreenState extends State<HifzLoopScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AudioPlayer _player;
   late final AnimationController _waveController;
+
+  // Feedback animations
+  late final AnimationController _checkController;
+  late final Animation<double> _checkScale;
+  late final Animation<double> _checkOpacity;
+  bool _showCheckmark = false;
+  bool _showHint = false;
+  bool _showCompletionOverlay = false;
+  Timer? _hintTimer;
 
   // Surah metadata
   late int _surahNumber;
@@ -90,12 +99,32 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _checkScale = Tween<double>(begin: 0.0, end: 1.4).animate(
+      CurvedAnimation(parent: _checkController, curve: Curves.elasticOut),
+    );
+    _checkOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _checkController,
+        curve: const Interval(0.55, 1.0, curve: Curves.easeOut),
+      ),
+    );
+    _checkController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        setState(() => _showCheckmark = false);
+        _checkController.reset();
+      }
+    });
 
     _player.playerStateStream.listen(_onPlayerState);
     _positionSub = _player.positionStream.listen(_onPosition);
     _loadPrefs();
     _loadTexts();
     _loadMemorized();
+    _loadHintState();
   }
 
   Future<void> _loadPrefs() async {
@@ -257,6 +286,21 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     if (mounted) setState(() => _memorized = mem);
   }
 
+  Future<void> _loadHintState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final shown = prefs.getBool('hifz_hint_shown_$_surahNumber') ?? false;
+    if (!shown && mounted) {
+      // Small delay so screen has rendered first
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
+      setState(() => _showHint = true);
+      await prefs.setBool('hifz_hint_shown_$_surahNumber', true);
+      _hintTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _showHint = false);
+      });
+    }
+  }
+
   void _onPosition(Duration pos) {
     if (!mounted) return;
     final ms = pos.inMilliseconds;
@@ -396,14 +440,29 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
         _memorized.remove(_currentVerse);
       }
     });
+
+    if (newVal) {
+      // Checkmark burst animation
+      setState(() => _showCheckmark = true);
+      _checkController.forward(from: 0);
+
+      // Check surah completion
+      if (_memorized.length == _totalVerses) {
+        await Future.delayed(const Duration(milliseconds: 700));
+        if (mounted) setState(() => _showCompletionOverlay = true);
+      }
+    }
+
     widget.onMemorizationChanged?.call();
   }
 
   @override
   void dispose() {
+    _hintTimer?.cancel();
     _positionSub?.cancel();
     _player.dispose();
     _waveController.dispose();
+    _checkController.dispose();
     super.dispose();
   }
 
@@ -459,12 +518,236 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
           child: Divider(height: 1, color: context.border),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          if (_showSettings) _buildSettingsPanel(),
-          Expanded(child: _buildContent(arabicText, transliterationText, translationText, isMemorized)),
-          _buildControls(isMemorized),
+          Column(
+            children: [
+              if (_showSettings) _buildSettingsPanel(),
+              Expanded(child: _buildContent(arabicText, transliterationText, translationText, isMemorized)),
+              _buildControls(isMemorized),
+            ],
+          ),
+          if (_showHint) _buildHintTooltip(),
+          if (_showCheckmark) _buildCheckmarkBurst(),
+          if (_showCompletionOverlay) _buildCompletionOverlay(),
         ],
+      ),
+    );
+  }
+
+  // ── Hint tooltip ─────────────────────────────────────────────────────────────
+  Widget _buildHintTooltip() {
+    return Positioned(
+      bottom: 108,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: AnimatedOpacity(
+          opacity: _showHint ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 400),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.gold,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3)),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.star_outline_rounded, color: Colors.white, size: 15),
+                SizedBox(width: 6),
+                Text(
+                  'Tap ★ to mark this verse memorized',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Checkmark burst ───────────────────────────────────────────────────────────
+  Widget _buildCheckmarkBurst() {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _checkController,
+            builder: (_, __) => Opacity(
+              opacity: _checkOpacity.value,
+              child: Transform.scale(
+                scale: _checkScale.value,
+                child: Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E9B5E),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2E9B5E).withOpacity(0.4),
+                        blurRadius: 20,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: Colors.white, size: 48),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Surah completion overlay ──────────────────────────────────────────────────
+  Widget _buildCompletionOverlay() {
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: () => setState(() => _showCompletionOverlay = false),
+        child: Container(
+          color: Colors.black.withOpacity(0.65),
+          child: Center(
+            child: GestureDetector(
+              onTap: () {}, // prevent dismiss on card tap
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: context.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.gold.withOpacity(0.4)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Gold star icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.star_rounded,
+                          color: AppColors.gold, size: 36),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Masha Allah in Arabic
+                    const Text(
+                      'مَا شَاءَ اللَّهُ',
+                      style: TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 28,
+                        color: AppColors.gold,
+                      ),
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Masha Allah!',
+                      style: TextStyle(
+                        color: context.text,
+                        fontSize: 20,
+                        fontFamily: 'serif',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Surah name
+                    Text(
+                      'You have memorized',
+                      style: TextStyle(color: context.textDim, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _surahName,
+                      style: TextStyle(
+                        color: context.text,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      _surahArabicName,
+                      style: const TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 20,
+                        color: AppColors.gold,
+                      ),
+                      textDirection: TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Quran quote
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.surface2,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '"And We have certainly made the Quran easy to remember."\n— Quran 54:17',
+                        style: TextStyle(
+                          color: context.textDim,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Stats
+                    Text(
+                      '${_memorized.length} of $_totalVerses verses memorized',
+                      style: TextStyle(color: context.textDim, fontSize: 11),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Dismiss button
+                    GestureDetector(
+                      onTap: () =>
+                          setState(() => _showCompletionOverlay = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: const Text(
+                          'Alhamdulillah  ✓',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -11,7 +11,7 @@ import 'hifz_loop_screen.dart';
 // HIFZ SCREEN  —  Surah browser showing memorization progress
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum _HifzSort { surahOrder, progress, alphabetical }
+enum _HifzSort { surahOrder, progress, fewestVerses }
 
 class HifzScreen extends StatefulWidget {
   const HifzScreen({super.key});
@@ -29,12 +29,25 @@ class _HifzScreenState extends State<HifzScreen> {
   _HifzSort _sort = _HifzSort.surahOrder;
   bool _loading = true;
 
+  // Search
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   static const int _totalAyahs = 6236;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _searchCtrl.addListener(() {
+      setState(() => _searchQuery = _searchCtrl.text.trim().toLowerCase());
+    });
   }
 
   Future<void> _loadData() async {
@@ -75,11 +88,22 @@ class _HifzScreenState extends State<HifzScreen> {
   }
 
   List<dynamic> _sortedSurahs() {
-    final list = List.of(kSurahs);
+    var list = List.of(kSurahs);
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      list = list.where((s) {
+        final q = _searchQuery;
+        return s.nameTransliteration.toLowerCase().contains(q) ||
+            s.nameArabic.contains(q) ||
+            s.number.toString() == q;
+      }).toList();
+      return list; // skip sort when searching — relevance order
+    }
+
     switch (_sort) {
       case _HifzSort.surahOrder:
-        // already in order
-        break;
+        break; // already in order
       case _HifzSort.progress:
         list.sort((a, b) {
           final pa = (_memorized[a.number]?.length ?? 0) / a.verses;
@@ -87,9 +111,8 @@ class _HifzScreenState extends State<HifzScreen> {
           return pb.compareTo(pa);
         });
         break;
-      case _HifzSort.alphabetical:
-        list.sort((a, b) =>
-            a.nameTransliteration.compareTo(b.nameTransliteration));
+      case _HifzSort.fewestVerses:
+        list.sort((a, b) => a.verses.compareTo(b.verses));
         break;
     }
     return list;
@@ -155,24 +178,74 @@ class _HifzScreenState extends State<HifzScreen> {
 
   Widget _buildBody() {
     final pct = _totalMemorized / _totalAyahs;
-    final sortedSurahs = _sortedSurahs();
+    final visibleSurahs = _sortedSurahs();
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _buildMetrics(pct)),
-        SliverToBoxAdapter(child: _buildSortChips()),
+        SliverToBoxAdapter(child: _buildSearchBar()),
+        if (_searchQuery.isEmpty)
+          SliverToBoxAdapter(child: _buildSortChips()),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (ctx, i) => _SurahProgressTile(
-              surah: sortedSurahs[i],
-              memorizedCount: _memorized[sortedSurahs[i].number]?.length ?? 0,
-              onTap: () => _openHifz(sortedSurahs[i].number),
+              surah: visibleSurahs[i],
+              memorizedCount:
+                  _memorized[visibleSurahs[i].number]?.length ?? 0,
+              onTap: () => _openHifz(visibleSurahs[i].number),
             ),
-            childCount: sortedSurahs.length,
+            childCount: visibleSurahs.length,
           ),
         ),
+        if (visibleSurahs.isEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Text(
+                'No surahs found',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.textDim, fontSize: 14),
+              ),
+            ),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: TextField(
+          controller: _searchCtrl,
+          style: TextStyle(color: context.text, fontSize: 14),
+          decoration: InputDecoration(
+            hintText: 'Search surah name or number…',
+            hintStyle: TextStyle(color: context.textDim, fontSize: 14),
+            prefixIcon:
+                Icon(Icons.search_rounded, color: context.textDim, size: 20),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear_rounded,
+                        color: context.textDim, size: 18),
+                    onPressed: () {
+                      _searchCtrl.clear();
+                      FocusScope.of(context).unfocus();
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          ),
+        ),
+      ),
     );
   }
 
@@ -292,9 +365,9 @@ class _HifzScreenState extends State<HifzScreen> {
           ),
           const SizedBox(width: 6),
           _SortChip(
-            label: 'A-Z',
-            selected: _sort == _HifzSort.alphabetical,
-            onTap: () => setState(() => _sort = _HifzSort.alphabetical),
+            label: 'Shortest',
+            selected: _sort == _HifzSort.fewestVerses,
+            onTap: () => setState(() => _sort = _HifzSort.fewestVerses),
           ),
         ],
       ),
