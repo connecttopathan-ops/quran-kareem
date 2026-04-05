@@ -17,7 +17,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v14.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v15.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -71,13 +71,12 @@ def patch_html(html, snum):
     if fe_match:
         func_start = fe_match.start()
         func_end   = find_function_end(html, func_start)
-        # Extract original arg name (e.g. "ed", "edition", "lang")
-        arg_match  = re.search(r'function\s+fetchEdition\s*\(([^)]*)\)', html[func_start:func_end])
-        arg        = arg_match.group(1).strip() if arg_match else 'ed'
+        # edition IDs are like "en.muhammadali" — split on '.' to get lang key
         new_func   = (
-            f'function fetchEdition({arg}){{\n'
-            f'  return Promise.resolve(TRANSLATIONS[{arg}]||[]);\n'
-            f'}}'
+            'async function fetchEdition(ed,num){\n'
+            '  var lang=ed.split(\'.\')[0];\n'
+            '  return TRANSLATIONS[lang]||TRANSLATIONS[ed]||[];\n'
+            '}'
         )
         html = html[:func_start] + new_func + html[func_end:]
     else:
