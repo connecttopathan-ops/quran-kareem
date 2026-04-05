@@ -17,7 +17,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v15.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v16.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -66,8 +66,8 @@ def patch_html(html, snum):
         html += '\n' + script_tag
 
     # ── 3. Replace fetchEdition function ──────────────────────────────────────
-    # Match:  function fetchEdition(<args>) { ... }
-    fe_match = re.search(r'function\s+fetchEdition\s*\([^)]*\)\s*\{', html)
+    # Match optional leading 'async' so we replace the whole declaration
+    fe_match = re.search(r'(?:async\s+)?function\s+fetchEdition\s*\([^)]*\)\s*\{', html)
     if fe_match:
         func_start = fe_match.start()
         func_end   = find_function_end(html, func_start)
