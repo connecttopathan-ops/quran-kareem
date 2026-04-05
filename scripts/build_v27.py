@@ -19,7 +19,7 @@ import json, os, re, urllib.request, zipfile
 
 # Regex to match the IIFE fetch block (handles variable whitespace/newlines across surahs)
 IIFE_PATTERN = re.compile(
-    r'var res=await fetch\("/quran/"\+SNUM\+"\\.json",\{signal:ctrl\.signal\}\);'
+    r'var res=await fetch\("/quran/"\+SNUM\+"\.json",\{signal:ctrl\.signal\}\);'
     r'\s*clearTimeout\(tmr\);if\(!res\.ok\)throw new Error\("HTTP "\+res\.status\);'
     r'\s*var data=await res\.json\(\),vs=data\.verses\|\|\[\];'
     r'\s*try\{localStorage\.setItem\("gq_ar_"\+SNUM,JSON\.stringify\(vs\.map\(function\(v\)\{return v\.text;\}\)\)\);\}catch\(e\)\{\}'
