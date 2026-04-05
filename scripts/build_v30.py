@@ -146,11 +146,44 @@ NEW_FETCH_OVERRIDE = (
     '</script>'
 )
 
-# Old fetchEdition string (present in v27 HTML, needs replacing)
-OLD_FETCH_OVERRIDE_PREFIX = '<script>async function fetchEdition(ed,num){'
+# ── Fix SyntaxError: broken multi-line string literals in wrap.innerHTML template ─
+# The v10.zip template has bare newlines inside single-quoted JS strings — invalid
+# ECMAScript. The ENTIRE script block fails to parse, IIFE never runs, page stays
+# on "Loading N ayahs..." forever. ROOT CAUSE of all large-surah loading failures.
+# Fix: collapse to a single line.
+
+RENDER_BROKEN = re.compile(
+    r'wrap\.innerHTML=vs\.map\(function\(v,i\)\{.*?\}\)\.join\(""\);',
+    re.DOTALL
+)
+
+# Single-line version of the same template — no bare newlines in string literals
+RENDER_FIXED = (
+    """wrap.innerHTML=vs.map(function(v,i){"""
+    """var ae=(v.text||"").split('"').join("&quot;");"""
+    """return '<div class="ay" data-n="'+(i+1)+'">"""
+    """<div class="ay-top"><span class="ay-num">'+(i+1)+'</span>"""
+    """<div class="ay-acts">"""
+    """<button class="ay-play" data-n="'+(i+1)+'" onclick="playAyah('+(i+1)+')" title="Play verse">"""
+    """<svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5v11l10-5.5z"/></svg>"""
+    """</button>"""
+    """<button class="cp-btn" data-ar="'+(ae)+'">Copy</button>"""
+    """<a href="https://apps.apple.com/app/apple-store/id6760704164" class="app-a" target="_blank">App</a>"""
+    """</div></div>"""
+    """<div class="ar-t" dir="rtl">'+(v.text||"")+' <span class="ay-e">&#64830;'+(i+1)+'&#64831;</span></div>"""
+    """<div class="tl-t">'+(v.transliteration||"")+'</div>"""
+    """<div class="tr-t">'+(v.translation||"")+'</div>"""
+    """</div>';}).join("");"""
+)
+
+
 
 
 def patch_html(html, snum=None):
+    # 0. Fix SyntaxError: collapse broken multi-line wrap.innerHTML template
+    html, r = RENDER_BROKEN.subn(RENDER_FIXED, html, count=1)
+    if r == 0 and 'wrap.innerHTML=vs.map' in html:
+        print(f'  WARNING: surah {snum} — render template not fixed')
     # 1. CDN URL → local (only needed if using v10 as base)
     html = html.replace(CDN_URL, '/quran/')
     # 2. Timeout 12s → 30s (only needed if using v10 as base)
