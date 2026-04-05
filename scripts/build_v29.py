@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 """
-build_v29.py  —  v27 design + per-surah translation files -> v29.zip
+build_v29.py  —  v10 design + cache-whole-language fetchEdition -> v29.zip
 
 Root cause of "still loading" on slow mobile:
   fetchEdition downloads /translations/en.json (1.1 MB) on EVERY first visit
-  to a surah. Each surah only caches its own translations, so every new surah
-  page re-downloads the full 1.1 MB file.
+  to any surah. It only caches the current surah's translations, so every new
+  surah page re-downloads the entire 1.1 MB file.
 
-Fix: switch to per-surah translation files.
-  /trans/2.json  = ALL 47 languages for just surah 2's 286 ayahs
-  /trans/114.json = ALL 47 languages for just surah 114's 6 ayahs
+Fix: after downloading /translations/en.json, cache the ENTIRE file in
+localStorage as 'gq_lang_en'. All subsequent surah visits in that language
+skip the network entirely — just a localStorage read.
 
-Benefits:
-  - Small surahs: tiny files (Al-Falaq = ~10 KB)
-  - Large surahs: ~150 KB instead of 1.1 MB (only what's needed)
-  - One download covers all language switches for that surah
-  - Still 114 total files (under Cloudflare's 1000-file limit)
+Cost: ONE 220 KB gzipped download per language (one-time).
+After that: all 114 surahs are instant for that language.
 
-Input: v27.zip (correct v10 design) OR v10.zip (rebuilt from scratch)
+Also keeps: local /quran/ files, 30s timeout, IIFE localStorage patch (104/114).
+
+Input: v10.zip (preferred) or v27.zip as base.
 Output: v29.zip
 
 Zero HTML/CSS changes. All other files copied verbatim.
@@ -82,15 +81,6 @@ for fname in sorted(os.listdir(TRANS_DIR)):
     TRANS[lang] = per_surah
 print(f'Loaded {len(TRANS)} languages')
 
-# Build per-surah dicts: SURAH_TRANS[snum] = {"en": [...], "ur": [...], ...}
-SURAH_TRANS = {}
-for snum in range(1, 115):
-    snum_str = str(snum)
-    SURAH_TRANS[snum] = {
-        lang: TRANS[lang].get(snum_str, [])
-        for lang in TRANS
-    }
-
 
 # ── HTML patches ──────────────────────────────────────────────────────────────
 
@@ -119,23 +109,36 @@ IIFE_NEW = (
     '}'
 )
 
-# New fetchEdition: fetches /trans/{num}.json (all languages for that surah only)
-# One small file replaces downloading a 1+ MB per-language file
+# New fetchEdition: caches the ENTIRE language file in localStorage after first download.
+# Cost: ONE download per language ever. After that all 114 surahs are instant.
+# gq_lang_{lang} = full {snum: [text,...]} map for that language
 NEW_FETCH_OVERRIDE = (
     '<script>'
     'async function fetchEdition(ed,num){'
     'var key="gqv2_"+ed+"_"+num;'
+    # 1. Check per-surah cache (fastest)
     'try{var c=localStorage.getItem(key);if(c)return JSON.parse(c);}catch(e){}'
+    'var lang=ed.split(\'.\')[0];'
+    # 2. Check whole-language cache (covers all surahs after first download)
     'try{'
-    'var r=await fetch("/trans/"+num+".json");'
+    'var lc=localStorage.getItem("gq_lang_"+lang);'
+    'if(lc){'
+    'var all=JSON.parse(lc);'
+    'var texts=all[String(num)]||[];'
+    'try{localStorage.setItem(key,JSON.stringify(texts));}catch(e){}'
+    'return texts;'
+    '}}'
+    'catch(e){}'
+    # 3. Download full language file once, cache it all
+    'try{'
+    'var r=await fetch("/translations/"+lang+".json");'
     'if(!r.ok)return[];'
     'var all=await r.json();'
-    # Cache all languages for this surah at once (avoids re-download on lang switch)
-    'Object.keys(all).forEach(function(l){'
-    'try{localStorage.setItem("gqv2_"+l+"."+l+"_"+num,JSON.stringify(all[l]));}catch(e){}'
-    '});'
-    'var lang=ed.split(\'.\')[0];'
-    'return all[lang]||[];'
+    # Cache whole language — next visit to ANY surah skips download
+    'try{localStorage.setItem("gq_lang_"+lang,JSON.stringify(all));}catch(e){}'
+    'var texts=all[String(num)]||[];'
+    'try{localStorage.setItem(key,JSON.stringify(texts));}catch(e){}'
+    'return texts;'
     '}catch(e){return[];}'
     '}'
     '</script>'
@@ -176,12 +179,11 @@ iife_patched = 0
 with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
      zipfile.ZipFile(OUT_ZIP, 'w', zipfile.ZIP_DEFLATED) as zout:
 
-    # Write per-surah translation files
-    print('Writing per-surah translation files...')
-    for snum in range(1, 115):
-        data = SURAH_TRANS[snum]
+    # Write per-language translation files (same as v27)
+    print('Writing translation files...')
+    for lang, data in TRANS.items():
         json_bytes = json.dumps(data, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-        zout.writestr(f'trans/{snum}.json', json_bytes)
+        zout.writestr(f'translations/{lang}.json', json_bytes)
 
     # Write quran chapter files
     for snum in range(1, 115):
@@ -191,7 +193,7 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
     # Patch and copy all HTML + other files
     for item in zin.infolist():
         raw = zin.read(item.filename)
-        # Skip old per-language translation files from v27
+        # Skip old translation files from v27 (already re-written above)
         if item.filename.startswith('translations/'):
             continue
         m = re.match(r'surah/[^/]+/index\.html$', item.filename)
@@ -210,21 +212,19 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
         else:
             zout.writestr(item, raw)
 
-# Report per-surah file sizes
 import gzip, io
-sample_sizes = {}
-for snum in [1, 2, 36, 114]:
-    data = SURAH_TRANS[snum]
-    raw = json.dumps(data, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+def gzip_size(data_bytes):
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode='wb') as gz:
-        gz.write(raw)
-    sample_sizes[snum] = (len(raw) // 1024, len(buf.getvalue()) // 1024)
+        gz.write(data_bytes)
+    return len(buf.getvalue())
+
+en_raw = json.dumps(TRANS['en'], ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+en_gz = gzip_size(en_raw)
 
 size_mb = os.path.getsize(OUT_ZIP) / 1_000_000
 print(f'\nDone! {OUT_ZIP} ({size_mb:.1f} MB)')
 print(f'Patched {surah_count} surah pages, IIFE localStorage patch applied to {iife_patched}')
-print(f'Per-surah translation file sizes (all 47 languages):')
-for snum, (raw_kb, gz_kb) in sample_sizes.items():
-    print(f'  /trans/{snum}.json: {raw_kb} KB uncompressed, ~{gz_kb} KB gzipped')
+print(f'/translations/en.json: {len(en_raw)//1024} KB uncompressed, ~{en_gz//1024} KB gzipped')
+print(f'After first visit: all 114 surahs instant (gq_lang_en localStorage cache)')
 print(f'Zero HTML/CSS changes')
