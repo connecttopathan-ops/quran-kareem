@@ -170,18 +170,17 @@ with zipfile.ZipFile(V10_ZIP, 'r') as zin, \
     for item in zin.infolist():
         raw = zin.read(item.filename)
 
-        m = re.match(r'surah/(\d+)/index\.html$', item.filename)
+        m = re.match(r'surah/[^/]+/index\.html$', item.filename)
         if m:
-            snum = int(m.group(1))
             html = raw.decode('utf-8')
 
-            # Read SNUM from the page to confirm (warn if mismatch)
+            # Read SNUM from the JS in the page
             snum_match = re.search(r'\bSNUM\s*=\s*(\d+)', html)
-            if snum_match:
-                page_snum = int(snum_match.group(1))
-                if page_snum != snum:
-                    print(f'  WARNING: path says {snum} but SNUM={page_snum} in page, using page value')
-                    snum = page_snum
+            if not snum_match:
+                print(f'  WARNING: SNUM not found in {item.filename}, skipping')
+                zout.writestr(item, raw)
+                continue
+            snum = int(snum_match.group(1))
 
             html = patch_html(html, snum)
             zout.writestr(item, html.encode('utf-8'))
