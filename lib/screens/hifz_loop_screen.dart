@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -231,11 +232,22 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      await _player.setUrl(_audioUrl(_currentVerse));
+      // just_audio_background requires AudioSource.uri with a MediaItem tag;
+      // plain setUrl() is silently ignored when JustAudioBackground is active.
+      final source = AudioSource.uri(
+        Uri.parse(_audioUrl(_currentVerse)),
+        tag: MediaItem(
+          id: 'hifz_${_surahNumber}_$_currentVerse',
+          title: '$_surahName – Verse $_currentVerse',
+          artist: 'Mishary Rashid Alafasy',
+          album: 'Hifz',
+        ),
+      );
+      await _player.setAudioSource(source);
       await _player.setSpeed(_speed);
       await _player.play();
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+    } catch (e) {
+      debugPrint('[Hifz] audio error: $e');
     }
     if (mounted) setState(() => _isLoading = false);
   }
