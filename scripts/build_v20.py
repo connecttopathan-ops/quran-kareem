@@ -20,7 +20,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v19.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v20.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -59,8 +59,12 @@ def build_trans_js(snum):
 
 
 def patch_html(html, snum):
-    """Inject <script src defer> before </body>. No other HTML changes."""
-    tag = f'<script src="/translations/{snum}.js" defer></script>'
+    """Inject <script src> into </head> — loads before body scripts run,
+    so TRANSLATIONS is defined before the ayah-loading IIFE calls changeLang."""
+    tag = f'<script src="/translations/{snum}.js"></script>'
+    if '</head>' in html:
+        return html.replace('</head>', tag + '\n</head>', 1)
+    # fallback: before </body>
     if '</body>' in html:
         return html.replace('</body>', tag + '\n</body>', 1)
     return html + '\n' + tag
