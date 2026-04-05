@@ -756,6 +756,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     final words = arabicText.split(' ');
     return Wrap(
       alignment: WrapAlignment.end,
+      textDirection: TextDirection.rtl,
       spacing: 2,
       runSpacing: 6,
       children: words.asMap().entries.map((entry) {
@@ -771,7 +772,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
             color: isActive ? AppColors.gold : context.text,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
           ),
-          child: Text(word),
+          child: Text(word, textDirection: TextDirection.rtl),
         );
       }).toList(),
     );
