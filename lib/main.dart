@@ -18,6 +18,7 @@ import 'screens/duas_screen.dart';
 import 'screens/prayer_notification_settings_screen.dart';
 import 'screens/islamic_books_screen.dart';
 import 'screens/daily_reminders_screen.dart';
+import 'screens/hifz_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -89,6 +90,7 @@ class QuranApp extends StatelessWidget {
                   const PrayerNotificationSettingsScreen(),
               '/islamic-books': (context) => const IslamicBooksScreen(),
               '/daily-reminders': (context) => const DailyRemindersScreen(),
+              '/hifz': (context) => const HifzScreen(),
             },
           );
         },

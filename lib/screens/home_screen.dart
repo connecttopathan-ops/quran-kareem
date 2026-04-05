@@ -23,6 +23,7 @@ import 'book_language_screen.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
 import '../data/curated_ayahs.dart';
+import 'hifz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1407,6 +1408,13 @@ class _QuickActionsCard extends StatelessWidget {
         subtitle: 'Free Quran distribution',
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
+      ),
+      (
+        icon: Icon(Icons.auto_stories_rounded, size: 26, color: AppColors.gold),
+        label: 'Hifz',
+        subtitle: 'Memorization tracker',
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const HifzScreen())),
       ),
     ];
 
