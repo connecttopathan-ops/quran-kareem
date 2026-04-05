@@ -16,12 +16,14 @@ import '../widgets/q_icons.dart';
 class HifzLoopScreen extends StatefulWidget {
   final int surahNumber;
   final int initialVerse;
+  final String langCode;
   final VoidCallback? onMemorizationChanged;
 
   const HifzLoopScreen({
     super.key,
     required this.surahNumber,
     this.initialVerse = 1,
+    this.langCode = 'en',
     this.onMemorizationChanged,
   });
 
@@ -45,7 +47,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
   // Text content
   Map<int, String> _arabicTexts = {};
-  Map<int, String> _romanUrduTexts = {};
+  Map<int, String> _transliterationTexts = {};  // Roman Arabic
+  Map<int, String> _translationTexts = {};       // User's selected language
 
   // Memorization state
   Set<int> _memorized = {};
@@ -105,42 +108,76 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     await prefs.setDouble('hifz_speed', _speed);
   }
 
-  /// Load Arabic text from alquran.cloud API, Roman Urdu from bundled asset.
+  /// Load Arabic text + transliteration from alquran.cloud API,
+  /// and translation from the bundled asset for the selected language.
   Future<void> _loadTexts() async {
     if (!mounted) return;
     setState(() => _textLoading = true);
 
-    // Load Roman Urdu from bundled asset
+    // Load translation from bundled asset (selected language, fallback 'en')
+    final langCode = widget.langCode;
+    // ur-roman is not a translation — map to 'en' if it's set as the lang
+    final assetLang = (langCode == 'ur-roman') ? 'en' : langCode;
     try {
-      final raw = await rootBundle.loadString('assets/translations/ur-roman.json');
+      final raw =
+          await rootBundle.loadString('assets/translations/$assetLang.json');
       final Map<String, dynamic> data = json.decode(raw);
       final surahData = data[_surahNumber.toString()];
       if (surahData is Map) {
-        final Map<int, String> romanUrdu = {};
+        final Map<int, String> trans = {};
         for (final entry in surahData.entries) {
           final v = int.tryParse(entry.key.toString());
-          if (v != null) romanUrdu[v] = entry.value.toString();
+          if (v != null) trans[v] = entry.value.toString();
         }
-        if (mounted) setState(() => _romanUrduTexts = romanUrdu);
+        if (mounted) setState(() => _translationTexts = trans);
       }
-    } catch (_) {}
+    } catch (_) {
+      // Fallback to English if the selected language asset is missing
+      try {
+        final raw =
+            await rootBundle.loadString('assets/translations/en.json');
+        final Map<String, dynamic> data = json.decode(raw);
+        final surahData = data[_surahNumber.toString()];
+        if (surahData is Map) {
+          final Map<int, String> trans = {};
+          for (final entry in surahData.entries) {
+            final v = int.tryParse(entry.key.toString());
+            if (v != null) trans[v] = entry.value.toString();
+          }
+          if (mounted) setState(() => _translationTexts = trans);
+        }
+      } catch (_) {}
+    }
 
-    // Load Arabic text from alquran.cloud
+    // Load Arabic text + transliteration from alquran.cloud (two editions in one call)
     try {
       final url =
-          'https://api.alquran.cloud/v1/surah/$_surahNumber/quran-uthmani';
-      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+          'https://api.alquran.cloud/v1/surah/$_surahNumber/editions/quran-uthmani,en.transliteration';
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 12));
       if (res.statusCode == 200) {
         final decoded = json.decode(res.body);
-        final ayahs = decoded['data']?['ayahs'] as List?;
-        if (ayahs != null) {
+        final editions = decoded['data'] as List?;
+        if (editions != null && editions.length >= 2) {
           final Map<int, String> arabic = {};
-          for (final ayah in ayahs) {
+          for (final ayah in (editions[0]['ayahs'] as List? ?? [])) {
             final v = ayah['numberInSurah'] as int?;
             final text = ayah['text'] as String?;
             if (v != null && text != null) arabic[v] = text;
           }
-          if (mounted) setState(() => _arabicTexts = arabic);
+          final Map<int, String> translit = {};
+          for (final ayah in (editions[1]['ayahs'] as List? ?? [])) {
+            final v = ayah['numberInSurah'] as int?;
+            final text = ayah['text'] as String?;
+            if (v != null && text != null) translit[v] = text;
+          }
+          if (mounted) {
+            setState(() {
+              _arabicTexts = arabic;
+              _transliterationTexts = translit;
+            });
+          }
         }
       }
     } catch (_) {}
@@ -298,7 +335,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
   Widget build(BuildContext context) {
     final isMemorized = _memorized.contains(_currentVerse);
     final arabicText = _arabicTexts[_currentVerse];
-    final romanUrduText = _romanUrduTexts[_currentVerse];
+    final transliterationText = _transliterationTexts[_currentVerse];
+    final translationText = _translationTexts[_currentVerse];
 
     return Scaffold(
       backgroundColor: context.bg,
@@ -348,7 +386,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       body: Column(
         children: [
           if (_showSettings) _buildSettingsPanel(),
-          Expanded(child: _buildContent(arabicText, romanUrduText, isMemorized)),
+          Expanded(child: _buildContent(arabicText, transliterationText, translationText, isMemorized)),
           _buildControls(isMemorized),
         ],
       ),
@@ -496,8 +534,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     );
   }
 
-  Widget _buildContent(
-      String? arabicText, String? romanUrduText, bool isMemorized) {
+  Widget _buildContent(String? arabicText, String? transliterationText,
+      String? translationText, bool isMemorized) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
       child: Column(
@@ -516,8 +554,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: context.surface2,
                   borderRadius: BorderRadius.circular(20),
@@ -563,11 +601,11 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
           ],
 
-          // Roman Urdu
-          if (romanUrduText != null) ...[
+          // Roman Arabic transliteration
+          if (!_textLoading && transliterationText != null) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -577,11 +615,33 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                 border: Border.all(color: context.border),
               ),
               child: Text(
-                romanUrduText,
+                transliterationText,
                 style: TextStyle(
                   color: context.textDim,
                   fontSize: 13,
                   fontStyle: FontStyle.italic,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Translation (selected language)
+          if (!_textLoading && translationText != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: context.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.border),
+              ),
+              child: Text(
+                translationText,
+                style: TextStyle(
+                  color: context.text,
+                  fontSize: 13,
                   height: 1.6,
                 ),
               ),
@@ -594,8 +654,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.star_rounded,
-                    color: AppColors.gold, size: 16),
+                Icon(Icons.star_rounded, color: AppColors.gold, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   'Memorized',

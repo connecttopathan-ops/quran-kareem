@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import '../models/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 import 'hifz_loop_screen.dart';
@@ -100,12 +102,14 @@ class _HifzScreenState extends State<HifzScreen> {
         break;
       }
     }
+    final langCode = context.read<AppState>().langCode;
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => HifzLoopScreen(
           surahNumber: surahNumber,
           initialVerse: startVerse,
+          langCode: langCode,
           onMemorizationChanged: _loadData,
         ),
       ),
