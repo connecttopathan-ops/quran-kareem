@@ -15,14 +15,28 @@ Also keeps v24's per-language translation approach (47 files, fetchEdition overr
 Zero HTML/CSS changes. All other files copied verbatim.
 """
 
-import json, os, re, zipfile
+import json, os, re, urllib.request, zipfile
 
 ROOT_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR   = os.path.join(ROOT_DIR, 'assets', 'translations')
-QURAN_DIR   = '/tmp/quran-chapters'
+QURAN_DIR   = os.path.join(ROOT_DIR, 'assets', 'quran-chapters')
 V10_ZIP     = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
 OUT_ZIP     = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v25.zip')
 CDN_URL     = 'https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/chapters/'
+
+# ── Download quran chapter files if not already cached ───────────────────────
+os.makedirs(QURAN_DIR, exist_ok=True)
+missing = [i for i in range(1, 115) if not os.path.exists(f'{QURAN_DIR}/{i}.json')]
+if missing:
+    print(f'Downloading {len(missing)} quran chapter files (one-time)...')
+    for i in missing:
+        url = f'{CDN_URL}{i}.json'
+        urllib.request.urlretrieve(url, f'{QURAN_DIR}/{i}.json')
+        if i % 20 == 0 or i == 114:
+            print(f'  {i}/114 downloaded')
+    print('Download complete.')
+else:
+    print(f'Quran chapter files already cached in {QURAN_DIR}')
 
 # ── Load and restructure translation files ────────────────────────────────────
 print('Loading translations...')
@@ -42,11 +56,7 @@ for fname in sorted(os.listdir(TRANS_DIR)):
         TRANS_DATA[lang] = restructured
 print(f'Loaded {len(TRANS_DATA)} languages')
 
-# Verify all 114 chapter files exist
-missing = [i for i in range(1, 115) if not os.path.exists(f'{QURAN_DIR}/{i}.json')]
-if missing:
-    raise SystemExit(f'ERROR: Missing quran chapter files: {missing}\nRun: for i in $(seq 1 114); do curl -s -o /tmp/quran-chapters/$i.json https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/chapters/$i.json; done')
-print(f'All 114 quran chapter files found in {QURAN_DIR}')
+print(f'All 114 quran chapter files ready')
 
 
 # fetchEdition override — same as v24
