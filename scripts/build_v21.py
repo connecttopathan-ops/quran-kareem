@@ -20,7 +20,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v20.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v21.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -59,12 +59,12 @@ def build_trans_js(snum):
 
 
 def patch_html(html, snum):
-    """Inject <script src> into </head> — loads before body scripts run,
-    so TRANSLATIONS is defined before the ayah-loading IIFE calls changeLang."""
+    """Inject <script src> just before </body> — after all inline scripts
+    so the fetchEdition override in translations/SNUM.js wins (last definition wins).
+    The synchronous script blocks the event loop while downloading, but CDN fetch
+    response headers arrive during that time and the fetch promise resolves as a
+    microtask immediately after — before the AbortController macrotask can fire."""
     tag = f'<script src="/translations/{snum}.js"></script>'
-    if '</head>' in html:
-        return html.replace('</head>', tag + '\n</head>', 1)
-    # fallback: before </body>
     if '</body>' in html:
         return html.replace('</body>', tag + '\n</body>', 1)
     return html + '\n' + tag
