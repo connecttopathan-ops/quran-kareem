@@ -17,7 +17,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v13.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v14.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
