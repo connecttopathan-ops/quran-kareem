@@ -148,7 +148,7 @@ NEW_FETCH_OVERRIDE = (
 OLD_FETCH_OVERRIDE_PREFIX = '<script>async function fetchEdition(ed,num){'
 
 
-def patch_html(html):
+def patch_html(html, snum=None):
     # 1. CDN URL → local (only needed if using v10 as base)
     html = html.replace(CDN_URL, '/quran/')
     # 2. Timeout 12s → 30s (only needed if using v10 as base)
@@ -156,16 +156,21 @@ def patch_html(html):
     # 3. IIFE localStorage read-first patch
     html, n = IIFE_PATTERN.subn(IIFE_NEW, html, count=1)
     if n == 0:
-        print('  WARNING: IIFE pattern not found — localStorage patch skipped')
+        label = f'surah {snum}' if snum else 'unknown surah'
+        print(f'  WARNING: {label} — IIFE pattern not found, dumping actual code:')
+        idx = html.find('gq_ar_')
+        if idx >= 0:
+            print(f'    {repr(html[max(0,idx-150):idx+150])}')
+        else:
+            idx2 = html.find('/quran/')
+            if idx2 >= 0:
+                print(f'    {repr(html[max(0,idx2-100):idx2+250])}')
     # 4. Replace or inject fetchEdition override
     if OLD_FETCH_OVERRIDE_PREFIX in html:
-        # v27 base: replace old fetchEdition with new per-surah version
-        # Find the full old script block
         start = html.find(OLD_FETCH_OVERRIDE_PREFIX)
         end = html.find('</script>', start) + len('</script>')
         html = html[:start] + NEW_FETCH_OVERRIDE + html[end:]
     elif '</body>' in html:
-        # v10 base: inject new fetchEdition before </body>
         html = html.replace('</body>', NEW_FETCH_OVERRIDE + '\n</body>', 1)
     else:
         html = html + '\n' + NEW_FETCH_OVERRIDE
@@ -204,7 +209,7 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
                 zout.writestr(item, raw)
                 continue
             snum = int(snum_match.group(1))
-            html = patch_html(html)
+            html = patch_html(html, snum)
             if IIFE_NEW in html:
                 iife_patched += 1
             zout.writestr(item, html.encode('utf-8'))
