@@ -17,7 +17,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v17.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v18.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -59,7 +59,7 @@ def patch_html(html, snum):  # returns (patched_html, trans_dict)
     # ── 2. Inject <script src> just before </body> ───────────────────────────
     # Translations are stored as /translations/SNUM.js (separate static file)
     # to avoid embedding multi-MB blobs inline for large surahs.
-    script_tag = f'<script src="/translations/{snum}.js"></script>'
+    script_tag = f'<script src="/translations/{snum}.js" defer></script>'
     if '</body>' in html:
         html = html.replace('</body>', script_tag + '\n</body>', 1)
     else:
