@@ -92,10 +92,9 @@ def patch_html(html, snum):
         pa_body  = html[pa_start:pa_end]
 
         # Find onended = function() { ... } inside playAyah
-        oe_match = re.search(r'(\.onended\s*=\s*function\s*\([^)]*\)\s*\{)', pa_body)
+        oe_match = re.search(r'\.onended\s*=\s*function\s*\([^)]*\)\s*\{', pa_body)
         if oe_match:
-            oe_start_in_body = oe_match.start()
-            oe_brace_open    = pa_body.index('{', oe_start_in_body + oe_match.start(1))
+            oe_brace_open    = pa_body.index('{', oe_match.start())
             # find closing } of onended handler
             depth = 0
             i = oe_brace_open
@@ -124,10 +123,9 @@ def patch_html(html, snum):
             html = html[:pa_start] + pa_body + html[pa_end:]
         else:
             # Arrow function style: .onended = () => { ... }  or  .onended=()=>{...}
-            oe_match2 = re.search(r'(\.onended\s*=\s*(?:\([^)]*\)|[a-z_]\w*)\s*=>\s*\{)', pa_body)
+            oe_match2 = re.search(r'\.onended\s*=\s*(?:\([^)]*\)|[a-z_]\w*)\s*=>\s*\{', pa_body)
             if oe_match2:
-                oe_start_in_body = oe_match2.start()
-                oe_brace_open    = pa_body.index('{', oe_start_in_body)
+                oe_brace_open    = pa_body.index('{', oe_match2.start())
                 depth = 0
                 i = oe_brace_open
                 while i < len(pa_body):
