@@ -190,7 +190,10 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       }
     } catch (_) {}
 
-    // Load word-level timing from qurancdn (Alafasy reciter 7 matches ar.alafasy CDN)
+    // Load word-level timing from qurancdn
+    // Response: one entry per surah with verse_timings[].segments
+    // Segment format: [wordPos(1-based), absStartMs, absEndMs] — absolute in surah file.
+    // Subtract each verse's timestamp_from to get per-verse relative ms.
     try {
       final timingUrl =
           'https://api.qurancdn.com/api/qdc/audio/reciters/7/audio_files?chapter=$_surahNumber&segments=true';
@@ -200,25 +203,41 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       if (timingRes.statusCode == 200) {
         final decoded = json.decode(timingRes.body);
         final audioFiles = decoded['audio_files'] as List?;
-        if (audioFiles != null) {
-          final Map<int, List<List<int>>> timings = {};
-          for (final file in audioFiles) {
-            final verseKey = file['verse_key'] as String?;
-            final segments = file['audio_segments'] as List?;
-            if (verseKey == null || segments == null) continue;
-            final parts = verseKey.split(':');
-            if (parts.length != 2) continue;
-            final v = int.tryParse(parts[1]);
-            if (v == null) continue;
-            timings[v] = segments
-                .map<List<int>>((s) =>
-                    (s as List).map<int>((e) => (e as num).toInt()).toList())
-                .toList();
+        if (audioFiles != null && audioFiles.isNotEmpty) {
+          final verseTimings = audioFiles[0]['verse_timings'] as List?;
+          if (verseTimings != null) {
+            final Map<int, List<List<int>>> timings = {};
+            for (final vt in verseTimings) {
+              final verseKey = vt['verse_key'] as String?;
+              final timestampFrom =
+                  (vt['timestamp_from'] as num?)?.toInt() ?? 0;
+              final segments = vt['segments'] as List?;
+              if (verseKey == null || segments == null) continue;
+              final parts = verseKey.split(':');
+              if (parts.length != 2) continue;
+              final v = int.tryParse(parts[1]);
+              if (v == null) continue;
+              // Convert absolute → per-verse relative, skip malformed entries
+              final List<List<int>> parsed = [];
+              for (final s in segments) {
+                final seg = s as List;
+                if (seg.length < 3) continue; // skip malformed
+                final wordPos = (seg[0] as num).toInt();
+                final startMs =
+                    ((seg[1] as num).toInt() - timestampFrom).clamp(0, 999999);
+                final endMs =
+                    ((seg[2] as num).toInt() - timestampFrom).clamp(0, 999999);
+                parsed.add([wordPos, startMs, endMs]);
+              }
+              if (parsed.isNotEmpty) timings[v] = parsed;
+            }
+            if (mounted) setState(() => _wordTimings = timings);
           }
-          if (mounted) setState(() => _wordTimings = timings);
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Hifz] word timing error: $e');
+    }
 
     if (mounted) {
       setState(() => _textLoading = false);
