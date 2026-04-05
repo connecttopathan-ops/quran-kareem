@@ -28,8 +28,14 @@ import os, re, urllib.request, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QURAN_DIR = os.path.join(ROOT_DIR, 'assets', 'quran-chapters')
 V11_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v11.zip')
+V11_DIR   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v11')
 OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v28.zip')
 CDN_URL   = 'https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/chapters/'
+
+# Accept either the zip or the extracted folder
+USE_DIR = not os.path.exists(V11_ZIP) and os.path.isdir(V11_DIR)
+if not os.path.exists(V11_ZIP) and not os.path.isdir(V11_DIR):
+    raise SystemExit(f'ERROR: neither {V11_ZIP} nor {V11_DIR} found')
 
 # ── Download quran chapter files if not already cached ───────────────────────
 os.makedirs(QURAN_DIR, exist_ok=True)
@@ -97,14 +103,26 @@ def patch_html(html):
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
-if not os.path.exists(V11_ZIP):
-    raise SystemExit(f'ERROR: {V11_ZIP} not found')
-
 surah_count = 0
 patched_count = 0
 
-with zipfile.ZipFile(V11_ZIP, 'r') as zin, \
-     zipfile.ZipFile(OUT_ZIP, 'w', zipfile.ZIP_DEFLATED) as zout:
+def iter_source():
+    """Yield (archive_path, bytes) from either zip or directory."""
+    if USE_DIR:
+        print(f'Reading from folder: {V11_DIR}')
+        for dirpath, _, filenames in os.walk(V11_DIR):
+            for fname in filenames:
+                full = os.path.join(dirpath, fname)
+                arc = os.path.relpath(full, V11_DIR).replace(os.sep, '/')
+                with open(full, 'rb') as f:
+                    yield arc, f.read()
+    else:
+        print(f'Reading from zip: {V11_ZIP}')
+        with zipfile.ZipFile(V11_ZIP, 'r') as zin:
+            for item in zin.infolist():
+                yield item.filename, zin.read(item.filename)
+
+with zipfile.ZipFile(OUT_ZIP, 'w', zipfile.ZIP_DEFLATED) as zout:
 
     # Bundle all 114 quran chapter files at /quran/{snum}.json
     print('Writing quran chapter files...')
@@ -113,15 +131,13 @@ with zipfile.ZipFile(V11_ZIP, 'r') as zin, \
             zout.writestr(f'quran/{snum}.json', f.read())
 
     # Patch surah HTML files
-    for item in zin.infolist():
-        raw = zin.read(item.filename)
-
-        m = re.match(r'surah/(\d+)/index\.html$', item.filename)
+    for arcname, raw in iter_source():
+        m = re.match(r'surah/(\d+)/index\.html$', arcname)
         if m:
             snum = int(m.group(1))
             html = raw.decode('utf-8')
             html, patched = patch_html(html)
-            zout.writestr(item, html.encode('utf-8'))
+            zout.writestr(arcname, html.encode('utf-8'))
             surah_count += 1
             if patched:
                 patched_count += 1
@@ -130,7 +146,7 @@ with zipfile.ZipFile(V11_ZIP, 'r') as zin, \
             if snum % 10 == 0 or snum == 114:
                 print(f'  {snum}/114 done')
         else:
-            zout.writestr(item, raw)
+            zout.writestr(arcname, raw)
 
 size_mb = os.path.getsize(OUT_ZIP) / 1_000_000
 print(f'\nDone! {OUT_ZIP} ({size_mb:.1f} MB)')
