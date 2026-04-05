@@ -17,7 +17,7 @@ import json, os, re, zipfile
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
 V10_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v10.zip')
-OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v16.zip')
+OUT_ZIP   = os.path.expanduser('~/Downloads/getquran_cloudflare_deploy_v17.zip')
 
 # ── Load translation files ────────────────────────────────────────────────────
 print('Loading translations...')
@@ -45,7 +45,7 @@ def find_function_end(text, func_start):
     return len(text)
 
 
-def patch_html(html, snum):
+def patch_html(html, snum):  # returns (patched_html, trans_dict)
     # ── 1. Build TRANSLATIONS for this surah ─────────────────────────────────
     trans = {}
     for lang, data in TRANS_DATA.items():
@@ -56,14 +56,21 @@ def patch_html(html, snum):
         else:
             trans[lang] = []
 
-    trans_json = json.dumps(trans, ensure_ascii=False, separators=(',', ':'))
-
-    # ── 2. Inject TRANSLATIONS just before </body> ────────────────────────────
-    script_tag = f'<script>var TRANSLATIONS={trans_json};</script>'
+    # ── 2. Inject <script src> just before </body> ───────────────────────────
+    # Translations are stored as /translations/SNUM.js (separate static file)
+    # to avoid embedding multi-MB blobs inline for large surahs.
+    script_tag = f'<script src="/translations/{snum}.js"></script>'
     if '</body>' in html:
         html = html.replace('</body>', script_tag + '\n</body>', 1)
     else:
         html += '\n' + script_tag
+
+    return html, trans  # also return trans so main loop can write the .js file
+
+
+def build_trans_js(trans):
+    trans_json = json.dumps(trans, ensure_ascii=False, separators=(',', ':'))
+    return f'var TRANSLATIONS={trans_json};'
 
     # ── 3. Replace fetchEdition function ──────────────────────────────────────
     # Match optional leading 'async' so we replace the whole declaration
@@ -153,7 +160,7 @@ def patch_html(html, snum):
     else:
         print(f'  WARNING surah {snum}: playAyah not found')
 
-    return html
+    return html, trans
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -179,8 +186,11 @@ with zipfile.ZipFile(V10_ZIP, 'r') as zin, \
                 continue
             snum = int(snum_match.group(1))
 
-            html = patch_html(html, snum)
+            html, trans = patch_html(html, snum)
             zout.writestr(item, html.encode('utf-8'))
+            # Write translations as separate static JS file
+            js_content = build_trans_js(trans)
+            zout.writestr(f'translations/{snum}.js', js_content.encode('utf-8'))
             surah_count += 1
             if snum % 10 == 0 or snum == 114:
                 print(f'  {snum}/114 patched')
