@@ -22,7 +22,7 @@ Output: v29.zip
 Zero HTML/CSS changes. All other files copied verbatim.
 """
 
-import json, os, re, urllib.request, zipfile
+import gzip, io, json, os, re, urllib.request, zipfile
 
 ROOT_DIR  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRANS_DIR = os.path.join(ROOT_DIR, 'assets', 'translations')
@@ -93,10 +93,12 @@ IIFE_PATTERN = re.compile(
 )
 
 IIFE_NEW = (
-    'var _ca=localStorage.getItem("gq_ar_"+SNUM),_ct=localStorage.getItem("gq_tl_"+SNUM);'
+    # Only require Arabic cache — transliteration optional (empty string fallback)
+    'var _ca=localStorage.getItem("gq_ar_"+SNUM);'
     'var vs;'
-    'if(_ca&&_ct){try{'
-    'var _a=JSON.parse(_ca),_t=JSON.parse(_ct);'
+    'if(_ca){try{'
+    'var _a=JSON.parse(_ca);'
+    'var _ct=localStorage.getItem("gq_tl_"+SNUM),_t=_ct?JSON.parse(_ct):[];'
     'vs=_a.map(function(t,i){return{text:t,transliteration:_t[i]||""};});'
     'clearTimeout(tmr);'
     '}catch(e){vs=null;}}'
@@ -105,7 +107,7 @@ IIFE_NEW = (
     'clearTimeout(tmr);if(!res.ok)throw new Error("HTTP "+res.status);'
     'var data=await res.json();vs=data.verses||[];'
     'try{localStorage.setItem("gq_ar_"+SNUM,JSON.stringify(vs.map(function(v){return v.text;})));}catch(e){}'
-    'try{localStorage.setItem("gq_tl_"+SNUM,JSON.stringify(vs.map(function(v){return v.transliteration;})));}catch(e){}'
+    'try{localStorage.setItem("gq_tl_"+SNUM,JSON.stringify(vs.map(function(v){return v.transliteration||""})));}catch(e){}'
     '}'
 )
 
@@ -190,10 +192,15 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
         json_bytes = json.dumps(data, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
         zout.writestr(f'translations/{lang}.json', json_bytes)
 
-    # Write quran chapter files
+    # Write quran chapter files — text only (no transliteration, no id)
+    # Cuts file size ~50%: surah 2 goes from 43 KB to 21 KB gzipped
+    # gq_tl_N localStorage (transliteration) will be empty strings; acceptable trade-off
     for snum in range(1, 115):
-        with open(f'{QURAN_DIR}/{snum}.json', 'rb') as f:
-            zout.writestr(f'quran/{snum}.json', f.read())
+        with open(f'{QURAN_DIR}/{snum}.json') as f:
+            data = json.load(f)
+        text_only = {'verses': [{'text': v['text']} for v in data['verses']]}
+        zout.writestr(f'quran/{snum}.json',
+                      json.dumps(text_only, ensure_ascii=False, separators=(',',':')).encode('utf-8'))
 
     # Patch and copy all HTML + other files
     for item in zin.infolist():
@@ -217,7 +224,6 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
         else:
             zout.writestr(item, raw)
 
-import gzip, io
 def gzip_size(data_bytes):
     buf = io.BytesIO()
     with gzip.GzipFile(fileobj=buf, mode='wb') as gz:
@@ -230,6 +236,12 @@ en_gz = gzip_size(en_raw)
 size_mb = os.path.getsize(OUT_ZIP) / 1_000_000
 print(f'\nDone! {OUT_ZIP} ({size_mb:.1f} MB)')
 print(f'Patched {surah_count} surah pages, IIFE localStorage patch applied to {iife_patched}')
-print(f'/translations/en.json: {len(en_raw)//1024} KB uncompressed, ~{en_gz//1024} KB gzipped')
+# Show quran/2.json size in zip
+with open(f'{QURAN_DIR}/2.json') as f:
+    d2 = json.load(f)
+q2_raw = json.dumps({'verses':[{'text':v['text']} for v in d2['verses']]}, ensure_ascii=False, separators=(',',':')).encode('utf-8')
+q2_gz = gzip_size(q2_raw)
+print(f'/quran/2.json (Al-Baqarah): {len(q2_raw)//1024} KB raw, ~{q2_gz//1024} KB gzipped (was 43 KB)')
+print(f'/translations/en.json: ~{en_gz//1024} KB gzipped (one-time, then cached)')
 print(f'After first visit: all 114 surahs instant (gq_lang_en localStorage cache)')
 print(f'Zero HTML/CSS changes')
