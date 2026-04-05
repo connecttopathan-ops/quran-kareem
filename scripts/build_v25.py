@@ -82,11 +82,13 @@ FETCH_OVERRIDE = (
 def patch_html(html):
     """
     1. Replace CDN URLs for quran-json chapter files with local /quran/{snum}.json
-    2. Inject fetchEdition override before </body>
+    2. Increase AbortController timeout from 12s to 30s (slow mobile connections)
+    3. Inject fetchEdition override before </body>
     """
     # Replace CDN URL in both IIFE and loadReadMode
-    # The URL appears as a string concatenation: CDN_URL + SNUM + ".json"
     html = html.replace(CDN_URL, '/quran/')
+    # Increase IIFE timeout: 12 seconds is too short on slow/congested mobile
+    html = html.replace('},12000);', '},30000);')
 
     if '</body>' in html:
         html = html.replace('</body>', FETCH_OVERRIDE + '\n</body>', 1)
