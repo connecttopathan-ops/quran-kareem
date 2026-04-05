@@ -179,6 +179,9 @@ RENDER_FIXED = (
 
 
 
+OLD_FETCH_OVERRIDE_PREFIX = '<script>async function fetchEdition(ed,num){'
+
+
 def patch_html(html, snum=None):
     # 0. Fix SyntaxError: collapse broken multi-line wrap.innerHTML template
     html, r = RENDER_BROKEN.subn(RENDER_FIXED, html, count=1)
