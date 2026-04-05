@@ -24,6 +24,7 @@ class _HifzScreenState extends State<HifzScreen> {
   /// memorized[surahNumber] = set of memorized verse numbers (1-based)
   Map<int, Set<int>> _memorized = {};
   int _totalMemorized = 0;
+  int _surahsMemorized = 0;
   int _todayReps = 0;
   _HifzSort _sort = _HifzSort.surahOrder;
   bool _loading = true;
@@ -41,6 +42,7 @@ class _HifzScreenState extends State<HifzScreen> {
     final Map<int, Set<int>> mem = {};
     int total = 0;
 
+    int surahsDone = 0;
     for (final surah in kSurahs) {
       final set = <int>{};
       for (int v = 1; v <= surah.verses; v++) {
@@ -49,6 +51,7 @@ class _HifzScreenState extends State<HifzScreen> {
           total++;
         }
       }
+      if (set.length == surah.verses) surahsDone++;
       mem[surah.number] = set;
     }
 
@@ -59,6 +62,7 @@ class _HifzScreenState extends State<HifzScreen> {
       setState(() {
         _memorized = mem;
         _totalMemorized = total;
+        _surahsMemorized = surahsDone;
         _todayReps = reps;
         _loading = false;
       });
@@ -182,12 +186,20 @@ class _HifzScreenState extends State<HifzScreen> {
             children: [
               Expanded(
                 child: _MetricCard(
-                  icon: Icons.star_rounded,
-                  value: _totalMemorized.toString(),
-                  label: 'Ayahs Memorized',
+                  icon: Icons.menu_book_rounded,
+                  value: _surahsMemorized.toString(),
+                  label: 'Surahs',
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MetricCard(
+                  icon: Icons.star_rounded,
+                  value: _totalMemorized.toString(),
+                  label: 'Ayahs',
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: _MetricCard(
                   icon: Icons.repeat_rounded,
@@ -301,36 +313,30 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.border),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.gold, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: context.text,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: context.textDim,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+          Icon(icon, color: AppColors.gold, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: context.text,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: context.textDim,
+              fontSize: 10,
             ),
           ),
         ],

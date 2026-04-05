@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,12 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
   Map<int, String> _transliterationTexts = {};  // Roman Arabic
   Map<int, String> _translationTexts = {};       // User's selected language
 
+  // Word-by-word highlighting
+  // verseNumber → list of [wordIndex(1-based), startMs, endMs]
+  Map<int, List<List<int>>> _wordTimings = {};
+  int _activeWordIndex = -1;   // 1-based; -1 = none
+  StreamSubscription<Duration>? _positionSub;
+
   // Memorization state
   Set<int> _memorized = {};
 
@@ -85,6 +92,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     );
 
     _player.playerStateStream.listen(_onPlayerState);
+    _positionSub = _player.positionStream.listen(_onPosition);
     _loadPrefs();
     _loadTexts();
     _loadMemorized();
@@ -182,6 +190,36 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       }
     } catch (_) {}
 
+    // Load word-level timing from qurancdn (Alafasy reciter 7 matches ar.alafasy CDN)
+    try {
+      final timingUrl =
+          'https://api.qurancdn.com/api/qdc/audio/reciters/7/audio_files?chapter=$_surahNumber&segments=true';
+      final timingRes = await http
+          .get(Uri.parse(timingUrl))
+          .timeout(const Duration(seconds: 10));
+      if (timingRes.statusCode == 200) {
+        final decoded = json.decode(timingRes.body);
+        final audioFiles = decoded['audio_files'] as List?;
+        if (audioFiles != null) {
+          final Map<int, List<List<int>>> timings = {};
+          for (final file in audioFiles) {
+            final verseKey = file['verse_key'] as String?;
+            final segments = file['audio_segments'] as List?;
+            if (verseKey == null || segments == null) continue;
+            final parts = verseKey.split(':');
+            if (parts.length != 2) continue;
+            final v = int.tryParse(parts[1]);
+            if (v == null) continue;
+            timings[v] = segments
+                .map<List<int>>((s) =>
+                    (s as List).map<int>((e) => (e as num).toInt()).toList())
+                .toList();
+          }
+          if (mounted) setState(() => _wordTimings = timings);
+        }
+      }
+    } catch (_) {}
+
     if (mounted) {
       setState(() => _textLoading = false);
       // Auto-play first verse once texts are loaded
@@ -198,6 +236,23 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       }
     }
     if (mounted) setState(() => _memorized = mem);
+  }
+
+  void _onPosition(Duration pos) {
+    if (!mounted) return;
+    final ms = pos.inMilliseconds;
+    final timings = _wordTimings[_currentVerse];
+    if (timings == null) return;
+    int newIndex = -1;
+    for (final seg in timings) {
+      if (ms >= seg[1] && ms < seg[2]) {
+        newIndex = seg[0]; // 1-based
+        break;
+      }
+    }
+    if (newIndex != _activeWordIndex) {
+      setState(() => _activeWordIndex = newIndex);
+    }
   }
 
   void _onPlayerState(PlayerState state) {
@@ -294,6 +349,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     setState(() {
       _currentVerse = verse;
       _loopCount = 0;
+      _activeWordIndex = -1;
     });
     await _playCurrentVerse();
   }
@@ -326,6 +382,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
   @override
   void dispose() {
+    _positionSub?.cancel();
     _player.dispose();
     _waveController.dispose();
     super.dispose();
@@ -578,7 +635,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
           _buildLoopDots(),
           const SizedBox(height: 24),
 
-          // Arabic text
+          // Arabic text (word-by-word highlighted when timing data available)
           if (_textLoading)
             const CircularProgressIndicator()
           else if (arabicText != null) ...[
@@ -590,16 +647,18 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: context.border),
               ),
-              child: Text(
-                arabicText,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontFamily: 'Scheherazade',
-                  fontSize: 28,
-                  height: 1.8,
-                  color: context.text,
-                ),
-              ),
+              child: _wordTimings.containsKey(_currentVerse)
+                  ? _buildHighlightedArabic(arabicText)
+                  : Text(
+                      arabicText,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontFamily: 'Scheherazade',
+                        fontSize: 28,
+                        height: 1.8,
+                        color: context.text,
+                      ),
+                    ),
             ),
             const SizedBox(height: 12),
           ],
@@ -669,6 +728,33 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+
+  /// Renders Arabic verse as a right-aligned Wrap of individually coloured words.
+  /// The word at [_activeWordIndex] (1-based) is highlighted in gold.
+  Widget _buildHighlightedArabic(String arabicText) {
+    final words = arabicText.split(' ');
+    return Wrap(
+      alignment: WrapAlignment.end,
+      spacing: 2,
+      runSpacing: 6,
+      children: words.asMap().entries.map((entry) {
+        final wordPos = entry.key + 1; // convert to 1-based
+        final word = entry.value;
+        final isActive = wordPos == _activeWordIndex;
+        return AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 120),
+          style: TextStyle(
+            fontFamily: 'Scheherazade',
+            fontSize: 28,
+            height: 1.8,
+            color: isActive ? AppColors.gold : context.text,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
+          ),
+          child: Text(word),
+        );
+      }).toList(),
     );
   }
 
