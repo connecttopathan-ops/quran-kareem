@@ -371,8 +371,11 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
     # Patch and copy all HTML + other files
     for item in zin.infolist():
         raw = zin.read(item.filename)
+        # Skip files we've already written our own versions of
         if item.filename.startswith('translations/'):
             continue
+        if item.filename in ('sitemap.xml', 'robots.txt', 'favicon.svg', 'icon.png'):
+            continue  # our versions already written above; don't let v10 overwrite them
         m = re.match(r'surah/[^/]+/index\.html$', item.filename)
         if m:
             html = raw.decode('utf-8')
