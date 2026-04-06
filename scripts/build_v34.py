@@ -3,10 +3,14 @@
 build_v34.py  —  v10 design, all fixes -> v34.zip
 
 Fixes over v33:
-  1. Transliteration restored in /quran/N.json files — text-only files (v31-v33)
-     caused transliteration to be empty for large surahs (IIFE path)
-  2. Favicon: circular black icon — SVG clips the actual icon.png (black bg +
+  1. Transliteration restored in /quran/N.json files — v31-v33 stripped it,
+     causing empty transliteration for large surahs on the IIFE path
+  2. Cache invalidation script (gq_cv=34): clears stale gq_ar_N/gq_tl_N
+     caches from v31-v33 (had empty transliteration) on first visit per device
+  3. Favicon: circular black icon — SVG clips actual icon.png (black bg +
      gold crescent) to a circle using base64 embedding, no Pillow needed
+  (All v33 fixes retained: Roman Urdu key, gqv3 cache, English defaults
+   for Middle East+EN countries, desktop CSS 38px/20px)
 
 Input: v10.zip (preferred) or v27.zip as base.
 Output: v34.zip
@@ -218,6 +222,22 @@ RENDER_FIXED = (
 
 OLD_FETCH_OVERRIDE_PREFIX = '<script>async function fetchEdition(ed,num){'
 
+# Cache invalidation: clears gq_ar_N and gq_tl_N caches from v31-v33 which
+# had empty transliteration. Runs once per device, keyed by version '34'.
+CACHE_INVALIDATION = (
+    '<script>'
+    '(function(){'
+    'if(localStorage.getItem("gq_cv")==="34")return;'
+    'var keys=[];'
+    'for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k)keys.push(k);}'
+    'keys.forEach(function(k){'
+    'if(k.indexOf("gq_ar_")===0||k.indexOf("gq_tl_")===0)localStorage.removeItem(k);'
+    '});'
+    'localStorage.setItem("gq_cv","34");'
+    '})();'
+    '</script>'
+)
+
 
 def patch_html(html, snum=None):
     # 0. Fix SyntaxError: collapse broken multi-line wrap.innerHTML template
@@ -260,16 +280,13 @@ def patch_html(html, snum=None):
     else:
         print(f'  WARNING: surah {snum} — geo map not found (may already be patched or different format)')
 
-    # 6. Fix 4+5: Inject desktop CSS + favicon before </head>
+    # 6. Inject desktop CSS + favicon + cache invalidation before </head>
     if '</head>' in html:
-        inject = ''
-        # Replace old favicon tags or inject new ones
+        # Remove old favicon tags so we don't duplicate
         if 'rel="icon"' in html:
-            # Remove old favicon tags and replace
             html = re.sub(r'<link rel="icon"[^>]*>', '', html)
             html = re.sub(r'<link rel="apple-touch-icon"[^>]*>', '', html)
-        inject += FAVICON_TAGS
-        inject += DESKTOP_CSS
+        inject = CACHE_INVALIDATION + FAVICON_TAGS + DESKTOP_CSS
         html = html.replace('</head>', inject + '\n</head>', 1)
 
     return html
@@ -356,4 +373,4 @@ q2_raw = json.dumps({'verses':[{'text':v['text'],'transliteration':v.get('transl
 q2_gz  = gzip_size(q2_raw)
 print(f'/quran/2.json: {len(q2_raw)//1024} KB raw, ~{q2_gz//1024} KB gzipped (text+transliteration)')
 print(f'/translations/en.json: ~{en_gz//1024} KB gzipped (one-time, then cached)')
-print(f'Fixes: transliteration restored in /quran/ files, circular black favicon')
+print(f'Fixes: transliteration restored, cache invalidated (gq_cv=34), circular black favicon')
