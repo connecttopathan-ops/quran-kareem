@@ -48,3 +48,12 @@ flutter:
     - assets/audio/adhan_madinah.mp3
     - assets/audio/adhan_makkah_fajr.mp3
     - assets/books/
+  fonts:
+    - family: Scheherazade
+      fonts:
+        - asset: assets/fonts/ScheherazadeNew-Regular.ttf
+        - asset: assets/fonts/ScheherazadeNew-Bold.ttf
+          weight: 700
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay.ttf
