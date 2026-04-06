@@ -893,6 +893,48 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     );
   }
 
+  Widget _buildSkeleton() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.3, end: 0.9),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeInOut,
+      builder: (ctx, opacity, _) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.9, end: 0.3),
+          duration: const Duration(milliseconds: 900),
+          curve: Curves.easeInOut,
+          builder: (ctx2, _, __) {
+            // Use AnimatedOpacity to pulse
+            return Column(
+              children: [
+                _SkeletonBlock(
+                  height: 100,
+                  opacity: opacity,
+                  color: context.surface,
+                  borderRadius: 16,
+                ),
+                const SizedBox(height: 12),
+                _SkeletonBlock(
+                  height: 60,
+                  opacity: opacity,
+                  color: context.surface2,
+                  borderRadius: 12,
+                ),
+                const SizedBox(height: 12),
+                _SkeletonBlock(
+                  height: 60,
+                  opacity: opacity,
+                  color: context.surface2,
+                  borderRadius: 12,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildContent(String? arabicText, String? transliterationText,
       String? translationText, bool isMemorized) {
     return SingleChildScrollView(
@@ -939,7 +981,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
           // Arabic text (word-by-word highlighted when timing data available)
           if (_textLoading)
-            const CircularProgressIndicator()
+            _buildSkeleton()
           else if (arabicText != null) ...[
             Container(
               width: double.infinity,
@@ -1246,6 +1288,66 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     return GestureDetector(
       onTap: onTap,
       child: Icon(icon, size: size, color: color),
+    );
+  }
+}
+
+// ── Skeleton shimmer block ────────────────────────────────────────────────────
+class _SkeletonBlock extends StatefulWidget {
+  final double height;
+  final double opacity;
+  final Color color;
+  final double borderRadius;
+
+  const _SkeletonBlock({
+    required this.height,
+    required this.opacity,
+    required this.color,
+    this.borderRadius = 8,
+  });
+
+  @override
+  State<_SkeletonBlock> createState() => _SkeletonBlockState();
+}
+
+class _SkeletonBlockState extends State<_SkeletonBlock>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.3, end: 0.85).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(
+        width: double.infinity,
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: widget.color.withOpacity(_anim.value),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+          border: Border.all(
+            color: AppColors.gold.withOpacity(_anim.value * 0.2),
+          ),
+        ),
+      ),
     );
   }
 }
