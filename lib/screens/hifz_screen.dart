@@ -197,17 +197,10 @@ class _HifzScreenState extends State<HifzScreen> {
             childCount: visibleSurahs.length,
           ),
         ),
-        if (visibleSurahs.isEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(40),
-              child: Text(
-                'No surahs found',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.textDim, fontSize: 14),
-              ),
-            ),
-          ),
+        if (visibleSurahs.isEmpty && _searchQuery.isNotEmpty)
+          SliverToBoxAdapter(child: _buildSearchEmpty()),
+        if (visibleSurahs.isNotEmpty && _totalMemorized == 0 && _searchQuery.isEmpty)
+          SliverToBoxAdapter(child: _buildGetStarted()),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
     );
@@ -334,6 +327,112 @@ class _HifzScreenState extends State<HifzScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchEmpty() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 48),
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.gold.withOpacity(0.08),
+              border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+            ),
+            child: Center(
+              child: Text(
+                'بَحْث',
+                style: TextStyle(
+                  fontFamily: 'Scheherazade',
+                  fontSize: 22,
+                  color: AppColors.gold.withOpacity(0.6),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No surahs found',
+            style: TextStyle(
+              fontSize: 15,
+              fontFamily: 'serif',
+              fontWeight: FontWeight.w600,
+              color: context.text,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Try a different name or number',
+            style: TextStyle(
+              fontSize: 12,
+              fontFamily: 'sans-serif',
+              color: context.textDim,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGetStarted() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 32, 32, 32),
+      child: Column(
+        children: [
+          Text(
+            'اقْرَأْ',
+            style: TextStyle(
+              fontFamily: 'Scheherazade',
+              fontSize: 52,
+              color: AppColors.gold.withOpacity(0.35),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Begin Your Hifz Journey',
+            style: TextStyle(
+              fontSize: 16,
+              fontFamily: 'serif',
+              fontWeight: FontWeight.w600,
+              color: context.text,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tap any surah below to start memorizing.\nMark each ayah with ★ as you learn it.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontFamily: 'sans-serif',
+              color: context.textDim,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.gold.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.gold.withOpacity(0.25)),
+            ),
+            child: Text(
+              '"And We have certainly made the Quran easy to remember" — 54:17',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                fontFamily: 'sans-serif',
+                fontStyle: FontStyle.italic,
+                color: context.isDark ? AppColors.goldDim : AppColors.goldDark,
+              ),
             ),
           ),
         ],

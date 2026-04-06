@@ -25,6 +25,58 @@ class _SurahListScreenState extends State<SurahListScreen> {
     super.dispose();
   }
 
+  Widget _buildSearchEmpty(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.gold.withOpacity(0.08),
+                border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+              ),
+              child: Center(
+                child: Text(
+                  'بَحْث',
+                  style: TextStyle(
+                    fontFamily: 'Scheherazade',
+                    fontSize: 22,
+                    color: AppColors.gold.withOpacity(0.55),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No surahs found',
+              style: TextStyle(
+                fontSize: 15,
+                fontFamily: 'serif',
+                fontWeight: FontWeight.w600,
+                color: context.text,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Try searching by name, translation, or number',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'sans-serif',
+                color: context.textDim,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = kSurahs
@@ -111,16 +163,18 @@ class _SurahListScreenState extends State<SurahListScreen> {
                 ],
               ),
             ),
-            // List
+            // List (with empty state)
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                itemCount: filtered.length,
-                itemBuilder: (context, i) {
-                  final s = filtered[i];
-                  return _SurahTile(surah: s);
-                },
-              ),
+              child: filtered.isEmpty
+                  ? _buildSearchEmpty(context)
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, i) {
+                        final s = filtered[i];
+                        return _SurahTile(surah: s);
+                      },
+                    ),
             ),
           ],
         ),
