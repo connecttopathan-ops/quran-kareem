@@ -32,6 +32,52 @@ class AppSpacing {
   static const double radiusXl = 22;
 }
 
+class AppShadows {
+  /// Subtle warm shadow for light-mode cards
+  static List<BoxShadow> card(bool isDark) => isDark
+      ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFFCBA830).withOpacity(0.10),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ];
+
+  /// Stronger shadow for elevated elements (popups, bottom sheets)
+  static List<BoxShadow> elevated(bool isDark) => isDark
+      ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFFCBA830).withOpacity(0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ];
+}
+
 class AppTextStyles {
   // Label styles (caps, spaced)
   static TextStyle label(Color color) =>

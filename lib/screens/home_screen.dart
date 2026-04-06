@@ -531,6 +531,7 @@ class _CalPrayerCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: context.isDark ? AppColors.darkGoldBorder : AppColors.goldBorder),
+        boxShadow: AppShadows.card(context.isDark),
       ),
       child: Column(
         children: [
@@ -811,12 +812,7 @@ class _PrayerGridState extends State<_PrayerGrid>
         color: context.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.border),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.18),
-              blurRadius: 10,
-              offset: const Offset(0, 3)),
-        ],
+        boxShadow: AppShadows.elevated(context.isDark),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1251,7 +1247,8 @@ class _ContinueCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
             decoration: BoxDecoration(color: context.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border)),
+                border: Border.all(color: context.border),
+                boxShadow: AppShadows.card(context.isDark)),
             child: Row(children: [
               Container(width: 36, height: 36,
                 decoration: BoxDecoration(color: AppColors.goldDim.withOpacity(0.1),
@@ -1293,6 +1290,7 @@ class _DailyAyah extends StatelessWidget {
         borderRadius: BorderRadius.circular(13),
         border: Border.all(color: context.isDark
             ? AppColors.darkGoldBorder : AppColors.goldBorder),
+        boxShadow: AppShadows.card(context.isDark),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('✦  Ayah of the Day  ✦'.toUpperCase(),
@@ -1423,6 +1421,7 @@ class _QuickActionsCard extends StatelessWidget {
         color: context.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.border),
+        boxShadow: AppShadows.card(context.isDark),
       ),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       child: IntrinsicHeight(
