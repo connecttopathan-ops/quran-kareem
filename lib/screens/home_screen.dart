@@ -530,7 +530,7 @@ class _CalPrayerCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: context.isDark ? const Color(0xFF3a2e10) : const Color(0xFFceb060)),
+            color: context.isDark ? AppColors.darkGoldBorder : AppColors.goldBorder),
       ),
       child: Column(
         children: [
@@ -555,7 +555,7 @@ class _CalPrayerCard extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text('${h['day']}',
                       style: TextStyle(fontFamily: 'serif', fontSize: 32, height: 1,
-                          color: context.isDark ? AppColors.warmWhite : const Color(0xFF2a1e08))),
+                          color: context.isDark ? AppColors.warmWhite : AppColors.deepText)),
                   Text(hMonths[h['month']! - 1],
                       style: TextStyle(fontFamily: 'serif', fontSize: 16,
                           fontStyle: FontStyle.italic,
@@ -580,7 +580,7 @@ class _CalPrayerCard extends StatelessWidget {
             ),
           ),
           Container(height: 1,
-              color: context.isDark ? const Color(0xFF3a2e10) : const Color(0xFFceb060).withOpacity(0.4)),
+              color: context.isDark ? AppColors.darkGoldBorder : AppColors.goldBorder.withOpacity(0.4)),
           // Prayer times
           Container(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
@@ -943,7 +943,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                       ? FontWeight.w700
                                       : FontWeight.normal,
                                   color: isCurrent
-                                      ? (context.isDark ? AppColors.gold : const Color(0xFF2a1e08))
+                                      ? (context.isDark ? AppColors.gold : AppColors.deepText)
                                       : context.textDim)),
                           const SizedBox(height: 3),
                           Text(
@@ -955,7 +955,7 @@ class _PrayerGridState extends State<_PrayerGrid>
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                   color: isCurrent
-                                      ? (context.isDark ? AppColors.gold : const Color(0xFF2a1e08))
+                                      ? (context.isDark ? AppColors.gold : AppColors.deepText)
                                       : context.text)),
                           const SizedBox(height: 4),
                           Container(
@@ -1292,7 +1292,7 @@ class _DailyAyah extends StatelessWidget {
             : [const Color(0xFFf5e8cc), const Color(0xFFefdba8)]),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(color: context.isDark
-            ? const Color(0xFF3a2e10) : const Color(0xFFd4b870)),
+            ? AppColors.darkGoldBorder : AppColors.goldBorder),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('✦  Ayah of the Day  ✦'.toUpperCase(),
@@ -1304,7 +1304,7 @@ class _DailyAyah extends StatelessWidget {
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 18, height: 2,
-                color: context.isDark ? AppColors.goldLight : const Color(0xFF2a1e08))),
+                color: context.isDark ? AppColors.goldLight : AppColors.deepText)),
         Divider(color: AppColors.goldDim.withOpacity(0.25)),
         const SizedBox(height: 4),
         Text(

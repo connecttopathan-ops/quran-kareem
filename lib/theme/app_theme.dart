@@ -12,6 +12,46 @@ class AppColors {
   static const paperBg = Color(0xFFF5EDD8);
   static const darkBg = Color(0xFF0D0A04);
   static const lightBorder2 = Color(0xFFE8D4A0);
+
+  // Unified border colors — use these instead of raw hex
+  static const goldBorder = Color(0xFFCEB060);      // light-mode gold border
+  static const darkGoldBorder = Color(0xFF3A2E10);  // dark-mode gold border
+  static const deepText = Color(0xFF2A1E08);        // deep warm text (light mode)
+}
+
+class AppSpacing {
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 24;
+
+  static const double radiusSm = 8;
+  static const double radiusMd = 12;
+  static const double radiusLg = 16;
+  static const double radiusXl = 22;
+}
+
+class AppTextStyles {
+  // Label styles (caps, spaced)
+  static TextStyle label(Color color) =>
+      TextStyle(fontSize: 9, letterSpacing: 2, fontFamily: 'sans-serif', color: color);
+
+  // Section headers
+  static TextStyle sectionHeader(Color color) =>
+      TextStyle(fontSize: 16, fontFamily: 'serif', fontWeight: FontWeight.w600, color: color);
+
+  // Card title
+  static TextStyle cardTitle(Color color) =>
+      TextStyle(fontSize: 14, fontFamily: 'serif', fontWeight: FontWeight.w600, color: color);
+
+  // Body text
+  static TextStyle body(Color color, {double fontSize = 13}) =>
+      TextStyle(fontSize: fontSize, fontFamily: 'sans-serif', color: color);
+
+  // Arabic display
+  static TextStyle arabic(Color color, {double fontSize = 22}) =>
+      TextStyle(fontSize: fontSize, fontFamily: 'Scheherazade', color: color);
 }
 
 extension AppThemeExtension on BuildContext {

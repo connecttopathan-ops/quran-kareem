@@ -416,7 +416,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                           'Move your phone in a\nfigure-8 motion to\ncalibrate the compass',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Color(0xFFD4AF37),
+                            color: AppColors.gold,
                             fontSize: 16,
                             fontFamily: 'serif',
                             height: 1.6,
@@ -528,9 +528,9 @@ class _RosePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final gold = const Color(0xFFD4AF37);
+    final gold = AppColors.gold;
     final bg = isDark ? const Color(0xFF1A1508) : const Color(0xFFFDF3E0);
-    final border = isDark ? const Color(0xFF3A2E10) : const Color(0xFFCEB060);
+    final border = isDark ? AppColors.darkGoldBorder : AppColors.goldBorder;
     final dim = isDark ? const Color(0xFF5A4A30) : const Color(0xFF9A7030);
 
     canvas.drawCircle(center, radius - 2,
@@ -590,7 +590,7 @@ class _NeedlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final color = onTarget ? Colors.green : const Color(0xFFD4AF37);
+    final color = onTarget ? Colors.green : AppColors.gold;
 
     final path = Path();
     final tipY = center.dy - radius * 0.62;
@@ -635,7 +635,7 @@ class _LissajousPainter extends CustomPainter {
 
     // Draw the full path faintly
     final pathPaint = Paint()
-      ..color = const Color(0xFFD4AF37).withOpacity(0.25)
+      ..color = AppColors.gold.withOpacity(0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
@@ -653,7 +653,7 @@ class _LissajousPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(cx + dotX, cy + dotY),
       6,
-      Paint()..color = const Color(0xFFD4AF37),
+      Paint()..color = AppColors.gold,
     );
   }
 
