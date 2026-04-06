@@ -1433,31 +1433,67 @@ class _QuickActionsCard extends StatelessWidget {
                 onTap: a.onTap,
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                   decoration: BoxDecoration(
                     color: context.surface2,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: context.border),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      a.icon,
-                      const SizedBox(height: 4),
-                      Text(a.label,
-                          style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: context.text),
-                          textAlign: TextAlign.center),
-                      const SizedBox(height: 2),
-                      Text(a.subtitle,
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontFamily: 'sans-serif',
-                              color: context.textDim),
-                          textAlign: TextAlign.center),
-                    ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Gold accent strip at top
+                        Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.gold.withOpacity(0.6),
+                                AppColors.goldLight.withOpacity(0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Circular icon background
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.gold.withOpacity(
+                                      context.isDark ? 0.15 : 0.12),
+                                  border: Border.all(
+                                    color: AppColors.gold.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Center(child: a.icon),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(a.label,
+                                  style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.text),
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 2),
+                              Text(a.subtitle,
+                                  style: TextStyle(
+                                      fontSize: 8,
+                                      fontFamily: 'sans-serif',
+                                      color: context.textDim),
+                                  textAlign: TextAlign.center),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
