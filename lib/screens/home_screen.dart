@@ -442,48 +442,43 @@ class _HomeTab extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Sponsor Quran — icon + label, natural header style
+                  // Sponsor a Quran — pill chip style
                   GestureDetector(
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const SponsorScreen())),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.gold.withOpacity(
-                                context.isDark ? 0.15 : 0.10),
-                            border: Border.all(
-                              color: AppColors.gold.withOpacity(0.35),
-                              width: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withOpacity(
+                            context.isDark ? 0.12 : 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.gold.withOpacity(0.4),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.volunteer_activism,
+                              size: 13,
+                              color: context.isDark
+                                  ? AppColors.goldLight
+                                  : AppColors.goldDark),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Sponsor a Quran',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontFamily: 'sans-serif',
+                              fontWeight: FontWeight.w600,
+                              color: context.isDark
+                                  ? AppColors.goldLight
+                                  : AppColors.goldDark,
                             ),
                           ),
-                          child: const Center(
-                            child: Icon(Icons.volunteer_activism,
-                                size: 20, color: AppColors.gold),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('Sponsor',
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontFamily: 'sans-serif',
-                                fontWeight: FontWeight.w600,
-                                color: context.isDark
-                                    ? AppColors.goldDim
-                                    : AppColors.goldDark)),
-                        Text('Quran',
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontFamily: 'sans-serif',
-                                fontWeight: FontWeight.w600,
-                                color: context.isDark
-                                    ? AppColors.goldDim
-                                    : AppColors.goldDark)),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1433,7 +1428,7 @@ class _QuickActionsCard extends StatelessWidget {
     // coming_soon = true means placeholder — tapping shows a snackbar
     final actions = [
       (
-        icon: Icons.explore_outlined,
+        icon: Icons.explore_rounded,
         label: 'Qibla',
         subtitle: 'Find direction',
         comingSoon: false,
@@ -1441,7 +1436,7 @@ class _QuickActionsCard extends StatelessWidget {
             context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
       ),
       (
-        icon: Icons.menu_book_outlined,
+        icon: Icons.menu_book_rounded,
         label: 'Duas',
         subtitle: 'Daily supplications',
         comingSoon: false,
@@ -1451,7 +1446,7 @@ class _QuickActionsCard extends StatelessWidget {
       (
         icon: Icons.auto_stories_rounded,
         label: 'Hifz',
-        subtitle: 'Memorization tracker',
+        subtitle: 'Memorize Surahs',
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const HifzScreen())),
@@ -1489,10 +1484,10 @@ class _QuickActionsCard extends StatelessWidget {
     ];
 
     return SizedBox(
-      height: 118,
+      height: 122,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 0),
+        padding: const EdgeInsets.only(left: 16, right: 8),
         physics: const BouncingScrollPhysics(),
         itemCount: actions.length,
         itemBuilder: (ctx, i) {
@@ -1501,17 +1496,30 @@ class _QuickActionsCard extends StatelessWidget {
           return GestureDetector(
             onTap: a.onTap,
             child: Container(
-              width: 88,
+              width: 92,
               margin: EdgeInsets.only(left: i == 0 ? 0 : 8),
               decoration: BoxDecoration(
                 color: isDimmed
                     ? context.surface.withOpacity(0.6)
                     : context.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDimmed
-                      ? context.border.withOpacity(0.5)
-                      : context.border,
+                // No top border — gold strip serves as the top edge
+                border: Border(
+                  left: BorderSide(
+                    color: isDimmed
+                        ? context.border.withOpacity(0.5)
+                        : context.border,
+                  ),
+                  right: BorderSide(
+                    color: isDimmed
+                        ? context.border.withOpacity(0.5)
+                        : context.border,
+                  ),
+                  bottom: BorderSide(
+                    color: isDimmed
+                        ? context.border.withOpacity(0.5)
+                        : context.border,
+                  ),
                 ),
                 boxShadow: isDimmed ? null : AppShadows.card(context.isDark),
               ),
@@ -1586,6 +1594,8 @@ class _QuickActionsCard extends StatelessWidget {
                                     ? context.textDim.withOpacity(0.4)
                                     : context.textDim),
                             textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
