@@ -545,7 +545,7 @@ with zipfile.ZipFile(IN_ZIP, 'r') as zin, \
         if item.filename.startswith('translations/'):
             continue
         if item.filename in ('sitemap.xml', 'robots.txt', 'favicon.svg', 'icon.png',
-                             'app/index.html'):
+                             'app/index.html', 'app.html'):
             continue  # our versions already written above; don't let v10 overwrite them
         m = re.match(r'surah/[^/]+/index\.html$', item.filename)
         if m:
