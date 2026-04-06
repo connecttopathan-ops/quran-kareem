@@ -381,7 +381,7 @@ class NotificationService {
 
   // ── Ayah of the Day ────────────────────────────────────────────────────────
 
-  // IDs 100–129 reserved for ayah of the day (30 days pre-scheduled)
+  // IDs 100–464 reserved for ayah of the day (365 days pre-scheduled)
   static const int _ayahBaseId = 100;
 
   Future<void> scheduleAyahNotifications({
@@ -390,7 +390,7 @@ class NotificationService {
     required int minute,
   }) async {
     // Cancel all previously scheduled ayah notifications
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 365; i++) {
       await _plugin.cancel(_ayahBaseId + i);
     }
     if (!enabled) return;
@@ -400,7 +400,7 @@ class NotificationService {
     final startIndex = now.difference(tz.TZDateTime(tz.local, now.year, 1, 1)).inDays %
         curatedAyahs.length;
 
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 365; i++) {
       final ayah = curatedAyahs[(startIndex + i) % curatedAyahs.length];
       tz.TZDateTime scheduled = tz.TZDateTime(
           tz.local, now.year, now.month, now.day, hour, minute);
