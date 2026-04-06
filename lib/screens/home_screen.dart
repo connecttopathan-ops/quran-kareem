@@ -1389,28 +1389,28 @@ class _QuickActionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = [
       (
-        icon: Icon(Icons.explore_outlined, size: 26, color: AppColors.gold),
+        icon: Icon(Icons.explore_outlined, size: 20, color: AppColors.gold),
         label: 'Qibla',
         subtitle: 'Find direction',
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
       ),
       (
-        icon: Icon(Icons.menu_book_outlined, size: 26, color: AppColors.gold),
+        icon: Icon(Icons.menu_book_outlined, size: 20, color: AppColors.gold),
         label: 'Duas',
         subtitle: 'Daily supplications',
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const DuasScreen())),
       ),
       (
-        icon: Icon(Icons.volunteer_activism, size: 26, color: AppColors.gold),
+        icon: Icon(Icons.volunteer_activism, size: 20, color: AppColors.gold),
         label: 'Sponsor Quran',
         subtitle: 'Free Quran distribution',
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
       ),
       (
-        icon: Icon(Icons.auto_stories_rounded, size: 26, color: AppColors.gold),
+        icon: Icon(Icons.auto_stories_rounded, size: 20, color: AppColors.gold),
         label: 'Hifz',
         subtitle: 'Memorization tracker',
         onTap: () => Navigator.push(
@@ -1424,7 +1424,7 @@ class _QuickActionsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.border),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1433,11 +1433,11 @@ class _QuickActionsCard extends StatelessWidget {
               child: GestureDetector(
                 onTap: a.onTap,
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                   decoration: BoxDecoration(
                     color: context.surface2,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: context.border),
                   ),
                   child: Column(
@@ -1447,14 +1447,14 @@ class _QuickActionsCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(a.label,
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w700,
                               color: context.text),
                           textAlign: TextAlign.center),
                       const SizedBox(height: 2),
                       Text(a.subtitle,
                           style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 8,
                               fontFamily: 'sans-serif',
                               color: context.textDim),
                           textAlign: TextAlign.center),
