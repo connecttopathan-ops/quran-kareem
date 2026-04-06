@@ -416,6 +416,7 @@ class _HomeTab extends StatelessWidget {
               decoration: BoxDecoration(
                   border: Border(bottom: BorderSide(color: context.border))),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
@@ -435,9 +436,53 @@ class _HomeTab extends StatelessWidget {
                           ],
                         )),
                         const SizedBox(height: 2),
-                        Text('\u0627\u0644\u0633\u064e\u0651\u0644\u064e\u0627\u0645\u064f \u0639\u064e\u0644\u064e\u064a\u0652\u0643\u064f\u0645\u0652',
+                        Text('اَلسَّلَامُ عَلَيْكُمْ',
                             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 14,
                                 color: context.isDark ? AppColors.gold : AppColors.goldDark)),
+                      ],
+                    ),
+                  ),
+                  // Sponsor Quran — icon + label, natural header style
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SponsorScreen())),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.gold.withOpacity(
+                                context.isDark ? 0.15 : 0.10),
+                            border: Border.all(
+                              color: AppColors.gold.withOpacity(0.35),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.volunteer_activism,
+                                size: 20, color: AppColors.gold),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text('Sponsor',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontFamily: 'sans-serif',
+                                fontWeight: FontWeight.w600,
+                                color: context.isDark
+                                    ? AppColors.goldDim
+                                    : AppColors.goldDark)),
+                        Text('Quran',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontFamily: 'sans-serif',
+                                fontWeight: FontWeight.w600,
+                                color: context.isDark
+                                    ? AppColors.goldDim
+                                    : AppColors.goldDark)),
                       ],
                     ),
                   ),
@@ -1385,121 +1430,172 @@ class _QuickActionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // coming_soon = true means placeholder — tapping shows a snackbar
     final actions = [
       (
-        icon: Icon(Icons.explore_outlined, size: 20, color: AppColors.gold),
+        icon: Icons.explore_outlined,
         label: 'Qibla',
         subtitle: 'Find direction',
+        comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
       ),
       (
-        icon: Icon(Icons.menu_book_outlined, size: 20, color: AppColors.gold),
+        icon: Icons.menu_book_outlined,
         label: 'Duas',
         subtitle: 'Daily supplications',
+        comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const DuasScreen())),
       ),
       (
-        icon: Icon(Icons.volunteer_activism, size: 20, color: AppColors.gold),
-        label: 'Sponsor Quran',
-        subtitle: 'Free Quran distribution',
-        onTap: () => Navigator.push(
-            context, MaterialPageRoute(builder: (_) => const SponsorScreen())),
-      ),
-      (
-        icon: Icon(Icons.auto_stories_rounded, size: 20, color: AppColors.gold),
+        icon: Icons.auto_stories_rounded,
         label: 'Hifz',
         subtitle: 'Memorization tracker',
+        comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const HifzScreen())),
       ),
+      (
+        icon: Icons.format_list_numbered_rounded,
+        label: '99 Names',
+        subtitle: 'Asma ul Husna',
+        comingSoon: true,
+        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('99 Names of Allah — coming soon',
+                style: TextStyle(fontFamily: 'sans-serif')),
+            backgroundColor: AppColors.goldDark,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        ),
+      ),
+      (
+        icon: Icons.accessibility_new_rounded,
+        label: 'Salah',
+        subtitle: 'Perform prayer',
+        comingSoon: true,
+        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Perform Salah — coming soon',
+                style: TextStyle(fontFamily: 'sans-serif')),
+            backgroundColor: AppColors.goldDark,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        ),
+      ),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.border),
-        boxShadow: AppShadows.card(context.isDark),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: actions.map((a) {
-            return Expanded(
-              child: GestureDetector(
-                onTap: a.onTap,
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: context.surface2,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.border),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(11),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Gold accent strip at top
-                        Container(
-                          height: 3,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.gold.withOpacity(0.6),
-                                AppColors.goldLight.withOpacity(0.3),
-                              ],
+    return SizedBox(
+      height: 118,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 0),
+        physics: const BouncingScrollPhysics(),
+        itemCount: actions.length,
+        itemBuilder: (ctx, i) {
+          final a = actions[i];
+          final isDimmed = a.comingSoon;
+          return GestureDetector(
+            onTap: a.onTap,
+            child: Container(
+              width: 88,
+              margin: EdgeInsets.only(left: i == 0 ? 0 : 8),
+              decoration: BoxDecoration(
+                color: isDimmed
+                    ? context.surface.withOpacity(0.6)
+                    : context.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDimmed
+                      ? context.border.withOpacity(0.5)
+                      : context.border,
+                ),
+                boxShadow: isDimmed ? null : AppShadows.card(context.isDark),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Gold accent strip at top
+                    Container(
+                      height: 3,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDimmed
+                              ? [
+                                  context.border.withOpacity(0.4),
+                                  context.border.withOpacity(0.1),
+                                ]
+                              : [
+                                  AppColors.gold.withOpacity(0.6),
+                                  AppColors.goldLight.withOpacity(0.3),
+                                ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(4, 10, 4, 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Circular icon background
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDimmed
+                                  ? context.border.withOpacity(0.15)
+                                  : AppColors.gold.withOpacity(
+                                      context.isDark ? 0.15 : 0.12),
+                              border: Border.all(
+                                color: isDimmed
+                                    ? context.border.withOpacity(0.3)
+                                    : AppColors.gold.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(a.icon,
+                                  size: 20,
+                                  color: isDimmed
+                                      ? context.textDim.withOpacity(0.5)
+                                      : AppColors.gold),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Circular icon background
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.gold.withOpacity(
-                                      context.isDark ? 0.15 : 0.12),
-                                  border: Border.all(
-                                    color: AppColors.gold.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Center(child: a.icon),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(a.label,
-                                  style: TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: context.text),
-                                  textAlign: TextAlign.center),
-                              const SizedBox(height: 2),
-                              Text(a.subtitle,
-                                  style: TextStyle(
-                                      fontSize: 8,
-                                      fontFamily: 'sans-serif',
-                                      color: context.textDim),
-                                  textAlign: TextAlign.center),
-                            ],
+                          const SizedBox(height: 7),
+                          Text(a.label,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDimmed
+                                      ? context.textDim.withOpacity(0.5)
+                                      : context.text),
+                              textAlign: TextAlign.center),
+                          const SizedBox(height: 2),
+                          Text(
+                            isDimmed ? 'Coming soon' : a.subtitle,
+                            style: TextStyle(
+                                fontSize: 8,
+                                fontFamily: 'sans-serif',
+                                color: isDimmed
+                                    ? context.textDim.withOpacity(0.4)
+                                    : context.textDim),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
