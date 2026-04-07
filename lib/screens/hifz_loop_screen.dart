@@ -153,8 +153,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
     // Load translation from bundled asset (selected language, fallback 'en')
     final langCode = widget.langCode;
-    // ur-roman is not a translation — map to 'en' if it's set as the lang
-    final assetLang = (langCode == 'ur-roman') ? 'en' : langCode;
+    final assetLang = langCode;
     try {
       final raw =
           await rootBundle.loadString('assets/translations/$assetLang.json');
