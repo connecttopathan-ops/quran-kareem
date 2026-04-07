@@ -49,6 +49,13 @@ android {
             shrinkResources false
         }
     }
+
+    // Required for 16 KB memory page size support (mandatory for Google Play)
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 flutter {
