@@ -871,7 +871,7 @@ class _PrayerGridState extends State<_PrayerGrid>
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.only(left: 14),
-            child: Text('at ${widget.pt.sunriseStr} · pray 2 rak. nafl',
+            child: Text('at ${widget.pt.sunriseStr}',
               style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
           ),
         ],
