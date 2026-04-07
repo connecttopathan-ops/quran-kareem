@@ -851,6 +851,12 @@ class _PrayerGridState extends State<_PrayerGrid>
     final sunriseWindowEnd = sunriseTime.add(const Duration(hours: 1));
     final inSunriseWindow = !beforeSunrise && now.isBefore(sunriseWindowEnd);
 
+    Widget blinkingDot() => FadeTransition(
+      opacity: _blinkAnim,
+      child: Container(width: 8, height: 8,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
+    );
+
     // State 1: After Fajr, before Sunrise — countdown to sunrise
     if (afterFajrWindow && beforeSunrise) {
       final until = sunriseTime.difference(now);
@@ -862,11 +868,10 @@ class _PrayerGridState extends State<_PrayerGrid>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Container(width: 8, height: 8,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF5A623))),
+            blinkingDot(),
             const SizedBox(width: 6),
             Text('Sunrise in ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: Color(0xFFE8920A), fontWeight: FontWeight.w700)),
+            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 3),
           Padding(
@@ -884,11 +889,10 @@ class _PrayerGridState extends State<_PrayerGrid>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Container(width: 8, height: 8,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF5A623))),
+            blinkingDot(),
             const SizedBox(width: 6),
             Text('Sunrise was at ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: Color(0xFFE8920A), fontWeight: FontWeight.w700)),
+            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 3),
           Padding(
@@ -905,11 +909,7 @@ class _PrayerGridState extends State<_PrayerGrid>
 
     // Normal: blinking gold dot + next prayer countdown
     return Row(children: [
-      FadeTransition(
-        opacity: _blinkAnim,
-        child: Container(width: 8, height: 8,
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
-      ),
+      blinkingDot(),
       const SizedBox(width: 6),
       Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
       Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
