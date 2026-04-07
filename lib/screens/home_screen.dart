@@ -848,11 +848,10 @@ class _PrayerGridState extends State<_PrayerGrid>
     final now = DateTime.now();
     final afterFajrWindow = currentPrayer == 'Fajr';
     final beforeSunrise = now.isBefore(sunriseTime);
-    final ishraqEnd = sunriseTime.add(const Duration(minutes: 15));
-    final inIshraqWindow = !beforeSunrise && now.isBefore(ishraqEnd);
-    final afterIshraq = !beforeSunrise && !inIshraqWindow;
+    final sunriseWindowEnd = sunriseTime.add(const Duration(hours: 1));
+    final inSunriseWindow = !beforeSunrise && now.isBefore(sunriseWindowEnd);
 
-    // State 1: After Fajr, before Sunrise
+    // State 1: After Fajr, before Sunrise — countdown to sunrise
     if (afterFajrWindow && beforeSunrise) {
       final until = sunriseTime.difference(now);
       final h = until.inHours;
@@ -872,85 +871,50 @@ class _PrayerGridState extends State<_PrayerGrid>
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.only(left: 14),
-            child: Text.rich(TextSpan(children: [
-              TextSpan(text: 'Ishraq at ', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
-              TextSpan(text: widget.pt.sunriseStr, style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: Color(0xFFE8920A), fontWeight: FontWeight.w600)),
-              TextSpan(text: ' · pray 2 rak. nafl', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
-            ])),
+            child: Text('at ${widget.pt.sunriseStr} · pray 2 rak. nafl',
+              style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
           ),
         ],
       );
     }
 
-    // State 2: Ishraq window (0–15 min after sunrise)
-    if (afterFajrWindow && inIshraqWindow) {
-      final until = ishraqEnd.difference(now);
-      final m = until.inMinutes % 60;
-      final s = until.inSeconds % 60;
-      final cd = '${m}m ${s}s';
-      final progress = (1.0 - until.inSeconds / (15 * 60)).clamp(0.0, 1.0);
+    // State 2: 0–60 min after sunrise — show sunrise time + next prayer
+    if (afterFajrWindow && inSunriseWindow) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
             Container(width: 8, height: 8,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF27AE60))),
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFF5A623))),
             const SizedBox(width: 6),
-            Text('Ishraq closes in ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: Color(0xFF27AE60), fontWeight: FontWeight.w700)),
+            Text('Sunrise was at ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
+            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: Color(0xFFE8920A), fontWeight: FontWeight.w700)),
           ]),
-          const SizedBox(height: 5),
+          const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.only(left: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: const Color(0xFFE8D4A0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF27AE60)),
-                    minHeight: 3,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text.rich(TextSpan(children: [
-                  TextSpan(text: 'Sunrise ${widget.pt.sunriseStr} · ', style: TextStyle(fontSize: 7.5, fontFamily: 'sans-serif', color: context.textDim)),
-                  TextSpan(text: 'Pray 2 rak. Ishraq now', style: const TextStyle(fontSize: 7.5, fontFamily: 'sans-serif', color: Color(0xFF27AE60), fontWeight: FontWeight.w600)),
-                ])),
-              ],
-            ),
+            child: Row(children: [
+              Text('Next: ', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
+              Text(next, style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text(' in $countdown', style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
+            ]),
           ),
         ],
       );
     }
 
-    // State 3 / Normal: gold dot next prayer countdown
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(children: [
-          FadeTransition(
-            opacity: _blinkAnim,
-            child: Container(width: 8, height: 8,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
-          ),
-          const SizedBox(width: 6),
-          Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-          Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-          Text(' in $countdown', style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-        ]),
-        if (afterFajrWindow && afterIshraq) ...[
-          const SizedBox(height: 3),
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: Text('Sunrise was at ${widget.pt.sunriseStr}',
-              style: TextStyle(fontSize: 7.5, fontFamily: 'sans-serif', color: context.textDim, fontStyle: FontStyle.italic)),
-          ),
-        ],
-      ],
-    );
+    // Normal: blinking gold dot + next prayer countdown
+    return Row(children: [
+      FadeTransition(
+        opacity: _blinkAnim,
+        child: Container(width: 8, height: 8,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
+      ),
+      const SizedBox(width: 6),
+      Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
+      Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+      Text(' in $countdown', style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+    ]);
   }
 
   Widget _buildPopup(BuildContext context, String prayerName) {

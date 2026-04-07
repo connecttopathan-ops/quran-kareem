@@ -66,26 +66,20 @@
   .hint { text-align: center; font-size: 8px; color: rgba(154,128,96,0.7); font-family: sans-serif; margin-bottom: 7px; }
   .next-row { display: flex; align-items: center; gap: 6px; padding: 6px 0 0; }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dot-gold { background: #CBA830; }
+  .dot-gold { background: #CBA830; animation: blink 1.2s ease-in-out infinite; }
   .dot-sunrise { background: #F5A623; }
-  .dot-ishraq { background: #27AE60; }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.15; } }
   .next-text { font-size: 10px; font-family: sans-serif; color: #9A8060; }
   .next-highlight { font-size: 10px; font-family: sans-serif; font-weight: 700; }
   .gold { color: #CBA830; }
   .orange { color: #E8920A; }
-  .green { color: #27AE60; }
-  .sunrise-sub { font-size: 8.5px; font-family: sans-serif; color: #9A8060; margin-top: 3px; padding-left: 14px; }
-  .sunrise-sub span { color: #E8920A; font-weight: 600; }
-  .ishraq-bar-wrap { margin-top: 5px; padding-left: 14px; }
-  .ishraq-bar-bg { height: 3px; background: #E8D4A0; border-radius: 2px; overflow: hidden; width: 100%; }
-  .ishraq-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #27AE60, #82E0AA); }
-  .ishraq-label { font-size: 7.5px; font-family: sans-serif; color: #9A8060; margin-top: 2px; }
-  .ishraq-label span { color: #27AE60; font-weight: 600; }
-  .state3-note { font-size: 7.5px; font-family: sans-serif; color: #9A8060; margin-top: 3px; padding-left: 14px; font-style: italic; }
+  .sub-row { font-size: 8.5px; font-family: sans-serif; color: #9A8060; margin-top: 3px; padding-left: 14px; }
+  .sub-row .gold { font-weight: 600; font-size: 8.5px; }
 </style>
 </head>
 <body>
 
+<!-- STATE 1: After Fajr, before Sunrise -->
 <div>
   <div class="label">STATE 1 — After Fajr · Before Sunrise</div>
   <div class="phone">
@@ -123,14 +117,15 @@
           <span class="next-text">Sunrise in</span>
           <span class="next-highlight orange">1h 23m 47s</span>
         </div>
-        <div class="sunrise-sub">Ishraq begins at <span>6:10 AM</span> · pray 2 rak. nafl</div>
+        <div class="sub-row">at 6:10 AM · pray 2 rak. nafl</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- STATE 2: 0–60 min after Sunrise -->
 <div>
-  <div class="label">STATE 2 — Ishraq Window · 0–15 min after Sunrise</div>
+  <div class="label">STATE 2 — 0–60 min after Sunrise</div>
   <div class="phone">
     <div class="card">
       <div class="card-header">
@@ -162,21 +157,19 @@
         </div>
         <div class="hint">✦ Tap a prayer to see full rakah breakdown ✦</div>
         <div class="next-row">
-          <div class="dot dot-ishraq"></div>
-          <span class="next-text">Ishraq closes in</span>
-          <span class="next-highlight green">8m 14s</span>
+          <div class="dot dot-sunrise"></div>
+          <span class="next-text">Sunrise was at</span>
+          <span class="next-highlight orange">6:10 AM</span>
         </div>
-        <div class="ishraq-bar-wrap">
-          <div class="ishraq-bar-bg"><div class="ishraq-bar-fill" style="width: 45%;"></div></div>
-          <div class="ishraq-label">Sunrise was at 6:10 AM · <span>Pray 2 rak. Ishraq now</span></div>
-        </div>
+        <div class="sub-row">Next: <span class="gold">Dhuhr in 5h 42m 30s</span></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- STATE 3: Normal (60+ min after Sunrise) -->
 <div>
-  <div class="label">STATE 3 — After Ishraq · Normal day resumes</div>
+  <div class="label">STATE 3 — Normal (60+ min after Sunrise)</div>
   <div class="phone">
     <div class="card">
       <div class="card-header">
@@ -210,9 +203,8 @@
         <div class="next-row">
           <div class="dot dot-gold"></div>
           <span class="next-text">Next:</span>
-          <span class="next-highlight gold">Dhuhr in 5h 12m 30s</span>
+          <span class="next-highlight gold">Dhuhr in 4h 12m 30s</span>
         </div>
-        <div class="state3-note">Sunrise was at 6:10 AM</div>
       </div>
     </div>
   </div>
