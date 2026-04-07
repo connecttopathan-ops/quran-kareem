@@ -67,12 +67,15 @@ class PrayerTimes {
   final String fajrStr, dhuhrStr, asrStr, maghribStr, ishaStr;
   final String nextPrayerName;
   final Duration timeUntilNext;
+  final String sunriseStr;
+  final DateTime sunriseTime;
 
   const PrayerTimes({
     required this.lat, required this.lng, required this.cityName,
     required this.calcMethod, required this.fajrStr, required this.dhuhrStr,
     required this.asrStr, required this.maghribStr, required this.ishaStr,
     required this.nextPrayerName, required this.timeUntilNext,
+    required this.sunriseStr, required this.sunriseTime,
   });
 }
 
@@ -371,6 +374,7 @@ class LocationService extends ChangeNotifier {
     final double asrHA = _deg(acos(asrCosT)) / 15;
 
     // ── Prayer hours (local device time, decimal) ────────────────────────────
+    final double sunriseHour  = midday - ha(-0.833);
     final double fajrHour    = midday - ha(-fajrAngle);
     final double dhuhrHour   = midday;
     final double asrHour     = midday + asrHA;
@@ -415,11 +419,14 @@ class LocationService extends ChangeNotifier {
       untilNext = toDateTime(fajrHour).add(const Duration(days: 1)).difference(now);
     }
 
+    final sunriseDateTime = toDateTime(sunriseHour);
+
     return PrayerTimes(
       lat: lat, lng: lng, cityName: city, calcMethod: _calcMethodId,
       fajrStr: fmt(times[0]), dhuhrStr: fmt(times[1]), asrStr: fmt(times[2]),
       maghribStr: fmt(times[3]), ishaStr: fmt(times[4]),
       nextPrayerName: nextName, timeUntilNext: untilNext,
+      sunriseStr: fmt(sunriseDateTime), sunriseTime: sunriseDateTime,
     );
   }
 
