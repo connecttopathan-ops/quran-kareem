@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunrise Countdown Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    font-family: -apple-system, 'Georgia', serif;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .phone {
+    width: 300px;
+    background: #F9F3E8;
+    border-radius: 40px;
+    padding: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 8px solid #222;
+  }
+  .label {
+    color: white;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-family: sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+  .card {
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid #CEB060;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(203,168,48,0.10);
+  }
+  .card-header {
+    background: linear-gradient(135deg, #f5e8c4, #edd99e);
+    padding: 10px 14px 8px;
+  }
+  .islamic-label { font-size: 7px; letter-spacing: 2px; color: #8B6914; font-family: sans-serif; font-weight: 600; }
+  .date-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .date-num { font-size: 28px; font-weight: 700; color: #2a1e08; line-height: 1; font-family: Georgia, serif; }
+  .date-month { font-size: 14px; color: #8B6914; font-style: italic; font-family: Georgia, serif; }
+  .date-year { font-size: 10px; color: #9a7030; font-family: sans-serif; }
+  .ar-date { text-align: right; font-size: 24px; color: #8B6914; }
+  .ar-month { font-size: 13px; color: #9a7030; }
+  .greg { font-size: 10px; color: #9a7030; font-family: sans-serif; }
+  .prayer-section { background: rgba(255,255,255,0.85); padding: 10px 14px 12px; }
+  .prayer-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .prayer-label { font-size: 7px; letter-spacing: 2px; color: #8B6914; font-family: sans-serif; font-weight: 600; }
+  .location-chip { font-size: 9px; color: #8B6914; border: 1px solid #D4C090; padding: 2px 8px; border-radius: 20px; font-family: sans-serif; }
+  .prayers { display: flex; gap: 4px; margin-bottom: 8px; }
+  .prayer { flex: 1; background: rgba(203,168,48,0.08); border-radius: 8px; border: 1px solid #D4C090; padding: 6px 2px; text-align: center; }
+  .prayer.active { background: #f5e8cc; border: 2px solid #CBA830; }
+  .prayer-name { font-size: 7px; color: #9A8060; font-family: sans-serif; display: block; margin-bottom: 2px; }
+  .prayer.active .prayer-name { color: #2a1e08; font-weight: 700; }
+  .prayer-time { font-size: 11px; font-weight: 700; color: #1A1208; font-family: Georgia, serif; display: block; }
+  .prayer-rak { font-size: 8px; color: #9A8060; font-family: sans-serif; background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 3px; display: inline-block; margin-top: 3px; }
+  .hint { text-align: center; font-size: 8px; color: rgba(154,128,96,0.7); font-family: sans-serif; margin-bottom: 7px; }
+  .next-row { display: flex; align-items: center; gap: 6px; padding: 6px 0 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-gold { background: #CBA830; }
+  .dot-sunrise { background: #F5A623; }
+  .dot-ishraq { background: #27AE60; }
+  .next-text { font-size: 10px; font-family: sans-serif; color: #9A8060; }
+  .next-highlight { font-size: 10px; font-family: sans-serif; font-weight: 700; }
+  .gold { color: #CBA830; }
+  .orange { color: #E8920A; }
+  .green { color: #27AE60; }
+  .sunrise-sub { font-size: 8.5px; font-family: sans-serif; color: #9A8060; margin-top: 3px; padding-left: 14px; }
+  .sunrise-sub span { color: #E8920A; font-weight: 600; }
+  .ishraq-bar-wrap { margin-top: 5px; padding-left: 14px; }
+  .ishraq-bar-bg { height: 3px; background: #E8D4A0; border-radius: 2px; overflow: hidden; width: 100%; }
+  .ishraq-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #27AE60, #82E0AA); }
+  .ishraq-label { font-size: 7.5px; font-family: sans-serif; color: #9A8060; margin-top: 2px; }
+  .ishraq-label span { color: #27AE60; font-weight: 600; }
+  .state3-note { font-size: 7.5px; font-family: sans-serif; color: #9A8060; margin-top: 3px; padding-left: 14px; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div>
+  <div class="label">STATE 1 — After Fajr · Before Sunrise</div>
+  <div class="phone">
+    <div class="card">
+      <div class="card-header">
+        <div class="islamic-label">ISLAMIC DATE</div>
+        <div class="date-row">
+          <div>
+            <div class="date-num">19</div>
+            <div class="date-month">Shawwal</div>
+            <div class="date-year">1447 AH</div>
+          </div>
+          <div style="text-align:right">
+            <div class="ar-date">١٩</div>
+            <div class="ar-month">شَوَّال</div>
+            <div class="greg">Tue, Apr 7</div>
+          </div>
+        </div>
+      </div>
+      <div class="prayer-section">
+        <div class="prayer-row-header">
+          <div class="prayer-label">PRAYER TIMES</div>
+          <div class="location-chip">📍 Dubai</div>
+        </div>
+        <div class="prayers">
+          <div class="prayer active"><span class="prayer-name">Fajr</span><span class="prayer-time">4:47</span><div><span class="prayer-rak">4 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Dhuhr</span><span class="prayer-time">12:21</span><div><span class="prayer-rak">10 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Asr</span><span class="prayer-time">3:50</span><div><span class="prayer-rak">8 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Maghrib</span><span class="prayer-time">6:38</span><div><span class="prayer-rak">5 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Isha</span><span class="prayer-time">7:51</span><div><span class="prayer-rak">13 rak.</span></div></div>
+        </div>
+        <div class="hint">✦ Tap a prayer to see full rakah breakdown ✦</div>
+        <div class="next-row">
+          <div class="dot dot-sunrise"></div>
+          <span class="next-text">Sunrise in</span>
+          <span class="next-highlight orange">1h 23m 47s</span>
+        </div>
+        <div class="sunrise-sub">Ishraq begins at <span>6:10 AM</span> · pray 2 rak. nafl</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="label">STATE 2 — Ishraq Window · 0–15 min after Sunrise</div>
+  <div class="phone">
+    <div class="card">
+      <div class="card-header">
+        <div class="islamic-label">ISLAMIC DATE</div>
+        <div class="date-row">
+          <div>
+            <div class="date-num">19</div>
+            <div class="date-month">Shawwal</div>
+            <div class="date-year">1447 AH</div>
+          </div>
+          <div style="text-align:right">
+            <div class="ar-date">١٩</div>
+            <div class="ar-month">شَوَّال</div>
+            <div class="greg">Tue, Apr 7</div>
+          </div>
+        </div>
+      </div>
+      <div class="prayer-section">
+        <div class="prayer-row-header">
+          <div class="prayer-label">PRAYER TIMES</div>
+          <div class="location-chip">📍 Dubai</div>
+        </div>
+        <div class="prayers">
+          <div class="prayer active"><span class="prayer-name">Fajr</span><span class="prayer-time">4:47</span><div><span class="prayer-rak">4 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Dhuhr</span><span class="prayer-time">12:21</span><div><span class="prayer-rak">10 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Asr</span><span class="prayer-time">3:50</span><div><span class="prayer-rak">8 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Maghrib</span><span class="prayer-time">6:38</span><div><span class="prayer-rak">5 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Isha</span><span class="prayer-time">7:51</span><div><span class="prayer-rak">13 rak.</span></div></div>
+        </div>
+        <div class="hint">✦ Tap a prayer to see full rakah breakdown ✦</div>
+        <div class="next-row">
+          <div class="dot dot-ishraq"></div>
+          <span class="next-text">Ishraq closes in</span>
+          <span class="next-highlight green">8m 14s</span>
+        </div>
+        <div class="ishraq-bar-wrap">
+          <div class="ishraq-bar-bg"><div class="ishraq-bar-fill" style="width: 45%;"></div></div>
+          <div class="ishraq-label">Sunrise was at 6:10 AM · <span>Pray 2 rak. Ishraq now</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="label">STATE 3 — After Ishraq · Normal day resumes</div>
+  <div class="phone">
+    <div class="card">
+      <div class="card-header">
+        <div class="islamic-label">ISLAMIC DATE</div>
+        <div class="date-row">
+          <div>
+            <div class="date-num">19</div>
+            <div class="date-month">Shawwal</div>
+            <div class="date-year">1447 AH</div>
+          </div>
+          <div style="text-align:right">
+            <div class="ar-date">١٩</div>
+            <div class="ar-month">شَوَّال</div>
+            <div class="greg">Tue, Apr 7</div>
+          </div>
+        </div>
+      </div>
+      <div class="prayer-section">
+        <div class="prayer-row-header">
+          <div class="prayer-label">PRAYER TIMES</div>
+          <div class="location-chip">📍 Dubai</div>
+        </div>
+        <div class="prayers">
+          <div class="prayer"><span class="prayer-name">Fajr</span><span class="prayer-time">4:47</span><div><span class="prayer-rak">4 rak.</span></div></div>
+          <div class="prayer active"><span class="prayer-name">Dhuhr</span><span class="prayer-time">12:21</span><div><span class="prayer-rak">10 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Asr</span><span class="prayer-time">3:50</span><div><span class="prayer-rak">8 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Maghrib</span><span class="prayer-time">6:38</span><div><span class="prayer-rak">5 rak.</span></div></div>
+          <div class="prayer"><span class="prayer-name">Isha</span><span class="prayer-time">7:51</span><div><span class="prayer-rak">13 rak.</span></div></div>
+        </div>
+        <div class="hint">✦ Tap a prayer to see full rakah breakdown ✦</div>
+        <div class="next-row">
+          <div class="dot dot-gold"></div>
+          <span class="next-text">Next:</span>
+          <span class="next-highlight gold">Dhuhr in 5h 12m 30s</span>
+        </div>
+        <div class="state3-note">Sunrise was at 6:10 AM</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
