@@ -103,7 +103,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'To notify you at the exact Fajr, Dhuhr, Asr, Maghrib and Isha times, Get Quran needs permission to schedule precise alarms.',
+                  'To notify you of exact prayer times, Get Quran needs permission to schedule precise alarms.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'sans-serif', fontSize: 13, height: 1.5,

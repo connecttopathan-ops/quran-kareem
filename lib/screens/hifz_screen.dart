@@ -565,10 +565,37 @@ class _SurahProgressTile extends StatelessWidget {
     required this.onTap,
   });
 
+  static const _green = Color(0xFF2E9B5E);
+
   @override
   Widget build(BuildContext context) {
     final pct = memorizedCount / surah.verses;
     final isComplete = memorizedCount == surah.verses;
+    final inProgress = !isComplete && memorizedCount > 0;
+
+    // Border: green for complete, faint gold for in-progress, default for untouched
+    final borderColor = isComplete
+        ? _green.withOpacity(0.5)
+        : inProgress
+            ? AppColors.gold.withOpacity(0.35)
+            : context.border;
+
+    // Badge bg + text
+    final badgeBg = isComplete
+        ? _green.withOpacity(0.15)
+        : inProgress
+            ? AppColors.gold.withOpacity(0.12)
+            : context.surface2;
+    final badgeTextColor = isComplete
+        ? _green
+        : inProgress
+            ? AppColors.gold
+            : context.textDim;
+
+    // Progress bar fill
+    final barColor = isComplete
+        ? _green
+        : AppColors.gold;
 
     return GestureDetector(
       onTap: onTap,
@@ -578,11 +605,7 @@ class _SurahProgressTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isComplete
-                ? AppColors.gold.withOpacity(0.5)
-                : context.border,
-          ),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           children: [
@@ -591,17 +614,14 @@ class _SurahProgressTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: isComplete
-                    ? AppColors.gold.withOpacity(0.15)
-                    : context.surface2,
+                color: badgeBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Text(
                   surah.number.toString(),
                   style: TextStyle(
-                    color:
-                        isComplete ? AppColors.gold : context.textDim,
+                    color: badgeTextColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -646,9 +666,7 @@ class _SurahProgressTile extends StatelessWidget {
                       value: pct,
                       minHeight: 5,
                       backgroundColor: context.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isComplete ? AppColors.gold : AppColors.gold.withOpacity(0.6),
-                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(barColor),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -667,7 +685,7 @@ class _SurahProgressTile extends StatelessWidget {
               isComplete
                   ? Icons.check_circle_rounded
                   : Icons.chevron_right_rounded,
-              color: isComplete ? AppColors.gold : context.textDim,
+              color: isComplete ? _green : context.textDim,
               size: 20,
             ),
           ],

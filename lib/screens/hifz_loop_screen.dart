@@ -42,9 +42,13 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
   late final Animation<double> _checkScale;
   late final Animation<double> _checkOpacity;
   bool _showCheckmark = false;
-  bool _showHint = false;
   bool _showCompletionOverlay = false;
-  Timer? _hintTimer;
+
+  // Guided walkthrough (one-time, global)
+  bool _showWelcomeCard = false;
+  int _walkthroughStep = 0; // 0=inactive, 1=mark★ tip, 2=tune⚙ tip
+  late final AnimationController _welcomeCtrl;
+  late final Animation<Offset> _welcomeSlide;
 
   // Surah metadata
   late int _surahNumber;
@@ -119,12 +123,21 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
       }
     });
 
+    _welcomeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _welcomeSlide = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _welcomeCtrl, curve: Curves.easeOutCubic));
+
     _player.playerStateStream.listen(_onPlayerState);
     _positionSub = _player.positionStream.listen(_onPosition);
     _loadPrefs();
     _loadTexts();
     _loadMemorized();
-    _loadHintState();
+    _checkWalkthrough();
   }
 
   Future<void> _loadPrefs() async {
@@ -285,18 +298,32 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
     if (mounted) setState(() => _memorized = mem);
   }
 
-  Future<void> _loadHintState() async {
+  Future<void> _checkWalkthrough() async {
     final prefs = await SharedPreferences.getInstance();
-    final shown = prefs.getBool('hifz_hint_shown_$_surahNumber') ?? false;
-    if (!shown && mounted) {
-      // Small delay so screen has rendered first
-      await Future.delayed(const Duration(milliseconds: 1200));
-      if (!mounted) return;
-      setState(() => _showHint = true);
-      await prefs.setBool('hifz_hint_shown_$_surahNumber', true);
-      _hintTimer = Timer(const Duration(seconds: 4), () {
-        if (mounted) setState(() => _showHint = false);
-      });
+    final done = prefs.getBool('hifz_walkthrough_done') ?? false;
+    if (done || !mounted) return;
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    setState(() => _showWelcomeCard = true);
+    _welcomeCtrl.forward();
+  }
+
+  Future<void> _onWalkthroughBegin() async {
+    await _welcomeCtrl.reverse();
+    if (!mounted) return;
+    setState(() {
+      _showWelcomeCard = false;
+      _walkthroughStep = 1;
+    });
+  }
+
+  Future<void> _nextWalkthroughStep() async {
+    if (_walkthroughStep == 1) {
+      setState(() => _walkthroughStep = 2);
+    } else if (_walkthroughStep == 2) {
+      setState(() => _walkthroughStep = 0);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hifz_walkthrough_done', true);
     }
   }
 
@@ -457,11 +484,11 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
   @override
   void dispose() {
-    _hintTimer?.cancel();
     _positionSub?.cancel();
     _player.dispose();
     _waveController.dispose();
     _checkController.dispose();
+    _welcomeCtrl.dispose();
     super.dispose();
   }
 
@@ -526,50 +553,219 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
               _buildControls(isMemorized),
             ],
           ),
-          if (_showHint) _buildHintTooltip(),
           if (_showCheckmark) _buildCheckmarkBurst(),
+          if (_showWelcomeCard) _buildWelcomeOverlay(),
+          if (_walkthroughStep == 1) _buildMarkTooltip(),
+          if (_walkthroughStep == 2) _buildRepeatTooltip(),
           if (_showCompletionOverlay) _buildCompletionOverlay(),
         ],
       ),
     );
   }
 
-  // ── Hint tooltip ─────────────────────────────────────────────────────────────
-  Widget _buildHintTooltip() {
-    return Positioned(
-      bottom: 108,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: AnimatedOpacity(
-          opacity: _showHint ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 400),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.gold,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3)),
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.star_outline_rounded, color: Colors.white, size: 15),
-                SizedBox(width: 6),
-                Text(
-                  'Tap ★ to mark this verse memorized',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+  // ── Walkthrough: welcome card ─────────────────────────────────────────────────
+  Widget _buildWelcomeOverlay() {
+    return Positioned.fill(
+      child: Material(
+        color: Colors.black.withOpacity(0.45),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: SlideTransition(
+            position: _welcomeSlide,
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+              decoration: BoxDecoration(
+                color: context.isDark ? const Color(0xFF1E1608) : const Color(0xFFF9F3E8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 24, offset: Offset(0, -8))],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36, height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Text('How Hifz works',
+                    style: TextStyle(
+                      fontFamily: 'serif', fontSize: 17, fontWeight: FontWeight.w700,
+                      color: context.text,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _walkthroughTip(Icons.star_border_rounded,    'Tap ★ once you\'ve memorized a verse'),
+                  const SizedBox(height: 8),
+                  _walkthroughTip(Icons.repeat_one_rounded,     'Each verse loops automatically — 3× by default'),
+                  const SizedBox(height: 8),
+                  _walkthroughTip(Icons.tune_rounded,           'Tap ⚙ to change repeats, speed, or auto-advance'),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _textLoading ? context.surface2 : AppColors.gold,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                        disabledBackgroundColor: context.surface2,
+                      ),
+                      onPressed: _textLoading ? null : _onWalkthroughBegin,
+                      child: _textLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 14, height: 14,
+                                  child: CircularProgressIndicator(
+                                    color: context.textDim, strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 10),
+                                Text('Loading verse…',
+                                  style: TextStyle(fontSize: 14, color: context.textDim,
+                                    fontFamily: 'sans-serif'),
+                                ),
+                              ],
+                            )
+                          : const Text('Start Memorizing',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
+                                fontFamily: 'sans-serif')),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _walkthroughTip(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(icon, color: AppColors.gold, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text,
+            style: TextStyle(fontSize: 13, color: context.textDim,
+              fontFamily: 'sans-serif', height: 1.4),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Walkthrough: step 1 — mark ★ tooltip ─────────────────────────────────────
+  Widget _buildMarkTooltip() {
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _nextWalkthroughStep,
+        child: Stack(
+          children: [
+            Positioned(
+              bottom: 148,
+              right: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('Tap ★ to mark this verse memorized',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontSize: 12,
+                            fontWeight: FontWeight.w600, fontFamily: 'sans-serif', height: 1.4),
+                        ),
+                        SizedBox(height: 4),
+                        Text('Tap anywhere to continue',
+                          style: TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 28),
+                    child: Icon(Icons.arrow_drop_down_rounded, color: AppColors.gold, size: 30),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Walkthrough: step 2 — tune ⚙ tooltip ─────────────────────────────────────
+  Widget _buildRepeatTooltip() {
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _nextWalkthroughStep,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 4,
+              right: 8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 14),
+                    child: Icon(Icons.arrow_drop_up_rounded, color: AppColors.gold, size: 30),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text('Tap ⚙ to adjust repeats per verse',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white, fontSize: 12,
+                            fontWeight: FontWeight.w600, fontFamily: 'sans-serif', height: 1.4),
+                        ),
+                        SizedBox(height: 4),
+                        Text('Tap anywhere to dismiss',
+                          style: TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
