@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../services/notification_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class DailyRemindersScreen extends StatefulWidget {
   const DailyRemindersScreen({super.key});
