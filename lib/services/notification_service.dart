@@ -181,19 +181,28 @@ class NotificationService {
   /// always true on older Android and iOS.
   Future<bool> hasExactAlarmPermission() async {
     if (defaultTargetPlatform != TargetPlatform.android) return true;
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin == null) return true;
-    final canSchedule = await androidPlugin.canScheduleExactNotifications();
-    return canSchedule ?? true;
+    try {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin == null) return false; // can't check on Android → assume not granted
+      final canSchedule = await androidPlugin.canScheduleExactNotifications();
+      return canSchedule ?? false; // null → assume not granted, show dialog
+    } catch (_) {
+      return true; // unexpected error → don't block the user
+    }
   }
 
   /// Opens the Android Alarms & Reminders settings page for this app.
   Future<void> openExactAlarmSettings() async {
     if (defaultTargetPlatform != TargetPlatform.android) return;
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    await androidPlugin?.requestExactAlarmsPermission();
+    try {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestExactAlarmsPermission();
+    } catch (_) {
+      // Fallback: open general app settings if specific page unavailable
+      await openAppSettings();
+    }
   }
 
 
