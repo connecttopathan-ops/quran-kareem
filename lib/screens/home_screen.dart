@@ -31,16 +31,18 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   Timer? _clockTimer;
   LocationService? _locationService;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _ayahKey = GlobalKey();
+  bool _pendingReschedule = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -51,8 +53,21 @@ class _HomeScreenState extends State<HomeScreen> {
         _checkFirstLaunchLocation();
         // Handle tap if app was launched from notification
         _onNotificationTap();
+        // Check exact alarm permission if notifications are enabled
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) _checkExactAlarmPermission();
+        });
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _pendingReschedule) {
+      _pendingReschedule = false;
+      final pt = _locationService?.prayerTimes;
+      if (pt != null) _scheduleNotifications(pt);
+    }
   }
 
   void _onNotificationTap() {
@@ -72,11 +87,118 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     NotificationService.notificationPayload.removeListener(_onNotificationTap);
     _scrollController.dispose();
     _locationService?.removeListener(_onPrayerTimesUpdated);
     _clockTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkExactAlarmPermission() async {
+    final prefs = await SharedPreferences.getInstance();
+    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
+    final morningOn = prefs.getBool('reminder_morning_enabled') ?? true;
+    final eveningOn = prefs.getBool('reminder_evening_enabled') ?? true;
+    final ayahOn = prefs.getBool('ayah_notification_enabled') ?? true;
+    final notificationsEnabled =
+        modeStr != 'off' || morningOn || eveningOn || ayahOn;
+    if (!notificationsEnabled) return;
+
+    final svc = NotificationService();
+    final hasExact = await svc.hasExactAlarmPermission();
+    if (hasExact || !mounted) return;
+
+    final result = await _showExactAlarmRationale();
+    if (result == _ExactAlarmHomeResult.allow) {
+      _pendingReschedule = true;
+      await svc.openExactAlarmSettings();
+    }
+  }
+
+  Future<_ExactAlarmHomeResult> _showExactAlarmRationale() async {
+    final result = await showDialog<_ExactAlarmHomeResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1608) : const Color(0xFFF9F3E8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.gold.withOpacity(0.4)),
+                  ),
+                  child: const Icon(Icons.notifications_active_outlined,
+                      color: AppColors.gold, size: 28),
+                ),
+                const SizedBox(height: 16),
+                Text('Accurate Prayer Times',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF2A1E08),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'To notify you at the exact Fajr, Dhuhr, Asr, Maghrib and Isha times, Get Quran needs permission to schedule precise alarms.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif', fontSize: 13, height: 1.5,
+                    color: isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF5A4A2A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Without this, adhan notifications may arrive a few minutes late.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif', fontSize: 11,
+                    color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, _ExactAlarmHomeResult.allow),
+                    child: const Text('Allow Precise Times',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, _ExactAlarmHomeResult.notNow),
+                  child: Text('Not Now',
+                    style: TextStyle(
+                      fontSize: 13, fontFamily: 'sans-serif',
+                      color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return result ?? _ExactAlarmHomeResult.notNow;
   }
 
   @override
@@ -2134,3 +2256,5 @@ class _BookContinueCardState extends State<_BookContinueCard> {
     );
   }
 }
+
+enum _ExactAlarmHomeResult { allow, notNow }
