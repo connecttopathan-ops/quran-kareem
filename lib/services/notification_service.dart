@@ -176,6 +176,20 @@ class NotificationService {
     return status.isGranted || status.isLimited;
   }
 
+  /// Returns true if SCHEDULE_EXACT_ALARM is granted, or if running on iOS /
+  /// Android < 12 where the permission is not required.
+  Future<bool> hasExactAlarmPermission() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+    final status = await Permission.scheduleExactAlarm.status;
+    return status.isGranted;
+  }
+
+  /// Opens the system Alarms & Reminders settings page for this app so the
+  /// user can grant SCHEDULE_EXACT_ALARM.
+  Future<void> openExactAlarmSettings() async {
+    await Permission.scheduleExactAlarm.request();
+  }
+
 
   Future<void> scheduleAllPrayers(
     Map<String, String> prayerTimes,
@@ -221,7 +235,7 @@ class NotificationService {
         "It's time for $name",
         scheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
@@ -354,7 +368,7 @@ class NotificationService {
         'Start your morning with the words of Allah',
         morning,
         details,
-        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
@@ -371,7 +385,7 @@ class NotificationService {
         'End your day with the words of Allah',
         evening,
         details,
-        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
@@ -423,7 +437,7 @@ class NotificationService {
           ),
           iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
         ),
-        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'ayah_of_the_day',

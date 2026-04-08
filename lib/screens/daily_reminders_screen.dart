@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../services/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DailyRemindersScreen extends StatefulWidget {
   const DailyRemindersScreen({super.key});
@@ -10,7 +11,9 @@ class DailyRemindersScreen extends StatefulWidget {
   State<DailyRemindersScreen> createState() => _DailyRemindersScreenState();
 }
 
-class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
+class _DailyRemindersScreenState extends State<DailyRemindersScreen>
+    with WidgetsBindingObserver {
+  bool _pendingSave = false;
   // Morning reminder
   bool _morningEnabled = true;
   TimeOfDay _morningTime = const TimeOfDay(hour: 6, minute: 0);
@@ -26,7 +29,23 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPrefs();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When user returns from Android system settings after granting permission
+    if (state == AppLifecycleState.resumed && _pendingSave) {
+      _pendingSave = false;
+      _save();
+    }
   }
 
   Future<void> _loadPrefs() async {
@@ -49,6 +68,91 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
         minute: prefs.getInt('ayah_notification_minute') ?? 0,
       );
     });
+  }
+
+  Future<_ExactAlarmResult> _showExactAlarmRationale() async {
+    final result = await showDialog<_ExactAlarmResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: isDark ? const Color(0xFF1E1608) : const Color(0xFFF9F3E8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.gold.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.gold.withOpacity(0.4)),
+                  ),
+                  child: const Icon(Icons.notifications_active_outlined,
+                      color: AppColors.gold, size: 28),
+                ),
+                const SizedBox(height: 16),
+                Text('Accurate Prayer Times',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF2A1E08),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'To notify you at the exact Fajr, Dhuhr, Asr, Maghrib and Isha times, Get Quran needs permission to schedule precise alarms.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif', fontSize: 13, height: 1.5,
+                    color: isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF5A4A2A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Without this, notifications may arrive a few minutes late.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif', fontSize: 11,
+                    color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.allow),
+                    child: const Text('Allow Precise Times',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.notNow),
+                  child: Text('Not Now',
+                    style: TextStyle(
+                      fontSize: 13, fontFamily: 'sans-serif',
+                      color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return result ?? _ExactAlarmResult.notNow;
   }
 
   Future<void> _pickTime(TimeOfDay current, ValueChanged<TimeOfDay> onPicked) async {
@@ -78,6 +182,22 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen> {
   }
 
   Future<void> _save() async {
+    // Check exact alarm permission if any notification is enabled
+    final anyEnabled = _morningEnabled || _eveningEnabled || _ayahEnabled;
+    if (anyEnabled) {
+      final svc = NotificationService();
+      final hasExact = await svc.hasExactAlarmPermission();
+      if (!hasExact && mounted) {
+        final result = await _showExactAlarmRationale();
+        if (result == _ExactAlarmResult.allow) {
+          _pendingSave = true;
+          await svc.openExactAlarmSettings();
+          return; // will resume via didChangeAppLifecycleState
+        }
+        // 'notNow' → proceed with inexact alarms (notifications still fire, may be slightly late)
+      }
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('reminder_morning_enabled', _morningEnabled);
@@ -388,3 +508,5 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
+
+enum _ExactAlarmResult { allow, notNow }
