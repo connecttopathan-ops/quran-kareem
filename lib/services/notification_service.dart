@@ -176,18 +176,24 @@ class NotificationService {
     return status.isGranted || status.isLimited;
   }
 
-  /// Returns true if SCHEDULE_EXACT_ALARM is granted, or if running on iOS /
-  /// Android < 12 where the permission is not required.
+  /// Returns true if exact alarms are permitted.
+  /// Uses AlarmManager.canScheduleExactAlarms() on Android 12+,
+  /// always true on older Android and iOS.
   Future<bool> hasExactAlarmPermission() async {
     if (defaultTargetPlatform != TargetPlatform.android) return true;
-    final status = await Permission.scheduleExactAlarm.status;
-    return status.isGranted;
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return true;
+    final canSchedule = await androidPlugin.canScheduleExactNotifications();
+    return canSchedule ?? true;
   }
 
-  /// Opens the system Alarms & Reminders settings page for this app so the
-  /// user can grant SCHEDULE_EXACT_ALARM.
+  /// Opens the Android Alarms & Reminders settings page for this app.
   Future<void> openExactAlarmSettings() async {
-    await Permission.scheduleExactAlarm.request();
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.requestExactAlarmsPermission();
   }
 
 
