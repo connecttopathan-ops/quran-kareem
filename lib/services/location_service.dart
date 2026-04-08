@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:adhan/adhan.dart' as adhan;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -83,12 +84,16 @@ class CalcMethod {
   final String id, name;
   const CalcMethod({required this.id, required this.name});
   static const List<CalcMethod> all = [
-    CalcMethod(id: 'MWL', name: 'Muslim World League'),
-    CalcMethod(id: 'ISNA', name: 'ISNA (North America)'),
-    CalcMethod(id: 'Egyptian', name: 'Egyptian Authority'),
-    CalcMethod(id: 'Karachi', name: 'Karachi (Hanafi)'),
+    CalcMethod(id: 'MWL',       name: 'Muslim World League'),
+    CalcMethod(id: 'ISNA',      name: 'ISNA (North America)'),
+    CalcMethod(id: 'Egyptian',  name: 'Egyptian Authority'),
+    CalcMethod(id: 'Karachi',   name: 'Karachi (Hanafi)'),
     CalcMethod(id: 'UmmAlQura', name: 'Umm Al-Qura (Mecca)'),
-    CalcMethod(id: 'Tehran', name: 'Tehran Institute'),
+    CalcMethod(id: 'Dubai',     name: 'Dubai / UAE'),
+    CalcMethod(id: 'Kuwait',    name: 'Kuwait'),
+    CalcMethod(id: 'Qatar',     name: 'Qatar'),
+    CalcMethod(id: 'Singapore', name: 'Singapore'),
+    CalcMethod(id: 'Tehran',    name: 'Tehran Institute'),
   ];
 }
 
@@ -299,109 +304,17 @@ class LocationService extends ChangeNotifier {
   }
 
   PrayerTimes _calc(double lat, double lng, String city) {
+    final coordinates = adhan.Coordinates(lat, lng);
+    final pt = adhan.PrayerTimes.today(coordinates, _adhanParams());
     final now = DateTime.now();
 
-    // ── Julian Day Number for today ──────────────────────────────────────────
-    int y = now.year, m = now.month, d = now.day;
-    if (m <= 2) { y--; m += 12; }
-    final int A = y ~/ 100;
-    final int B = 2 - A + A ~/ 4;
-    final double jd = (365.25 * (y + 4716)).floor() +
-        (30.6001 * (m + 1)).floor() +
-        d.toDouble() +
-        B -
-        1524.5;
-
-    // ── Solar position (USNO low-precision formulae) ─────────────────────────
-    final double D = jd - 2451545.0; // days from J2000.0
-    final double g = _fixAngle(357.529 + 0.98560028 * D); // mean anomaly (°)
-    final double q = _fixAngle(280.459 + 0.98564736 * D); // mean longitude (°)
-    final double L = _fixAngle(
-        q + 1.915 * sin(_rad(g)) + 0.02 * sin(_rad(2 * g))); // ecliptic lon (°)
-    final double e = 23.439 - 0.00000036 * D; // obliquity of ecliptic (°)
-
-    // Right ascension (hours, 0–24)
-    double RA = _fixAngle(_deg(atan2(cos(_rad(e)) * sin(_rad(L)), cos(_rad(L))))) / 15;
-    // Declination (radians)
-    final double decl = asin(sin(_rad(e)) * sin(_rad(L)));
-    // Equation of time (hours)
-    double EqT = q / 15 - RA;
-    if (EqT > 12) EqT -= 24;
-    if (EqT < -12) EqT += 24;
-
-    // UTC offset of the device
-    final double utcOffset = now.timeZoneOffset.inMinutes / 60.0;
-
-    // Solar noon in local device time (hours)
-    final double midday = 12 - lng / 15 - EqT + utcOffset;
-
-    // ── Hour-angle helper ────────────────────────────────────────────────────
-    // Returns hours from midday to reach a given sun altitude (degrees).
-    double ha(double altDeg) {
-      double cosT = (sin(_rad(altDeg)) - sin(_rad(lat)) * sin(decl)) /
-          (cos(_rad(lat)) * cos(decl));
-      cosT = cosT.clamp(-1.0, 1.0);
-      return _deg(acos(cosT)) / 15;
-    }
-
-    // ── Fajr / Isha angles by calculation method ─────────────────────────────
-    double fajrAngle, ishaAngle;
-    bool ishaIsOffset = false;
-    int ishaOffsetMin = 0;
-    switch (_calcMethodId) {
-      case 'ISNA':
-        fajrAngle = 15.0; ishaAngle = 15.0;
-      case 'Egyptian':
-        fajrAngle = 19.5; ishaAngle = 17.5;
-      case 'Karachi':
-        fajrAngle = 18.0; ishaAngle = 18.0;
-      case 'UmmAlQura':
-        fajrAngle = 18.5; ishaAngle = 0; ishaIsOffset = true; ishaOffsetMin = 90;
-      case 'Tehran':
-        fajrAngle = 17.7; ishaAngle = 14.0;
-      default: // MWL
-        fajrAngle = 18.0; ishaAngle = 17.0;
-    }
-
-    // ── Asr altitude (shadow factor: Shafi'i = 1, Hanafi = 2) ───────────────
-    final double asrFactor = _calcMethodId == 'Karachi' ? 2.0 : 1.0;
-    final double asrAlt =
-        atan(1.0 / (asrFactor + tan((decl - _rad(lat)).abs())));
-    // Hour angle for Asr (sun above horizon at asrAlt radians)
-    double asrCosT = (sin(asrAlt) - sin(_rad(lat)) * sin(decl)) /
-        (cos(_rad(lat)) * cos(decl));
-    asrCosT = asrCosT.clamp(-1.0, 1.0);
-    final double asrHA = _deg(acos(asrCosT)) / 15;
-
-    // ── Prayer hours (local device time, decimal) ────────────────────────────
-    final double sunriseHour  = midday - ha(-0.833);
-    final double fajrHour    = midday - ha(-fajrAngle);
-    final double dhuhrHour   = midday;
-    final double asrHour     = midday + asrHA;
-    final double maghribHour = midday + ha(-0.833);
-    final double ishaHour    = ishaIsOffset
-        ? maghribHour + ishaOffsetMin / 60.0
-        : midday + ha(-ishaAngle);
-
-    // ── Convert decimal hours → local DateTime ───────────────────────────────
-    DateTime toDateTime(double hours) {
-      final int totalMins = (hours * 60).round();
-      return DateTime(
-          now.year, now.month, now.day, (totalMins ~/ 60) % 24, totalMins % 60);
-    }
-
     String fmt(DateTime t) {
-      final int h = t.hour > 12 ? t.hour - 12 : (t.hour == 0 ? 12 : t.hour);
-      return '$h:${t.minute.toString().padLeft(2, '0')} ${t.hour >= 12 ? "PM" : "AM"}';
+      final h = t.hour > 12 ? t.hour - 12 : (t.hour == 0 ? 12 : t.hour);
+      return '$h:${t.minute.toString().padLeft(2, '0')} '
+          '${t.hour >= 12 ? "PM" : "AM"}';
     }
 
-    final times = [
-      toDateTime(fajrHour),
-      toDateTime(dhuhrHour),
-      toDateTime(asrHour),
-      toDateTime(maghribHour),
-      toDateTime(ishaHour),
-    ];
+    final times = [pt.fajr, pt.dhuhr, pt.asr, pt.maghrib, pt.isha];
     const names = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     String nextName = names[0];
@@ -413,25 +326,51 @@ class LocationService extends ChangeNotifier {
         break;
       }
     }
-    // Past Isha → next is Fajr tomorrow
-    if (now.isAfter(times[4])) {
+    // Past Isha → next Fajr is tomorrow
+    if (now.isAfter(pt.isha)) {
       nextName = names[0];
-      untilNext = toDateTime(fajrHour).add(const Duration(days: 1)).difference(now);
+      untilNext = pt.fajr.add(const Duration(days: 1)).difference(now);
     }
-
-    final sunriseDateTime = toDateTime(sunriseHour);
 
     return PrayerTimes(
       lat: lat, lng: lng, cityName: city, calcMethod: _calcMethodId,
-      fajrStr: fmt(times[0]), dhuhrStr: fmt(times[1]), asrStr: fmt(times[2]),
-      maghribStr: fmt(times[3]), ishaStr: fmt(times[4]),
-      nextPrayerName: nextName, timeUntilNext: untilNext,
-      sunriseStr: fmt(sunriseDateTime), sunriseTime: sunriseDateTime,
+      fajrStr:    fmt(pt.fajr),
+      dhuhrStr:   fmt(pt.dhuhr),
+      asrStr:     fmt(pt.asr),
+      maghribStr: fmt(pt.maghrib),
+      ishaStr:    fmt(pt.isha),
+      nextPrayerName: nextName,
+      timeUntilNext:  untilNext,
+      sunriseStr:  fmt(pt.sunrise),
+      sunriseTime: pt.sunrise,
     );
   }
 
-  // ── Math helpers ─────────────────────────────────────────────────────────
-  static double _rad(double deg) => deg * pi / 180;
-  static double _deg(double rad) => rad * 180 / pi;
-  static double _fixAngle(double a) => a - 360.0 * (a / 360.0).floor();
+  adhan.CalculationParameters _adhanParams() {
+    switch (_calcMethodId) {
+      case 'ISNA':
+        return adhan.CalculationMethod.north_america.getParameters();
+      case 'Egyptian':
+        return adhan.CalculationMethod.egyptian.getParameters();
+      case 'Karachi':
+        final p = adhan.CalculationMethod.karachi.getParameters();
+        p.madhab = adhan.Madhab.hanafi;
+        return p;
+      case 'UmmAlQura':
+        return adhan.CalculationMethod.umm_al_qura.getParameters();
+      case 'Dubai':
+        return adhan.CalculationMethod.dubai.getParameters();
+      case 'Kuwait':
+        return adhan.CalculationMethod.kuwait.getParameters();
+      case 'Qatar':
+        return adhan.CalculationMethod.qatar.getParameters();
+      case 'Singapore':
+        return adhan.CalculationMethod.singapore.getParameters();
+      case 'Tehran':
+        return adhan.CalculationMethod.tehran.getParameters();
+      default: // MWL
+        return adhan.CalculationMethod.muslim_world_league.getParameters();
+    }
+  }
+
 }
