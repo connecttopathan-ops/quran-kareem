@@ -1135,9 +1135,9 @@ class _LocationSheetState extends State<_LocationSheet> {
     setState(() { _searching = true; _searchErr = null; });
     try {
       _results = await locationFromAddress(q);
-      setState(() { _searching = false; });
+      if (mounted) setState(() { _searching = false; });
     } catch (_) {
-      setState(() { _searchErr = 'City not found. Try a different spelling.'; _searching = false; });
+      if (mounted) setState(() { _searchErr = 'City not found. Try a different spelling.'; _searching = false; });
     }
   }
 
