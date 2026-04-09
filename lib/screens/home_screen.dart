@@ -98,9 +98,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _checkExactAlarmPermission() async {
     final prefs = await SharedPreferences.getInstance();
     final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
-    final morningOn = prefs.getBool('reminder_morning_enabled') ?? true;
-    final eveningOn = prefs.getBool('reminder_evening_enabled') ?? true;
-    final ayahOn = prefs.getBool('ayah_notification_enabled') ?? true;
+    final morningOn = prefs.getBool('reminder_morning_enabled') ?? false;
+    final eveningOn = prefs.getBool('reminder_evening_enabled') ?? false;
+    final ayahOn = prefs.getBool('ayah_notification_enabled') ?? false;
     final notificationsEnabled =
         modeStr != 'off' || morningOn || eveningOn || ayahOn;
     if (!notificationsEnabled) return;

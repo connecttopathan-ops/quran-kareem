@@ -437,14 +437,16 @@ class NotificationService {
         '✨ Ayah of the Day — ${ayah.surahName} ${ayah.surah}:${ayah.ayah}',
         '${ayah.translation}\n\n${ayah.message}',
         scheduled,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             _ayahChannelId,
             'Ayah of the Day',
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
-            styleInformation: BigTextStyleInformation(''),
+            styleInformation: BigTextStyleInformation(
+              '${ayah.translation}\n\n${ayah.message}',
+            ),
           ),
           iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
         ),
