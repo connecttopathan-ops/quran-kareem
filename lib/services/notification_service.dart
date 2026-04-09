@@ -80,10 +80,6 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    // Cancel all active notifications first — Android refuses to delete
-    // a channel that has a currently-visible notification.
-    await _plugin.cancelAll();
-
     // Delete old channels so they are recreated with the correct sound.
     // Android caches channel settings — must delete to update sound.
     await androidPlugin?.deleteNotificationChannel('prayer_times');
