@@ -50,6 +50,11 @@ class NotificationService {
     'Isha'
   ];
 
+  // Bump this when channel config changes (sound, importance, etc.).
+  // Channels are only deleted and recreated when this version advances —
+  // preserving any per-channel OS settings the user has customised.
+  static const int _channelVersion = 1;
+
   Future<void> init() async {
     tzdata.initializeTimeZones();
     final String timeZoneName = await FlutterTimezone.getLocalTimezone();
@@ -80,86 +85,90 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    // Delete old channels so they are recreated with the correct sound.
-    // Android caches channel settings — must delete to update sound.
-    await androidPlugin?.deleteNotificationChannel('prayer_times');
-    await androidPlugin?.deleteNotificationChannel('prayer_times_adhan');
-    await androidPlugin?.deleteNotificationChannel(_adhanMakkahChannelId);
-    await androidPlugin?.deleteNotificationChannel(_adhanMadinahChannelId);
-    await androidPlugin?.deleteNotificationChannel(_adhanFajrChannelId);
-    await androidPlugin?.deleteNotificationChannel(_vibrationChannelId);
+    // Only migrate channels when the version advances — not on every launch.
+    final prefs = await SharedPreferences.getInstance();
+    final storedVersion = prefs.getInt('notification_channel_version') ?? 0;
+    if (storedVersion < _channelVersion) {
+      // Delete legacy channel IDs from old builds and current ones so they
+      // are recreated with the correct sound / importance settings.
+      await androidPlugin?.deleteNotificationChannel('prayer_times');
+      await androidPlugin?.deleteNotificationChannel('prayer_times_adhan');
+      await androidPlugin?.deleteNotificationChannel(_adhanMakkahChannelId);
+      await androidPlugin?.deleteNotificationChannel(_adhanMadinahChannelId);
+      await androidPlugin?.deleteNotificationChannel(_adhanFajrChannelId);
+      await androidPlugin?.deleteNotificationChannel(_vibrationChannelId);
+      await androidPlugin?.deleteNotificationChannel(_reminderChannelId);
+      await androidPlugin?.deleteNotificationChannel(_ayahChannelId);
 
-    // One channel per sound — Android locks sound at channel creation time.
-    const AndroidNotificationChannel adhanMakkahChannel =
-        AndroidNotificationChannel(
-      _adhanMakkahChannelId,
-      'Prayer Times (Makkah Adhan)',
-      description: 'Makkah adhan at prayer times',
-      importance: Importance.max,
-      playSound: true,
-      sound: RawResourceAndroidNotificationSound('adhan_makkah'),
-      enableVibration: true,
-    );
-    const AndroidNotificationChannel adhanMadinahChannel =
-        AndroidNotificationChannel(
-      _adhanMadinahChannelId,
-      'Prayer Times (Madinah Adhan)',
-      description: 'Madinah adhan at prayer times',
-      importance: Importance.max,
-      playSound: true,
-      sound: RawResourceAndroidNotificationSound('adhan_madinah'),
-      enableVibration: true,
-    );
-    const AndroidNotificationChannel adhanFajrChannel =
-        AndroidNotificationChannel(
-      _adhanFajrChannelId,
-      'Prayer Times (Fajr Adhan)',
-      description: 'Fajr adhan at prayer times',
-      importance: Importance.max,
-      playSound: true,
-      sound: RawResourceAndroidNotificationSound('adhan_makkah_fajr'),
-      enableVibration: true,
-    );
-    const AndroidNotificationChannel vibrationChannel =
-        AndroidNotificationChannel(
-      _vibrationChannelId,
-      _vibrationChannelName,
-      description: 'Vibration alert at prayer times',
-      importance: Importance.high,
-      playSound: false,
-      enableVibration: true,
-    );
+      // One channel per sound — Android locks sound at channel creation time.
+      const AndroidNotificationChannel adhanMakkahChannel =
+          AndroidNotificationChannel(
+        _adhanMakkahChannelId,
+        'Prayer Times (Makkah Adhan)',
+        description: 'Makkah adhan at prayer times',
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('adhan_makkah'),
+        enableVibration: true,
+      );
+      const AndroidNotificationChannel adhanMadinahChannel =
+          AndroidNotificationChannel(
+        _adhanMadinahChannelId,
+        'Prayer Times (Madinah Adhan)',
+        description: 'Madinah adhan at prayer times',
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('adhan_madinah'),
+        enableVibration: true,
+      );
+      const AndroidNotificationChannel adhanFajrChannel =
+          AndroidNotificationChannel(
+        _adhanFajrChannelId,
+        'Prayer Times (Fajr Adhan)',
+        description: 'Fajr adhan at prayer times',
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('adhan_makkah_fajr'),
+        enableVibration: true,
+      );
+      const AndroidNotificationChannel vibrationChannel =
+          AndroidNotificationChannel(
+        _vibrationChannelId,
+        _vibrationChannelName,
+        description: 'Vibration alert at prayer times',
+        importance: Importance.high,
+        playSound: false,
+        enableVibration: true,
+      );
+      const AndroidNotificationChannel reminderChannel =
+          AndroidNotificationChannel(
+        _reminderChannelId,
+        'Daily Reminders',
+        description: 'Daily Quran reading reminders',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
+      const AndroidNotificationChannel ayahChannel = AndroidNotificationChannel(
+        _ayahChannelId,
+        'Ayah of the Day',
+        description: 'Daily ayah notification',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
 
-    const AndroidNotificationChannel reminderChannel =
-        AndroidNotificationChannel(
-      _reminderChannelId,
-      'Daily Reminders',
-      description: 'Daily Quran reading reminders',
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    );
-    const AndroidNotificationChannel ayahChannel = AndroidNotificationChannel(
-      _ayahChannelId,
-      'Ayah of the Day',
-      description: 'Daily ayah notification',
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    );
+      await androidPlugin?.createNotificationChannel(adhanMakkahChannel);
+      await androidPlugin?.createNotificationChannel(adhanMadinahChannel);
+      await androidPlugin?.createNotificationChannel(adhanFajrChannel);
+      await androidPlugin?.createNotificationChannel(vibrationChannel);
+      await androidPlugin?.createNotificationChannel(reminderChannel);
+      await androidPlugin?.createNotificationChannel(ayahChannel);
 
-    await androidPlugin?.deleteNotificationChannel(_reminderChannelId);
-    await androidPlugin?.deleteNotificationChannel(_ayahChannelId);
-
-    await androidPlugin?.createNotificationChannel(adhanMakkahChannel);
-    await androidPlugin?.createNotificationChannel(adhanMadinahChannel);
-    await androidPlugin?.createNotificationChannel(adhanFajrChannel);
-    await androidPlugin?.createNotificationChannel(vibrationChannel);
-    await androidPlugin?.createNotificationChannel(reminderChannel);
-    await androidPlugin?.createNotificationChannel(ayahChannel);
+      await prefs.setInt('notification_channel_version', _channelVersion);
+    }
 
     // Request POST_NOTIFICATIONS permission on Android 13+
-    // (permission dialog is now shown from UI with context — just init here)
     await Permission.notification.request();
 
     // SCHEDULE_EXACT_ALARM is requested from UI with rationale dialog
