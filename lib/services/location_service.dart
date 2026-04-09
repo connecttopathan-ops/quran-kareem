@@ -37,7 +37,7 @@ Future<List<Location>> locationFromAddress(String address) async {
   return [];
 }
 
-Future<String> _reverseGeocode(double lat, double lng) async {
+Future<(String, String)> _reverseGeocode(double lat, double lng) async {
   try {
     final uri = Uri.parse(
       'https://nominatim.openstreetmap.org/reverse'
@@ -51,15 +51,18 @@ Future<String> _reverseGeocode(double lat, double lng) async {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final address = json['address'] as Map<String, dynamic>?;
       if (address != null) {
-        return address['city'] as String? ??
+        final city = address['city'] as String? ??
             address['town'] as String? ??
             address['village'] as String? ??
             address['county'] as String? ??
             'My Location';
+        final countryCode =
+            (address['country_code'] as String? ?? '').toLowerCase();
+        return (city, countryCode);
       }
     }
   } catch (_) {}
-  return 'My Location';
+  return ('My Location', '');
 }
 
 class PrayerTimes {
@@ -166,7 +169,17 @@ class LocationService extends ChangeNotifier {
         ),
       );
 
-      final cityName = await _reverseGeocode(position.latitude, position.longitude);
+      final (cityName, countryCode) =
+          await _reverseGeocode(position.latitude, position.longitude);
+
+      // On first GPS detection (user has never chosen a method), auto-select
+      // the calculation method that matches their country.
+      final p = await SharedPreferences.getInstance();
+      if (p.getString('calcMethod') == null && countryCode.isNotEmpty) {
+        _calcMethodId = _calcMethodForCountry(countryCode);
+        await p.setString('calcMethod', _calcMethodId);
+      }
+
       await setManualLocation(position.latitude, position.longitude, cityName);
     } catch (e) {
       _error = 'Could not get location. Please set city manually.';
@@ -344,6 +357,36 @@ class LocationService extends ChangeNotifier {
       sunriseStr:  fmt(pt.sunrise),
       sunriseTime: pt.sunrise,
     );
+  }
+
+  /// Maps an ISO 3166-1 alpha-2 country code to the most appropriate
+  /// calculation method. Used only for first-time auto-selection.
+  String _calcMethodForCountry(String cc) {
+    switch (cc) {
+      case 'ae':
+        return 'Dubai';
+      case 'sa':
+        return 'UmmAlQura';
+      case 'us':
+      case 'ca':
+        return 'ISNA';
+      case 'eg':
+        return 'Egyptian';
+      case 'pk':
+      case 'in':
+      case 'bd':
+        return 'Karachi';
+      case 'kw':
+        return 'Kuwait';
+      case 'qa':
+        return 'Qatar';
+      case 'sg':
+        return 'Singapore';
+      case 'ir':
+        return 'Tehran';
+      default:
+        return 'MWL';
+    }
   }
 
   adhan.CalculationParameters _adhanParams() {
