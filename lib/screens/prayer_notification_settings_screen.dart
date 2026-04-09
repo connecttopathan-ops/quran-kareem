@@ -128,7 +128,7 @@ class _PrayerNotificationSettingsScreenState
       await prefs.setString('adhan_type', _adhanType.name);
 
       if (_mode == PrayerNotificationMode.off) {
-        await NotificationService().cancelAll();
+        await NotificationService().cancelPrayerNotifications();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Notifications turned off')));

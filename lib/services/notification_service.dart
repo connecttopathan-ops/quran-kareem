@@ -208,11 +208,11 @@ class NotificationService {
     AdhanType adhanType = AdhanType.makkah,
   }) async {
     if (mode == PrayerNotificationMode.off) {
-      await cancelAll();
+      await cancelPrayerNotifications();
       return;
     }
 
-    await cancelAll();
+    await cancelPrayerNotifications();
 
     final now = tz.TZDateTime.now(tz.local);
 
@@ -453,6 +453,14 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'ayah_of_the_day',
       );
+    }
+  }
+
+  /// Cancels only the 5 prayer time notifications (IDs 1–5).
+  /// Does NOT touch daily reminders or ayah notifications.
+  Future<void> cancelPrayerNotifications() async {
+    for (final id in _prayerIds) {
+      await _plugin.cancel(id);
     }
   }
 
