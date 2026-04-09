@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "co.getquran.app"
-    compileSdk 35
+    compileSdk 36
     ndkVersion "27.2.12479018"
 
     compileOptions {

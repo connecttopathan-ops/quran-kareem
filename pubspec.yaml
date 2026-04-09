@@ -1,7 +1,7 @@
 name: quran_kareem
 description: Get Quran - A beautiful Quran app
 publish_to: 'none'
-version: 1.0.5+30
+version: 1.0.5+31
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -26,7 +26,7 @@ dependencies:
   timezone: ^0.9.4
   android_alarm_manager_plus: ^4.0.0
   permission_handler: ^11.3.0
-  flutter_timezone: ^1.0.7
+  flutter_timezone: ^4.1.1
   adhan: ^2.0.0
 
 dev_dependencies:
