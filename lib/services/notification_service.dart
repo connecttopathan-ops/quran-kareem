@@ -7,6 +7,7 @@
 // Uninstall → reinstall → go to Prayer Notifications → Save & Schedule.
 
 import 'dart:typed_data';
+import 'package:adhan/adhan.dart' as adhan;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,7 +43,10 @@ class NotificationService {
   static const String _ayahChannelId = 'ayah_of_the_day';
 
   // Notification IDs
-  static const List<int> _prayerIds = [1, 2, 3, 4, 5];
+  // Prayer slots: 7 days × 5 prayers = IDs 1–35 (one-shot absolute alarms,
+  // no matchDateTimeComponents — avoids daily drift and clock-change issues)
+  static const int _prayerBaseId = 1;
+  static const int _prayerDays = 7;
   static const List<String> _prayerNames = [
     'Fajr',
     'Dhuhr',
@@ -212,59 +216,84 @@ class NotificationService {
   }
 
 
+  /// Schedules [_prayerDays] × 5 one-shot absolute alarms using coordinates
+  /// and a calculation method ID.  Each alarm fires exactly once at the
+  /// calculated prayer time for that specific calendar day — no daily repeat,
+  /// no accumulated drift.  Cancels all existing prayer slots first so calling
+  /// this again (e.g. on every app open) always gives fresh, accurate times.
   Future<void> scheduleAllPrayers(
-    Map<String, String> prayerTimes,
+    double lat,
+    double lng,
+    String calcMethodId,
     PrayerNotificationMode mode, {
     AdhanType adhanType = AdhanType.makkah,
   }) async {
-    if (mode == PrayerNotificationMode.off) {
-      await cancelPrayerNotifications();
-      return;
-    }
+    await cancelPrayerNotifications(); // always clear old slots first
 
-    await cancelPrayerNotifications();
+    if (mode == PrayerNotificationMode.off) return;
 
-    // Pick exact or inexact scheduling based on what the OS allows.
-    // If SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM isn't granted, zonedSchedule
-    // with exactAllowWhileIdle throws SecurityException on Android 12+.
-    // Inexact alarms still fire (with ~10–15 min drift) so users get reminders.
     final scheduleMode = await _resolveScheduleMode();
-
     final now = tz.TZDateTime.now(tz.local);
 
-    for (int i = 0; i < _prayerNames.length; i++) {
-      final name = _prayerNames[i];
-      final timeStr = prayerTimes[name];
-      if (timeStr == null) continue;
+    final coordinates = adhan.Coordinates(lat, lng);
+    final params = _adhanParamsForMethod(calcMethodId);
 
-      final parsed = _parseTimeString(timeStr);
-      if (parsed == null) continue;
+    int slotId = _prayerBaseId;
 
-      // Build scheduled time for today; if already passed, schedule for tomorrow.
-      // matchDateTimeComponents: DateTimeComponents.time will repeat daily after that.
-      tz.TZDateTime scheduledDate = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        parsed.$1,
-        parsed.$2,
+    for (int day = 0; day < _prayerDays; day++) {
+      final date = DateTime.now().add(Duration(days: day));
+      final pt = adhan.PrayerTimes(
+        coordinates,
+        adhan.DateComponents(date.year, date.month, date.day),
+        params,
       );
-      if (scheduledDate.isBefore(now)) {
-        scheduledDate = scheduledDate.add(const Duration(days: 1));
+
+      final prayerDateTimes = [pt.fajr, pt.dhuhr, pt.asr, pt.maghrib, pt.isha];
+
+      for (int p = 0; p < _prayerNames.length; p++) {
+        final prayerDT = prayerDateTimes[p];
+        final scheduledDate = tz.TZDateTime.from(prayerDT, tz.local);
+
+        if (scheduledDate.isBefore(now)) {
+          slotId++;
+          continue; // skip prayers that have already passed
+        }
+
+        final details = _buildNotificationDetails(_prayerNames[p], mode, adhanType);
+
+        await _safeZonedSchedule(
+          id: slotId,
+          title: 'Prayer Time 🕌',
+          body: "It's time for ${_prayerNames[p]}",
+          scheduledDate: scheduledDate,
+          details: details,
+          scheduleMode: scheduleMode,
+          // No matchDateTimeComponents — one-shot absolute alarm per day.
+          // Rescheduled on every app open via _onPrayerTimesUpdated.
+        );
+
+        slotId++;
       }
+    }
+  }
 
-      final details = _buildNotificationDetails(name, mode, adhanType);
-
-      await _safeZonedSchedule(
-        id: _prayerIds[i],
-        title: 'Prayer Time 🕌',
-        body: "It's time for $name",
-        scheduledDate: scheduledDate,
-        details: details,
-        scheduleMode: scheduleMode,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
+  /// Returns adhan calculation parameters for the given method ID string.
+  /// Mirrors LocationService._adhanParams() to keep services independent.
+  adhan.CalculationParameters _adhanParamsForMethod(String id) {
+    switch (id) {
+      case 'ISNA':      return adhan.CalculationMethod.north_america.getParameters();
+      case 'Egyptian':  return adhan.CalculationMethod.egyptian.getParameters();
+      case 'Karachi':
+        final p = adhan.CalculationMethod.karachi.getParameters();
+        p.madhab = adhan.Madhab.hanafi;
+        return p;
+      case 'UmmAlQura': return adhan.CalculationMethod.umm_al_qura.getParameters();
+      case 'Dubai':     return adhan.CalculationMethod.dubai.getParameters();
+      case 'Kuwait':    return adhan.CalculationMethod.kuwait.getParameters();
+      case 'Qatar':     return adhan.CalculationMethod.qatar.getParameters();
+      case 'Singapore': return adhan.CalculationMethod.singapore.getParameters();
+      case 'Tehran':    return adhan.CalculationMethod.tehran.getParameters();
+      default:          return adhan.CalculationMethod.muslim_world_league.getParameters();
     }
   }
 
@@ -529,11 +558,12 @@ class NotificationService {
     }
   }
 
-  /// Cancels only the 5 prayer time notifications (IDs 1–5).
+  /// Cancels all prayer notification slots (IDs 1 – [_prayerBaseId + _prayerDays×5]).
   /// Does NOT touch daily reminders or ayah notifications.
   Future<void> cancelPrayerNotifications() async {
-    for (final id in _prayerIds) {
-      await _plugin.cancel(id);
+    final total = _prayerDays * _prayerNames.length;
+    for (int i = 0; i < total; i++) {
+      await _plugin.cancel(_prayerBaseId + i);
     }
   }
 
@@ -554,25 +584,4 @@ class NotificationService {
     );
   }
 
-  (int, int)? _parseTimeString(String timeStr) {
-    try {
-      final cleaned = timeStr.trim();
-      final upper = cleaned.toUpperCase();
-      if (upper.contains('AM') || upper.contains('PM')) {
-        final parts = cleaned.split(' ');
-        final timeParts = parts[0].split(':');
-        int hour = int.parse(timeParts[0]);
-        int minute = int.parse(timeParts[1]);
-        final isPm = parts[1].toUpperCase() == 'PM';
-        if (isPm && hour != 12) hour += 12;
-        if (!isPm && hour == 12) hour = 0;
-        return (hour, minute);
-      } else {
-        final parts = cleaned.split(':');
-        return (int.parse(parts[0]), int.parse(parts[1]));
-      }
-    } catch (_) {
-      return null;
-    }
-  }
 }

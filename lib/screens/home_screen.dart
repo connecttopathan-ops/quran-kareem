@@ -41,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   LocationService? _locationService;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _ayahKey = GlobalKey();
-  bool _pendingReschedule = false;
 
   @override
   void initState() {
@@ -102,8 +101,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _pendingReschedule) {
+    if (state == AppLifecycleState.resumed) {
       _pendingReschedule = false;
+      // Reschedule on every resume so clock/timezone changes and day
+      // boundaries are handled without needing a cold app restart.
       final pt = _locationService?.prayerTimes;
       if (pt != null) _scheduleNotifications(pt);
     }
@@ -170,15 +171,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         (e) => e.name == adhanStr,
         orElse: () => AdhanType.makkah,
       );
-      final times = {
-        'Fajr': pt.fajrStr,
-        'Dhuhr': pt.dhuhrStr,
-        'Asr': pt.asrStr,
-        'Maghrib': pt.maghribStr,
-        'Isha': pt.ishaStr,
-      };
       await NotificationService()
-          .scheduleAllPrayers(times, mode, adhanType: adhanType);
+          .scheduleAllPrayers(pt.lat, pt.lng, pt.calcMethod, mode, adhanType: adhanType);
 
       // Refresh ayah of the day (30-day window — renew on each app open)
       final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;

@@ -146,15 +146,8 @@ class _PrayerNotificationSettingsScreenState
 
       final pt = context.read<LocationService>().prayerTimes;
       if (pt != null) {
-        final times = {
-          'Fajr': pt.fajrStr,
-          'Dhuhr': pt.dhuhrStr,
-          'Asr': pt.asrStr,
-          'Maghrib': pt.maghribStr,
-          'Isha': pt.ishaStr,
-        };
         await NotificationService()
-            .scheduleAllPrayers(times, _mode, adhanType: _adhanType);
+            .scheduleAllPrayers(pt.lat, pt.lng, pt.calcMethod, _mode, adhanType: _adhanType);
       }
 
       if (mounted) {
