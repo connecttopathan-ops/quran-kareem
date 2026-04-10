@@ -210,17 +210,18 @@ class PrayerTaskHandler extends TaskHandler {
     final ph = local.hour.toString().padLeft(2, '0');
     final pm = local.minute.toString().padLeft(2, '0');
 
-    // Countdown: "-1h 23m" when > 1 h, "-01:22" (mm:ss) when under 1 h.
+    // Countdown: always includes seconds so the display visibly ticks.
+    // > 1 h → "-7h 09:23"   ≤ 1 h → "-09:23"
     final String countdown;
-    if (rem.inHours >= 1) {
-      final h = rem.inHours;
-      final m = rem.inMinutes % 60;
-      countdown = '-${h}h ${m}m';
+    final totalSeconds = rem.inSeconds;
+    final h = totalSeconds ~/ 3600;
+    final m = (totalSeconds % 3600) ~/ 60;
+    final s = totalSeconds % 60;
+    final mmss = '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    if (h >= 1) {
+      countdown = '-${h}h $mmss';
     } else {
-      final m = rem.inMinutes;
-      final s = rem.inSeconds % 60;
-      countdown =
-          '-${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      countdown = '-$mmss';
     }
 
     FlutterForegroundTask.updateService(
