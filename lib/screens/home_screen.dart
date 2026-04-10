@@ -24,7 +24,9 @@ import 'book_detail_screen.dart';
 import 'book_language_screen.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
+import '../services/review_service.dart';
 import '../data/curated_ayahs.dart';
+import '../widgets/review_dialog.dart';
 import 'hifz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -62,6 +64,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         // Check exact alarm permission if notifications are enabled
         Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) _checkExactAlarmPermission();
+        });
+        // Review prompt — fires 2 s after launch so permission dialogs
+        // have cleared. recordAppOpen() is async so dayStreak is ready by then.
+        Future.delayed(const Duration(milliseconds: 2000), () async {
+          if (!mounted) return;
+          final streak = context.read<AppState>().dayStreak;
+          if (await ReviewService.shouldPrompt(streak)) {
+            await ReviewService.markShown(streak);
+            if (mounted) await showReviewDialog(context, streak);
+          }
         });
       }
     });
