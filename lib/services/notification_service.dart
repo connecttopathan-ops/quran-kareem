@@ -6,11 +6,9 @@
 // because Android persists old notification channels even across updates.
 // Uninstall → reinstall → go to Prayer Notifications → Save & Schedule.
 
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:adhan/adhan.dart' as adhan;
 import 'package:flutter/foundation.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -233,13 +231,6 @@ class NotificationService {
     await cancelPrayerNotifications(); // always clear old slots first
 
     if (mode == PrayerNotificationMode.off) return;
-
-    // When the persistent foreground service is running it fires prayer
-    // notifications directly from its Dart isolate via an exact Timer —
-    // no AlarmManager needed and no duplicate notifications.
-    if (Platform.isAndroid && await FlutterForegroundTask.isRunningService) {
-      return;
-    }
 
     final scheduleMode = await _resolveScheduleMode();
     final now = tz.TZDateTime.now(tz.local);
