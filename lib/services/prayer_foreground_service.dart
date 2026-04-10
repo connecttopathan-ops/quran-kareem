@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:adhan/adhan.dart' as adhan;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,17 +61,12 @@ class PrayerForegroundService {
       FlutterForegroundTask.sendDataToTask('refresh');
       return;
     }
-    final result = await FlutterForegroundTask.startService(
+    await FlutterForegroundTask.startService(
       serviceId: 512,
       notificationTitle: 'Get Quran',
       notificationText: 'Loading prayer times…',
       callback: prayerForegroundTaskCallback,
-      // serviceTypes added in a later release; v8.17.0 handles dataSync
-      // automatically via the manifest foregroundServiceType declaration.
     );
-    if (!result.success) {
-      debugPrint('[ForegroundService] startService failed: ${result.error}');
-    }
   }
 
   /// Stop the service — call when the user turns off all notifications.
