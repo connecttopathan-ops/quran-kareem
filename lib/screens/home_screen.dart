@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
@@ -26,6 +25,7 @@ import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
 import '../services/review_service.dart';
 import '../data/curated_ayahs.dart';
+import '../widgets/permissions_onboarding.dart';
 import '../widgets/review_dialog.dart';
 import 'hifz_screen.dart';
 
@@ -57,17 +57,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _checkFirstLaunchLocation();
         // Handle tap if app was launched from notification
         _onNotificationTap();
-        // First-launch: request POST_NOTIFICATIONS + seed default prayer mode.
-        // Must run AFTER the first frame so the FlutterActivity is resumed
-        // (required for the system permission dialog to appear).
-        _bootstrapFirstLaunch();
-        // Check exact alarm permission if notifications are enabled
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) _checkExactAlarmPermission();
+        // Unified permissions onboarding — runs after a short delay so
+        // the location dialog (first-launch only) appears first.
+        // Handles: POST_NOTIFICATIONS, exact alarm, battery optimisation.
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted) _runPermissionsOnboarding();
         });
-        // Review prompt — fires 2 s after launch so permission dialogs
-        // have cleared. recordAppOpen() is async so dayStreak is ready by then.
-        Future.delayed(const Duration(milliseconds: 2000), () async {
+        // Review prompt — fires 3 s after launch so permissions sheet
+        // has had time to appear first.
+        Future.delayed(const Duration(milliseconds: 3000), () async {
           if (!mounted) return;
           final streak = context.read<AppState>().dayStreak;
           if (await ReviewService.shouldPrompt(streak)) {
@@ -79,43 +77,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
-  /// Runs once on the very first app launch:
-  /// 1. Requests POST_NOTIFICATIONS (Android 13+ / iOS). Doing it here —
-  ///    not inside NotificationService.init() which runs before runApp() —
-  ///    guarantees the Activity is resumed so the system dialog actually shows.
-  /// 2. Seeds `prayer_notification_mode = singleVibration` so users get
-  ///    vibration-only prayer reminders out of the box. They can switch to
-  ///    adhan / full vibration / off in Prayer Notifications settings.
-  /// 3. Triggers a reschedule if prayer times are already available.
-  Future<void> _bootstrapFirstLaunch() async {
+  /// Shows the unified permissions onboarding sheet (notifications, precise
+  /// timing, battery optimisation) and seeds the default notification mode.
+  /// Safe to call on every launch — the sheet self-skips when all grants
+  /// are already in place.
+  Future<void> _runPermissionsOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('notifications_bootstrapped') ?? false) return;
 
-    // Seed the default mode before requesting permission so that if the user
-    // grants POST_NOTIFICATIONS we immediately schedule vibration reminders.
+    // Seed singleVibration as default so new users get prayer reminders
+    // without visiting settings first.
     if (prefs.getString('prayer_notification_mode') == null) {
       await prefs.setString(
           'prayer_notification_mode', PrayerNotificationMode.singleVibration.name);
     }
 
-    // Request POST_NOTIFICATIONS. No-op on Android ≤12 and already-granted iOS.
-    try {
-      final status = await Permission.notification.status;
-      if (status.isDenied) {
-        await Permission.notification.request();
-      }
-    } catch (e) {
-      debugPrint('[HomeScreen] notification permission request failed: $e');
-    }
+    if (!mounted) return;
+    await showPermissionsOnboardingIfNeeded(context);
 
-    await prefs.setBool('notifications_bootstrapped', true);
-
-    // Reschedule now that defaults + permissions are in place.
+    // Reschedule after permissions may have changed.
     if (!mounted) return;
     final pt = _locationService?.prayerTimes;
-    if (pt != null) {
-      await _scheduleNotifications(pt);
-    }
+    if (pt != null) await _scheduleNotifications(pt);
   }
 
   @override
@@ -150,112 +132,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _locationService?.removeListener(_onPrayerTimesUpdated);
     _clockTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _checkExactAlarmPermission() async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
-    final morningOn = prefs.getBool('reminder_morning_enabled') ?? false;
-    final eveningOn = prefs.getBool('reminder_evening_enabled') ?? false;
-    final ayahOn = prefs.getBool('ayah_notification_enabled') ?? false;
-    final notificationsEnabled =
-        modeStr != 'off' || morningOn || eveningOn || ayahOn;
-    if (!notificationsEnabled) return;
-
-    final svc = NotificationService();
-    final hasExact = await svc.hasExactAlarmPermission();
-    if (hasExact || !mounted) return;
-
-    final result = await _showExactAlarmRationale();
-    if (result == _ExactAlarmHomeResult.allow) {
-      _pendingReschedule = true;
-      await svc.openExactAlarmSettings();
-    }
-  }
-
-  Future<_ExactAlarmHomeResult> _showExactAlarmRationale() async {
-    final result = await showDialog<_ExactAlarmHomeResult>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Dialog(
-          backgroundColor: isDark ? const Color(0xFF1E1608) : const Color(0xFFF9F3E8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.gold.withOpacity(0.4)),
-                  ),
-                  child: const Icon(Icons.notifications_active_outlined,
-                      color: AppColors.gold, size: 28),
-                ),
-                const SizedBox(height: 16),
-                Text('Accurate Prayer Times',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF2A1E08),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'To notify you of exact prayer times, Get Quran needs permission to schedule precise alarms.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'sans-serif', fontSize: 13, height: 1.5,
-                    color: isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF5A4A2A),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Without this, adhan notifications may arrive a few minutes late.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'sans-serif', fontSize: 11,
-                    color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.gold,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 0,
-                    ),
-                    onPressed: () => Navigator.pop(ctx, _ExactAlarmHomeResult.allow),
-                    child: const Text('Allow Precise Times',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, _ExactAlarmHomeResult.notNow),
-                  child: Text('Not Now',
-                    style: TextStyle(
-                      fontSize: 13, fontFamily: 'sans-serif',
-                      color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    return result ?? _ExactAlarmHomeResult.notNow;
   }
 
   @override
@@ -2328,5 +2204,3 @@ class _BookContinueCardState extends State<_BookContinueCard> {
     );
   }
 }
-
-enum _ExactAlarmHomeResult { allow, notNow }
