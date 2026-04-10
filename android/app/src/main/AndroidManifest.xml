@@ -7,11 +7,6 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <!-- USE_EXACT_ALARM is auto-granted on Android 14+ for alarm/calendar/prayer apps.
-         Prayer notifications are time-critical reminders so we qualify per Google policy.
-         On API ≤33 this is ignored; on API 34+ it removes the need for the user to
-         manually enable "Alarms & reminders" in system settings. -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Allows the onboarding sheet to request battery optimisation exemption.
          The system shows a dialog; no manual settings navigation needed. -->

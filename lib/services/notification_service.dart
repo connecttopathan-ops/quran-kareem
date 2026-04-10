@@ -198,7 +198,7 @@ class NotificationService {
       final canSchedule = await androidPlugin.canScheduleExactNotifications();
       return canSchedule ?? false; // null → assume not granted, show dialog
     } catch (_) {
-      return true; // unexpected error → don't block the user
+      return false; // unknown → show the permission row to be safe
     }
   }
 
