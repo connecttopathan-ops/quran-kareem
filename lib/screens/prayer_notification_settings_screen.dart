@@ -149,7 +149,7 @@ class _PrayerNotificationSettingsScreenState
       // Start/restart the foreground service so it re-reads the new prefs
       // and arms a fresh Timer for the next prayer.
       await PrayerForegroundService.start();
-      await PrayerForegroundService.refresh();
+      PrayerForegroundService.refresh();
 
       final pt = context.read<LocationService>().prayerTimes;
       if (pt != null) {

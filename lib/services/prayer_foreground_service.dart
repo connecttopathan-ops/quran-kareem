@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:adhan/adhan.dart' as adhan;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,8 +17,9 @@ void prayerForegroundTaskCallback() {
 /// Controls the prayer-times foreground service (Android only).
 ///
 /// Architecture:
-///   • A persistent foreground notification shows "Next Prayer: Asr · 2h 14m"
-///     and updates every minute — users see it in the status bar.
+///   • A persistent foreground notification shows "Dubai | 22 Sha'ban 1447"
+///     on the first line and "Dhuhr, 12:34" on the second — updates every
+///     minute via the 60 s repeat event.
 ///   • Inside the service's Dart isolate a [Timer] fires at the exact
 ///     millisecond of each prayer and shows the adhan/vibration notification
 ///     directly, without going through AlarmManager.
@@ -35,7 +37,7 @@ class PrayerForegroundService {
         channelId: 'prayer_service',
         channelName: 'Prayer Times Service',
         channelDescription:
-            'Shows next prayer countdown and ensures accurate notifications.',
+            'Shows next prayer and ensures accurate notifications.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
       ),
@@ -51,19 +53,26 @@ class PrayerForegroundService {
     );
   }
 
-  /// Start (or restart) the service. Safe to call on every app open.
+  /// Start the service if not running, or refresh its data if already running.
+  /// Safe to call on every app open.
   static Future<void> start() async {
     if (!Platform.isAndroid) return;
     if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.restartService();
+      // Already running — just tell it to re-read prefs and rearm the timer.
+      FlutterForegroundTask.sendDataToTask('refresh');
       return;
     }
-    await FlutterForegroundTask.startService(
+    final result = await FlutterForegroundTask.startService(
       serviceId: 512,
       notificationTitle: 'Get Quran',
       notificationText: 'Loading prayer times…',
       callback: prayerForegroundTaskCallback,
+      // Required on Android 14+: must match foregroundServiceType in manifest.
+      serviceTypes: [ForegroundServiceTypes.dataSync],
     );
+    if (!result.success) {
+      debugPrint('[ForegroundService] startService failed: ${result.error}');
+    }
   }
 
   /// Stop the service — call when the user turns off all notifications.
@@ -74,7 +83,7 @@ class PrayerForegroundService {
 
   /// Ask the running service to recalculate prayer times from SharedPreferences.
   /// Call after a location change or after saving notification settings.
-  static Future<void> refresh() async {
+  static void refresh() {
     if (!Platform.isAndroid) return;
     FlutterForegroundTask.sendDataToTask('refresh');
   }
@@ -87,10 +96,17 @@ class PrayerTaskHandler extends TaskHandler {
   Timer? _timer;
   String? _nextName;
   DateTime? _nextTime;
+  String _cityName = '';
   PrayerNotificationMode _mode = PrayerNotificationMode.singleVibration;
   AdhanType _adhanType = AdhanType.makkah;
   final FlutterLocalNotificationsPlugin _notif =
       FlutterLocalNotificationsPlugin();
+
+  static const _hijriMonths = [
+    'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
+    'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', "Sha'ban",
+    'Ramadan', 'Shawwal', "Dhul-Qi'dah", 'Dhul-Hijjah',
+  ];
 
   // ── TaskHandler lifecycle ─────────────────────────────────────────────────
 
@@ -100,10 +116,11 @@ class PrayerTaskHandler extends TaskHandler {
     await _loadNextPrayer();
   }
 
-  /// Called every 60 s — updates countdown and acts as safety net.
+  /// Called every 60 s — updates the status-bar notification and acts as
+  /// a safety net in case the Dart Timer somehow misfired.
   @override
   void onRepeatEvent(DateTime timestamp) {
-    _updateCountdown();
+    _updateNotification();
     if (_nextTime != null && DateTime.now().isAfter(_nextTime!)) {
       _firePrayer(); // backup: timer somehow misfired
     }
@@ -180,6 +197,7 @@ class PrayerTaskHandler extends TaskHandler {
       return;
     }
 
+    _cityName = prefs.getString('cityName') ?? '';
     final calcMethodId = prefs.getString('calcMethod') ?? 'MWL';
     _mode = PrayerNotificationMode.values.firstWhere(
       (e) =>
@@ -230,7 +248,7 @@ class PrayerTaskHandler extends TaskHandler {
     // Exact Dart Timer — fires in the foreground-service process, not via
     // AlarmManager, so it is immune to Doze and battery optimisation.
     _timer = Timer(nextTime.difference(now), _firePrayer);
-    _updateCountdown();
+    _updateNotification();
   }
 
   void _firePrayer() {
@@ -299,16 +317,63 @@ class PrayerTaskHandler extends TaskHandler {
     _loadNextPrayer(); // arm the next prayer
   }
 
-  void _updateCountdown() {
+  /// Updates the persistent status-bar notification to:
+  ///   Title: "Dubai | 22 Sha'ban 1447"
+  ///   Text:  "Dhuhr, 12:34"
+  void _updateNotification() {
     if (_nextName == null || _nextTime == null) return;
     final rem = _nextTime!.difference(DateTime.now());
     if (rem.isNegative) return;
-    final h = rem.inHours;
-    final m = rem.inMinutes % 60;
+
+    final now = DateTime.now();
+    final (hy, hm, hd) = _toHijri(now);
+    final hijriStr = '$hd ${_hijriMonths[hm - 1]} $hy';
+
+    final title = _cityName.isNotEmpty ? '$_cityName | $hijriStr' : hijriStr;
+
+    final local = _nextTime!.toLocal();
+    final hh = local.hour.toString().padLeft(2, '0');
+    final mm = local.minute.toString().padLeft(2, '0');
+
     FlutterForegroundTask.updateService(
-      notificationTitle: 'Next Prayer: $_nextName',
-      notificationText: h > 0 ? '${h}h ${m}m away' : '${m}m away',
+      notificationTitle: title,
+      notificationText: '$_nextName, $hh:$mm',
     );
+  }
+
+  // ── Hijri calendar conversion ─────────────────────────────────────────────
+
+  /// Converts a Gregorian [date] to (hijriYear, hijriMonth, hijriDay).
+  /// Uses the standard tabular Islamic calendar algorithm.
+  (int, int, int) _toHijri(DateTime date) {
+    final jd = _toJulianDay(date.year, date.month, date.day);
+    final l = jd - 1948440 + 10632;
+    final n = (l - 1) ~/ 10631;
+    final ll = l - 10631 * n + 354;
+    final j = ((10985 - ll) ~/ 5316) * ((50 * ll) ~/ 17719) +
+        (ll ~/ 5670) * ((43 * ll) ~/ 15238);
+    final lll = ll -
+        ((30 - j) ~/ 15) * ((17719 * j) ~/ 50) -
+        (j ~/ 16) * ((15238 * j) ~/ 43) +
+        29;
+    final hMonth = (24 * lll) ~/ 709;
+    final hDay = lll - (709 * hMonth) ~/ 24;
+    final hYear = 30 * n + j - 30;
+    return (hYear, hMonth.clamp(1, 12), hDay.clamp(1, 30));
+  }
+
+  int _toJulianDay(int y, int m, int d) {
+    if (m <= 2) {
+      y -= 1;
+      m += 12;
+    }
+    final a = y ~/ 100;
+    final b = 2 - a + a ~/ 4;
+    return (365.25 * (y + 4716)).toInt() +
+        (30.6001 * (m + 1)).toInt() +
+        d +
+        b -
+        1524;
   }
 
   adhan.CalculationParameters _paramsFor(String id) {
