@@ -7,6 +7,7 @@ import 'package:audio_service/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
+import '../services/prayer_foreground_service.dart';
 
 class PrayerNotificationSettingsScreen extends StatefulWidget {
   const PrayerNotificationSettingsScreen({super.key});
@@ -128,6 +129,7 @@ class _PrayerNotificationSettingsScreenState
       await prefs.setString('adhan_type', _adhanType.name);
 
       if (_mode == PrayerNotificationMode.off) {
+        await PrayerForegroundService.stop();
         await NotificationService().cancelPrayerNotifications();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -143,6 +145,11 @@ class _PrayerNotificationSettingsScreenState
         await Permission.notification.request();
         // Continue even if denied — Android will silently not show notifications
       }
+
+      // Start/restart the foreground service so it re-reads the new prefs
+      // and arms a fresh Timer for the next prayer.
+      await PrayerForegroundService.start();
+      await PrayerForegroundService.refresh();
 
       final pt = context.read<LocationService>().prayerTimes;
       if (pt != null) {

@@ -8,6 +8,7 @@ import '../models/app_state.dart';
 import '../services/location_service.dart';
 import '../services/audio_service.dart';
 import '../services/notification_service.dart';
+import '../services/prayer_foreground_service.dart';
 import '../widgets/q_icons.dart';
 import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
@@ -170,6 +171,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         (e) => e.name == adhanStr,
         orElse: () => AdhanType.makkah,
       );
+      // Start (or restart) the persistent foreground service so it arms an
+      // exact Dart Timer for the next prayer. The service is immune to Doze
+      // because Android exempts foreground services from battery restrictions.
+      // NotificationService.scheduleAllPrayers skips AlarmManager when the
+      // service is running to prevent duplicate notifications.
+      if (mode != PrayerNotificationMode.off) {
+        await PrayerForegroundService.start();
+      } else {
+        await PrayerForegroundService.stop();
+      }
+
       await NotificationService()
           .scheduleAllPrayers(pt.lat, pt.lng, pt.calcMethod, mode, adhanType: adhanType);
 
