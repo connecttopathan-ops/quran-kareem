@@ -169,11 +169,11 @@ class NotificationService {
       await prefs.setInt('notification_channel_version', _channelVersion);
     }
 
-    // Request POST_NOTIFICATIONS permission on Android 13+
-    await Permission.notification.request();
-
-    // SCHEDULE_EXACT_ALARM is requested from UI with rationale dialog
-    // so we don't blindly request it here anymore
+    // NOTE: Runtime permissions (POST_NOTIFICATIONS on Android 13+, and the
+    // SCHEDULE_EXACT_ALARM rationale dialog) are intentionally NOT requested
+    // here. Doing so from init() — before runApp() — is unreliable because the
+    // FlutterActivity hasn't fully attached yet, so the system dialog often
+    // doesn't appear. HomeScreen requests them from a post-frame callback.
   }
 
   /// Returns true if POST_NOTIFICATIONS is granted (or not needed pre-Android 13).
@@ -224,6 +224,12 @@ class NotificationService {
 
     await cancelPrayerNotifications();
 
+    // Pick exact or inexact scheduling based on what the OS allows.
+    // If SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM isn't granted, zonedSchedule
+    // with exactAllowWhileIdle throws SecurityException on Android 12+.
+    // Inexact alarms still fire (with ~10–15 min drift) so users get reminders.
+    final scheduleMode = await _resolveScheduleMode();
+
     final now = tz.TZDateTime.now(tz.local);
 
     for (int i = 0; i < _prayerNames.length; i++) {
@@ -250,18 +256,29 @@ class NotificationService {
 
       final details = _buildNotificationDetails(name, mode, adhanType);
 
-      await _plugin.zonedSchedule(
-        _prayerIds[i],
-        'Prayer Time 🕌',
-        "It's time for $name",
-        scheduledDate,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+      await _safeZonedSchedule(
+        id: _prayerIds[i],
+        title: 'Prayer Time 🕌',
+        body: "It's time for $name",
+        scheduledDate: scheduledDate,
+        details: details,
+        scheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     }
+  }
+
+  /// Picks [AndroidScheduleMode.exactAllowWhileIdle] if we can schedule exact
+  /// alarms, otherwise falls back to [AndroidScheduleMode.inexactAllowWhileIdle]
+  /// so notifications still fire (with drift).
+  Future<AndroidScheduleMode> _resolveScheduleMode() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+    final canExact = await hasExactAlarmPermission();
+    return canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   NotificationDetails _buildNotificationDetails(
@@ -377,21 +394,20 @@ class NotificationService {
       iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
     );
 
+    final scheduleMode = await _resolveScheduleMode();
     final now = tz.TZDateTime.now(tz.local);
 
     if (morningEnabled) {
       tz.TZDateTime morning = tz.TZDateTime(
           tz.local, now.year, now.month, now.day, morningHour, morningMinute);
       if (morning.isBefore(now)) morning = morning.add(const Duration(days: 1));
-      await _plugin.zonedSchedule(
-        _morningReminderId,
-        'Time to Read Quran 📖',
-        'Start your morning with the words of Allah',
-        morning,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+      await _safeZonedSchedule(
+        id: _morningReminderId,
+        title: 'Time to Read Quran 📖',
+        body: 'Start your morning with the words of Allah',
+        scheduledDate: morning,
+        details: details,
+        scheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     }
@@ -400,17 +416,63 @@ class NotificationService {
       tz.TZDateTime evening = tz.TZDateTime(
           tz.local, now.year, now.month, now.day, eveningHour, eveningMinute);
       if (evening.isBefore(now)) evening = evening.add(const Duration(days: 1));
-      await _plugin.zonedSchedule(
-        _eveningReminderId,
-        'Evening Quran Reminder 🌙',
-        'End your day with the words of Allah',
-        evening,
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+      await _safeZonedSchedule(
+        id: _eveningReminderId,
+        title: 'Evening Quran Reminder 🌙',
+        body: 'End your day with the words of Allah',
+        scheduledDate: evening,
+        details: details,
+        scheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
       );
+    }
+  }
+
+  /// Wraps `zonedSchedule` with exact→inexact fallback and try/catch so a
+  /// single SecurityException doesn't abort the rest of the batch.
+  Future<void> _safeZonedSchedule({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledDate,
+    required NotificationDetails details,
+    required AndroidScheduleMode scheduleMode,
+    DateTimeComponents? matchDateTimeComponents,
+    String? payload,
+  }) async {
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        details,
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: matchDateTimeComponents,
+        payload: payload,
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] Failed to schedule id=$id ($scheduleMode): $e');
+      if (scheduleMode == AndroidScheduleMode.exactAllowWhileIdle) {
+        try {
+          await _plugin.zonedSchedule(
+            id,
+            title,
+            body,
+            scheduledDate,
+            details,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: matchDateTimeComponents,
+            payload: payload,
+          );
+        } catch (e2) {
+          debugPrint('[NotificationService] Fallback inexact also failed id=$id: $e2');
+        }
+      }
     }
   }
 
@@ -430,6 +492,7 @@ class NotificationService {
     }
     if (!enabled) return;
 
+    final scheduleMode = await _resolveScheduleMode();
     final now = tz.TZDateTime.now(tz.local);
     // Starting ayah index: based on day-of-year so it advances daily
     final startIndex = now.difference(tz.TZDateTime(tz.local, now.year, 1, 1)).inDays %
@@ -442,12 +505,12 @@ class NotificationService {
       scheduled = scheduled.add(Duration(days: i));
       if (scheduled.isBefore(now)) scheduled = scheduled.add(const Duration(days: 1));
 
-      await _plugin.zonedSchedule(
-        _ayahBaseId + i,
-        '✨ Ayah of the Day — ${ayah.surahName} ${ayah.surah}:${ayah.ayah}',
-        '${ayah.translation}\n\n${ayah.message}',
-        scheduled,
-        NotificationDetails(
+      await _safeZonedSchedule(
+        id: _ayahBaseId + i,
+        title: '✨ Ayah of the Day — ${ayah.surahName} ${ayah.surah}:${ayah.ayah}',
+        body: '${ayah.translation}\n\n${ayah.message}',
+        scheduledDate: scheduled,
+        details: NotificationDetails(
           android: AndroidNotificationDetails(
             _ayahChannelId,
             'Ayah of the Day',
@@ -458,11 +521,9 @@ class NotificationService {
               '${ayah.translation}\n\n${ayah.message}',
             ),
           ),
-          iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+          iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: true),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
+        scheduleMode: scheduleMode,
         payload: 'ayah_of_the_day',
       );
     }

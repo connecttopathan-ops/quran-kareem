@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
@@ -53,12 +55,55 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _checkFirstLaunchLocation();
         // Handle tap if app was launched from notification
         _onNotificationTap();
+        // First-launch: request POST_NOTIFICATIONS + seed default prayer mode.
+        // Must run AFTER the first frame so the FlutterActivity is resumed
+        // (required for the system permission dialog to appear).
+        _bootstrapFirstLaunch();
         // Check exact alarm permission if notifications are enabled
         Future.delayed(const Duration(milliseconds: 800), () {
           if (mounted) _checkExactAlarmPermission();
         });
       }
     });
+  }
+
+  /// Runs once on the very first app launch:
+  /// 1. Requests POST_NOTIFICATIONS (Android 13+ / iOS). Doing it here —
+  ///    not inside NotificationService.init() which runs before runApp() —
+  ///    guarantees the Activity is resumed so the system dialog actually shows.
+  /// 2. Seeds `prayer_notification_mode = singleVibration` so users get
+  ///    vibration-only prayer reminders out of the box. They can switch to
+  ///    adhan / full vibration / off in Prayer Notifications settings.
+  /// 3. Triggers a reschedule if prayer times are already available.
+  Future<void> _bootstrapFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('notifications_bootstrapped') ?? false) return;
+
+    // Seed the default mode before requesting permission so that if the user
+    // grants POST_NOTIFICATIONS we immediately schedule vibration reminders.
+    if (prefs.getString('prayer_notification_mode') == null) {
+      await prefs.setString(
+          'prayer_notification_mode', PrayerNotificationMode.singleVibration.name);
+    }
+
+    // Request POST_NOTIFICATIONS. No-op on Android ≤12 and already-granted iOS.
+    try {
+      final status = await Permission.notification.status;
+      if (status.isDenied) {
+        await Permission.notification.request();
+      }
+    } catch (e) {
+      debugPrint('[HomeScreen] notification permission request failed: $e');
+    }
+
+    await prefs.setBool('notifications_bootstrapped', true);
+
+    // Reschedule now that defaults + permissions are in place.
+    if (!mounted) return;
+    final pt = _locationService?.prayerTimes;
+    if (pt != null) {
+      await _scheduleNotifications(pt);
+    }
   }
 
   @override
@@ -218,44 +263,59 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _scheduleNotifications(PrayerTimes pt) async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeStr = prefs.getString('prayer_notification_mode') ?? 'off';
-    final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
-    final mode = PrayerNotificationMode.values.firstWhere(
-      (e) => e.name == modeStr,
-      orElse: () => PrayerNotificationMode.off,
-    );
-    final adhanType = AdhanType.values.firstWhere(
-      (e) => e.name == adhanStr,
-      orElse: () => AdhanType.makkah,
-    );
-    final times = {
-      'Fajr': pt.fajrStr,
-      'Dhuhr': pt.dhuhrStr,
-      'Asr': pt.asrStr,
-      'Maghrib': pt.maghribStr,
-      'Isha': pt.ishaStr,
-    };
-    await NotificationService()
-        .scheduleAllPrayers(times, mode, adhanType: adhanType);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Inline default: on a fresh install, treat missing mode as
+      // singleVibration (matches the UI default in the settings screen
+      // and _bootstrapFirstLaunch). Persist it so subsequent reads agree.
+      var modeStr = prefs.getString('prayer_notification_mode');
+      if (modeStr == null) {
+        modeStr = PrayerNotificationMode.singleVibration.name;
+        await prefs.setString('prayer_notification_mode', modeStr);
+      }
+      final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
+      final mode = PrayerNotificationMode.values.firstWhere(
+        (e) => e.name == modeStr,
+        orElse: () => PrayerNotificationMode.singleVibration,
+      );
+      final adhanType = AdhanType.values.firstWhere(
+        (e) => e.name == adhanStr,
+        orElse: () => AdhanType.makkah,
+      );
+      final times = {
+        'Fajr': pt.fajrStr,
+        'Dhuhr': pt.dhuhrStr,
+        'Asr': pt.asrStr,
+        'Maghrib': pt.maghribStr,
+        'Isha': pt.ishaStr,
+      };
+      await NotificationService()
+          .scheduleAllPrayers(times, mode, adhanType: adhanType);
 
-    // Refresh ayah of the day (30-day window — renew on each app open)
-    final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
-    await NotificationService().scheduleAyahNotifications(
-      enabled: ayahEnabled,
-      hour: prefs.getInt('ayah_notification_hour') ?? 11,
-      minute: prefs.getInt('ayah_notification_minute') ?? 0,
-    );
+      // Refresh ayah of the day (30-day window — renew on each app open)
+      final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
+      await NotificationService().scheduleAyahNotifications(
+        enabled: ayahEnabled,
+        hour: prefs.getInt('ayah_notification_hour') ?? 11,
+        minute: prefs.getInt('ayah_notification_minute') ?? 0,
+      );
 
-    // Refresh daily reading reminders
-    await NotificationService().scheduleDailyReminders(
-      morningEnabled: prefs.getBool('reminder_morning_enabled') ?? false,
-      morningHour: prefs.getInt('reminder_morning_hour') ?? 6,
-      morningMinute: prefs.getInt('reminder_morning_minute') ?? 0,
-      eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? false,
-      eveningHour: prefs.getInt('reminder_evening_hour') ?? 20,
-      eveningMinute: prefs.getInt('reminder_evening_minute') ?? 0,
-    );
+      // Refresh daily reading reminders
+      await NotificationService().scheduleDailyReminders(
+        morningEnabled: prefs.getBool('reminder_morning_enabled') ?? false,
+        morningHour: prefs.getInt('reminder_morning_hour') ?? 6,
+        morningMinute: prefs.getInt('reminder_morning_minute') ?? 0,
+        eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? false,
+        eveningHour: prefs.getInt('reminder_evening_hour') ?? 20,
+        eveningMinute: prefs.getInt('reminder_evening_minute') ?? 0,
+      );
+    } catch (e, stack) {
+      // Never let a scheduling failure crash the UI. Typical cause is a
+      // SecurityException when exact alarms aren't granted on Android 12+;
+      // individual scheduleXxx methods already fall back to inexact alarms,
+      // so this catch is just a last-resort safety net.
+      debugPrint('[HomeScreen] _scheduleNotifications failed: $e\n$stack');
+    }
   }
 
   Future<void> _checkFirstLaunchLocation() async {
