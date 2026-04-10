@@ -171,11 +171,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         (e) => e.name == adhanStr,
         orElse: () => AdhanType.makkah,
       );
-      // Start (or restart) the persistent foreground service so it arms an
-      // exact Dart Timer for the next prayer. The service is immune to Doze
-      // because Android exempts foreground services from battery restrictions.
-      // NotificationService.scheduleAllPrayers skips AlarmManager when the
-      // service is running to prevent duplicate notifications.
+      // Start (or restart) the persistent foreground service — provides the
+      // live countdown status-bar notification. AlarmManager (scheduleAllPrayers)
+      // runs independently for the actual prayer-time alarm pop-ups.
       if (mode != PrayerNotificationMode.off) {
         await PrayerForegroundService.start();
       } else {
