@@ -65,6 +65,10 @@ class PrayerForegroundService {
       notificationTitle: 'Get Quran',
       notificationText: 'Loading prayer times…',
       callback: prayerForegroundTaskCallback,
+      // v9.1+: pass service type at runtime so startForeground() includes it.
+      // Required when targetSdk >= 34 (Android 14+) — without this the OS
+      // throws InvalidForegroundServiceTypeException and the service is killed.
+      serviceTypes: [ForegroundServiceTypes.dataSync],
     );
   }
 
@@ -115,7 +119,7 @@ class PrayerTaskHandler extends TaskHandler {
   }
 
   @override
-  Future<void> onDestroy(DateTime timestamp) async {
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _boundaryTimer?.cancel();
   }
 
