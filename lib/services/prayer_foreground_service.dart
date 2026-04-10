@@ -95,6 +95,7 @@ class PrayerForegroundService {
 /// notifications are handled by AlarmManager in the main process.
 class PrayerTaskHandler extends TaskHandler {
   Timer? _boundaryTimer;
+  Timer? _tickTimer;   // 1-second tick for live countdown
   String? _nextName;
   DateTime? _nextTime;
   String _cityName = '';
@@ -112,15 +113,16 @@ class PrayerTaskHandler extends TaskHandler {
     await _loadNextPrayer();
   }
 
-  /// Called every 60 s — keeps the notification text fresh.
+  /// Called every 60 s — full recalculation in case prefs changed.
   @override
   void onRepeatEvent(DateTime timestamp) {
-    _updateNotification();
+    _loadNextPrayer();
   }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _boundaryTimer?.cancel();
+    _tickTimer?.cancel();
   }
 
   @override
@@ -132,6 +134,7 @@ class PrayerTaskHandler extends TaskHandler {
 
   Future<void> _loadNextPrayer() async {
     _boundaryTimer?.cancel();
+    _tickTimer?.cancel();
 
     final prefs = await SharedPreferences.getInstance();
     final lat = prefs.getDouble('lat');
@@ -181,9 +184,12 @@ class PrayerTaskHandler extends TaskHandler {
     _nextName = nextName;
     _nextTime = nextTime;
 
-    // Timer fires at the prayer boundary so the notification updates to the
-    // next prayer instantly rather than waiting for the 60 s tick.
+    // Boundary timer: fires exactly at the prayer time so the notification
+    // switches to the next prayer instantly.
     _boundaryTimer = Timer(nextTime.difference(now), _loadNextPrayer);
+
+    // 1-second tick: drives the live countdown display.
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateNotification());
     _updateNotification();
   }
 
