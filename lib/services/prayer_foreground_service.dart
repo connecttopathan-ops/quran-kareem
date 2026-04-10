@@ -183,25 +183,39 @@ class PrayerTaskHandler extends TaskHandler {
     _updateNotification();
   }
 
-  /// Updates the persistent notification:
+  /// Updates the persistent notification to match Salatuk's style:
   ///   Title: "Dubai | 22 Sha'ban 1447"
-  ///   Text:  "Dhuhr, 12:34"
+  ///   Text:  "Maghrib, 18:43  -01:22"   (prayer time + live countdown)
   void _updateNotification() {
     if (_nextName == null || _nextTime == null) return;
-    if (_nextTime!.isBefore(DateTime.now())) return;
-
     final now = DateTime.now();
+    final rem = _nextTime!.difference(now);
+    if (rem.isNegative) return;
+
     final (hy, hm, hd) = _toHijri(now);
     final hijriStr = '$hd ${_hijriMonths[hm - 1]} $hy';
     final title = _cityName.isNotEmpty ? '$_cityName | $hijriStr' : hijriStr;
 
     final local = _nextTime!.toLocal();
-    final hh = local.hour.toString().padLeft(2, '0');
-    final mm = local.minute.toString().padLeft(2, '0');
+    final ph = local.hour.toString().padLeft(2, '0');
+    final pm = local.minute.toString().padLeft(2, '0');
+
+    // Countdown: "-1h 23m" when > 1 h, "-01:22" (mm:ss) when under 1 h.
+    final String countdown;
+    if (rem.inHours >= 1) {
+      final h = rem.inHours;
+      final m = rem.inMinutes % 60;
+      countdown = '-${h}h ${m}m';
+    } else {
+      final m = rem.inMinutes;
+      final s = rem.inSeconds % 60;
+      countdown =
+          '-${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
 
     FlutterForegroundTask.updateService(
       notificationTitle: title,
-      notificationText: '$_nextName, $hh:$mm',
+      notificationText: '$_nextName, $ph:$pm  $countdown',
     );
   }
 
