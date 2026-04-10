@@ -67,8 +67,8 @@ class PrayerForegroundService {
       notificationTitle: 'Get Quran',
       notificationText: 'Loading prayer times…',
       callback: prayerForegroundTaskCallback,
-      // Required on Android 14+: must match foregroundServiceType in manifest.
-      serviceTypes: [ForegroundServiceTypes.dataSync],
+      // serviceTypes added in a later release; v8.17.0 handles dataSync
+      // automatically via the manifest foregroundServiceType declaration.
     );
     if (!result.success) {
       debugPrint('[ForegroundService] startService failed: ${result.error}');
