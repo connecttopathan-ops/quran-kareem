@@ -43,7 +43,7 @@ class PrayerForegroundService {
         showNotification: false,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
+      foregroundTaskOptions: ForegroundTaskOptions(
         eventAction: ForegroundTaskEventAction.repeat(60000), // 60 s tick
         autoRunOnBoot: true,
         allowWakeLock: true,
@@ -76,7 +76,7 @@ class PrayerForegroundService {
   /// Call after a location change or after saving notification settings.
   static Future<void> refresh() async {
     if (!Platform.isAndroid) return;
-    await FlutterForegroundTask.sendDataToTask('refresh');
+    FlutterForegroundTask.sendDataToTask('refresh');
   }
 }
 
