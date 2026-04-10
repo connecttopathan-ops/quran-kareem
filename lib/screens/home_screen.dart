@@ -102,7 +102,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _pendingReschedule = false;
       // Reschedule on every resume so clock/timezone changes and day
       // boundaries are handled without needing a cold app restart.
       final pt = _locationService?.prayerTimes;
