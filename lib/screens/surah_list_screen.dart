@@ -90,6 +90,10 @@ class _SurahListScreenState extends State<SurahListScreen> {
             s.number.toString().contains(_query))
         .toList();
 
+    final dl = context.watch<AudioDownloadService>();
+    final audio = context.watch<AudioService>();
+    final reciterId = audio.reciterId;
+
     return Scaffold(
       backgroundColor: context.bg,
       body: SafeArea(
@@ -172,7 +176,13 @@ class _SurahListScreenState extends State<SurahListScreen> {
                       itemCount: filtered.length,
                       itemBuilder: (context, i) {
                         final s = filtered[i];
-                        return _SurahTile(surah: s);
+                        return _SurahTile(
+                          surah: s,
+                          reciterId: reciterId,
+                          downloaded: dl.isDownloaded(reciterId, s.number),
+                          downloading: dl.isDownloading(reciterId, s.number),
+                          progress: dl.progress(reciterId, s.number),
+                        );
                       },
                     ),
             ),
@@ -184,17 +194,22 @@ class _SurahListScreenState extends State<SurahListScreen> {
 }
 
 class _SurahTile extends StatelessWidget {
-  final surah;
-  const _SurahTile({required this.surah});
+  final dynamic surah;
+  final String reciterId;
+  final bool downloaded;
+  final bool downloading;
+  final double? progress;
+
+  const _SurahTile({
+    required this.surah,
+    required this.reciterId,
+    required this.downloaded,
+    required this.downloading,
+    required this.progress,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final dl = context.watch<AudioDownloadService>();
-    final audio = context.watch<AudioService>();
-    final reciterId = audio.reciterId;
-    final downloaded = dl.isDownloaded(reciterId, surah.number);
-    final downloading = dl.isDownloading(reciterId, surah.number);
-    final progress = dl.progress(reciterId, surah.number);
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -276,6 +291,7 @@ class _SurahTile extends StatelessWidget {
             // Download button
             GestureDetector(
               onTap: () {
+                final dl = context.read<AudioDownloadService>();
                 if (downloading) {
                   dl.cancelDownload(reciterId, surah.number);
                 } else if (downloaded) {

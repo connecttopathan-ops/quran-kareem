@@ -846,6 +846,65 @@ const _kRakahTotal = {
   'Fajr': 4, 'Dhuhr': 10, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PRAYER TIME HELPERS (top-level so both _PrayerGridState and _NextPrayerRow
+// can share them without duplication)
+// ─────────────────────────────────────────────────────────────────────────────
+TimeOfDay _parsePrayerTime(String timeStr) {
+  final cleaned = timeStr.trim();
+  final upper = cleaned.toUpperCase();
+  if (upper.contains('AM') || upper.contains('PM')) {
+    final parts = cleaned.split(' ');
+    final timeParts = parts[0].split(':');
+    int hour = int.parse(timeParts[0]);
+    int minute = int.parse(timeParts[1]);
+    final isPm = parts[1].toUpperCase() == 'PM';
+    if (isPm && hour != 12) hour += 12;
+    if (!isPm && hour == 12) hour = 0;
+    return TimeOfDay(hour: hour, minute: minute);
+  } else {
+    final parts = cleaned.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+}
+
+int _prayerTimeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+String _getCurrentPrayerName(Map<String, String> times) {
+  final now = TimeOfDay.now();
+  const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  String current = 'Isha';
+  for (final name in prayers) {
+    final t = _parsePrayerTime(times[name]!);
+    if (_prayerTimeToMinutes(now) >= _prayerTimeToMinutes(t)) {
+      current = name;
+    }
+  }
+  return current;
+}
+
+(String, Duration) _computeNextPrayerFrom(PrayerTimes pt) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final prayers = [
+    ('Fajr', pt.fajrStr),
+    ('Dhuhr', pt.dhuhrStr),
+    ('Asr', pt.asrStr),
+    ('Maghrib', pt.maghribStr),
+    ('Isha', pt.ishaStr),
+  ];
+  for (final (name, timeStr) in prayers) {
+    final t = _parsePrayerTime(timeStr);
+    final dt = DateTime(today.year, today.month, today.day, t.hour, t.minute);
+    if (dt.isAfter(now)) return (name, dt.difference(now));
+  }
+  // All five prayers for today have passed — wrap to Fajr tomorrow.
+  final fajr = _parsePrayerTime(pt.fajrStr);
+  final tomorrow = today.add(const Duration(days: 1));
+  final tomorrowFajr = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, fajr.hour, fajr.minute);
+  return ('Fajr', tomorrowFajr.difference(now));
+}
+
 class _PrayerGrid extends StatefulWidget {
   final PrayerTimes pt;
   const _PrayerGrid({required this.pt});
@@ -854,169 +913,8 @@ class _PrayerGrid extends StatefulWidget {
   State<_PrayerGrid> createState() => _PrayerGridState();
 }
 
-class _PrayerGridState extends State<_PrayerGrid>
-    with SingleTickerProviderStateMixin {
+class _PrayerGridState extends State<_PrayerGrid> {
   int? _tappedIndex;
-  late AnimationController _blinkCtrl;
-  late Animation<double> _blinkAnim;
-  Timer? _countdownTimer;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _blinkCtrl = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-    _blinkAnim = Tween<double>(begin: 1.0, end: 0.15).animate(
-      CurvedAnimation(parent: _blinkCtrl, curve: Curves.easeInOut),
-    );
-    _blinkCtrl.repeat(reverse: true);
-
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _blinkCtrl.dispose();
-    _countdownTimer?.cancel();
-    super.dispose();
-  }
-
-  String _getCurrentPrayer(Map<String, String> times) {
-    final now = TimeOfDay.now();
-    const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    String current = 'Isha';
-    for (int i = 0; i < prayers.length; i++) {
-      final t = _parseTime(times[prayers[i]]!);
-      if (_timeToMinutes(now) >= _timeToMinutes(t)) {
-        current = prayers[i];
-      }
-    }
-    return current;
-  }
-
-  TimeOfDay _parseTime(String timeStr) {
-    final cleaned = timeStr.trim();
-    final upper = cleaned.toUpperCase();
-    if (upper.contains('AM') || upper.contains('PM')) {
-      final parts = cleaned.split(' ');
-      final timeParts = parts[0].split(':');
-      int hour = int.parse(timeParts[0]);
-      int minute = int.parse(timeParts[1]);
-      final isPm = parts[1].toUpperCase() == 'PM';
-      if (isPm && hour != 12) hour += 12;
-      if (!isPm && hour == 12) hour = 0;
-      return TimeOfDay(hour: hour, minute: minute);
-    } else {
-      final parts = cleaned.split(':');
-      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-    }
-  }
-
-  int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
-
-  /// Computes the next upcoming prayer and the Duration until it, live from
-  /// the prayer time strings. Unlike [widget.pt.nextPrayerName] / [widget.pt.timeUntilNext]
-  /// (which are frozen at construction time), this always reflects the current clock.
-  (String, Duration) _computeNextPrayer() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final prayers = [
-      ('Fajr', widget.pt.fajrStr),
-      ('Dhuhr', widget.pt.dhuhrStr),
-      ('Asr', widget.pt.asrStr),
-      ('Maghrib', widget.pt.maghribStr),
-      ('Isha', widget.pt.ishaStr),
-    ];
-    for (final (name, timeStr) in prayers) {
-      final t = _parseTime(timeStr);
-      final dt = DateTime(today.year, today.month, today.day, t.hour, t.minute);
-      if (dt.isAfter(now)) return (name, dt.difference(now));
-    }
-    // All five prayers for today have passed — wrap to Fajr tomorrow.
-    final fajr = _parseTime(widget.pt.fajrStr);
-    final tomorrow = today.add(const Duration(days: 1));
-    final tomorrowFajr = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, fajr.hour, fajr.minute);
-    return ('Fajr', tomorrowFajr.difference(now));
-  }
-
-  Widget _buildNextRow(BuildContext context, String next, String countdown, String currentPrayer) {
-    final sunriseTime = widget.pt.sunriseTime;
-    final now = DateTime.now();
-    final afterFajrWindow = currentPrayer == 'Fajr';
-    final beforeSunrise = now.isBefore(sunriseTime);
-    final sunriseWindowEnd = sunriseTime.add(const Duration(hours: 1));
-    final inSunriseWindow = !beforeSunrise && now.isBefore(sunriseWindowEnd);
-
-    Widget blinkingDot() => FadeTransition(
-      opacity: _blinkAnim,
-      child: Container(width: 8, height: 8,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.gold)),
-    );
-
-    // State 1: After Fajr, before Sunrise — countdown to sunrise
-    if (afterFajrWindow && beforeSunrise) {
-      final until = sunriseTime.difference(now);
-      final h = until.inHours;
-      final m = until.inMinutes % 60;
-      final s = until.inSeconds % 60;
-      final cd = h > 0 ? '${h}h ${m}m ${s}s' : '${m}m ${s}s';
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            blinkingDot(),
-            const SizedBox(width: 6),
-            Text('Sunrise in ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-          ]),
-          const SizedBox(height: 3),
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: Text('at ${widget.pt.sunriseStr}',
-              style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
-          ),
-        ],
-      );
-    }
-
-    // State 2: 0–60 min after sunrise — show sunrise time + next prayer
-    if (afterFajrWindow && inSunriseWindow) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            blinkingDot(),
-            const SizedBox(width: 6),
-            Text('Sunrise was at ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-          ]),
-          const SizedBox(height: 3),
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: Row(children: [
-              Text('Next: ', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
-              Text(next, style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
-              Text(' in $countdown', style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        ],
-      );
-    }
-
-    // Normal: blinking gold dot + next prayer countdown
-    return Row(children: [
-      blinkingDot(),
-      const SizedBox(width: 6),
-      Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-      Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-      Text(' in $countdown', style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-    ]);
-  }
 
   Widget _buildPopup(BuildContext context, String prayerName) {
     final rows = _kRakahRows[prayerName] ?? [];
@@ -1091,19 +989,13 @@ class _PrayerGridState extends State<_PrayerGrid>
       ('Maghrib', widget.pt.maghribStr, 5),
       ('Isha',    widget.pt.ishaStr,    13),
     ];
-    final (next, rem) = _computeNextPrayer();
-    final currentPrayer = _getCurrentPrayer({
+    final currentPrayer = _getCurrentPrayerName({
       'Fajr': widget.pt.fajrStr,
       'Dhuhr': widget.pt.dhuhrStr,
       'Asr': widget.pt.asrStr,
       'Maghrib': widget.pt.maghribStr,
       'Isha': widget.pt.ishaStr,
     });
-
-    final h = rem.inHours;
-    final m = rem.inMinutes % 60;
-    final s = rem.inSeconds % 60;
-    final countdown = '${h}h ${m}m ${s}s';
 
     return GestureDetector(
       onTap: () {
@@ -1203,15 +1095,153 @@ class _PrayerGridState extends State<_PrayerGrid>
                 color: context.textDim.withOpacity(0.7)),
           ),
           const SizedBox(height: 8),
-          // Next prayer row — sunrise-aware 3 states
-          _buildNextRow(context, next, countdown, currentPrayer),
+          // Next prayer row — isolated widget with its own 1-second timer
+          _NextPrayerRow(pt: widget.pt),
         ],
       ),
     );
   }
 }
 
-// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─────────────────────────────────────────────────
+// NEXT PRAYER ROW — isolated StatefulWidget with its own 1-second timer and
+// blink animation. Only this tiny widget rebuilds every second; the 5 prayer
+// cards above stay completely still between user taps.
+// ─────────────────────────────────────────────────
+class _NextPrayerRow extends StatefulWidget {
+  final PrayerTimes pt;
+  const _NextPrayerRow({required this.pt});
+
+  @override
+  State<_NextPrayerRow> createState() => _NextPrayerRowState();
+}
+
+class _NextPrayerRowState extends State<_NextPrayerRow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _blinkCtrl;
+  late Animation<double> _blinkAnim;
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _blinkCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _blinkAnim = Tween<double>(begin: 1.0, end: 0.15).animate(
+      CurvedAnimation(parent: _blinkCtrl, curve: Curves.easeInOut),
+    );
+    _blinkCtrl.repeat(reverse: true);
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _blinkCtrl.dispose();
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (next, rem) = _computeNextPrayerFrom(widget.pt);
+    final currentPrayer = _getCurrentPrayerName({
+      'Fajr': widget.pt.fajrStr,
+      'Dhuhr': widget.pt.dhuhrStr,
+      'Asr': widget.pt.asrStr,
+      'Maghrib': widget.pt.maghribStr,
+      'Isha': widget.pt.ishaStr,
+    });
+
+    final h = rem.inHours;
+    final m = rem.inMinutes % 60;
+    final s = rem.inSeconds % 60;
+    final countdown = '${h}h ${m}m ${s}s';
+
+    final sunriseTime = widget.pt.sunriseTime;
+    final now = DateTime.now();
+    final afterFajrWindow = currentPrayer == 'Fajr';
+    final beforeSunrise = now.isBefore(sunriseTime);
+    final sunriseWindowEnd = sunriseTime.add(const Duration(hours: 1));
+    final inSunriseWindow = !beforeSunrise && now.isBefore(sunriseWindowEnd);
+
+    Widget blinkingDot() => FadeTransition(
+      opacity: _blinkAnim,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.gold,
+        ),
+      ),
+    );
+
+    // State 1: After Fajr, before Sunrise — countdown to sunrise
+    if (afterFajrWindow && beforeSunrise) {
+      final until = sunriseTime.difference(now);
+      final sh = until.inHours;
+      final sm = until.inMinutes % 60;
+      final ss = until.inSeconds % 60;
+      final cd = sh > 0 ? '${sh}h ${sm}m ${ss}s' : '${sm}m ${ss}s';
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            blinkingDot(),
+            const SizedBox(width: 6),
+            Text('Sunrise in ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
+            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+          ]),
+          const SizedBox(height: 3),
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Text('at ${widget.pt.sunriseStr}',
+              style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
+          ),
+        ],
+      );
+    }
+
+    // State 2: 0–60 min after sunrise — show sunrise time + next prayer
+    if (afterFajrWindow && inSunriseWindow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            blinkingDot(),
+            const SizedBox(width: 6),
+            Text('Sunrise was at ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
+            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+          ]),
+          const SizedBox(height: 3),
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Row(children: [
+              Text('Next: ', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
+              Text(next, style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
+              Text(' in $countdown', style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ],
+      );
+    }
+
+    // Normal: blinking gold dot + next prayer countdown
+    return Row(children: [
+      blinkingDot(),
+      const SizedBox(width: 6),
+      Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
+      Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+      Text(' in $countdown', style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+    ]);
+  }
+}
+
+// ─────────────────────────────────────────────────
 // LOCATION SHEET
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 class _LocationSheet extends StatefulWidget {
@@ -1579,6 +1609,40 @@ class _DailyAyah extends StatelessWidget {
 class _PopularSurahs extends StatelessWidget {
   const _PopularSurahs();
 
+  Widget _popularTile(BuildContext context, dynamic s) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(
+        builder: (_) => ReaderScreen(surah: s),
+      )),
+      child: AspectRatio(
+        aspectRatio: 2.4,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+          decoration: BoxDecoration(color: context.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: context.border)),
+          child: Row(children: [
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Surah ${s.number}',
+                    style: TextStyle(fontSize: 7, fontFamily: 'sans-serif', color: context.textDim)),
+                Text(s.nameTransliteration,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.text)),
+                Text('${s.verses} verses',
+                    style: TextStyle(fontSize: 8, fontFamily: 'sans-serif', color: context.textDim)),
+              ],
+            )),
+            Text(s.nameArabic,
+                style: TextStyle(fontFamily: 'Scheherazade', fontSize: 16,
+                    color: context.isDark ? AppColors.gold : AppColors.goldDark)),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final surahs = [1, 36, 55, 67]
@@ -1590,41 +1654,20 @@ class _PopularSurahs extends StatelessWidget {
           style: TextStyle(fontSize: 8, letterSpacing: 2.5,
               color: context.textDim, fontFamily: 'sans-serif')),
       const SizedBox(height: 6),
-      GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        childAspectRatio: 2.4,
-        crossAxisSpacing: 7,
-        mainAxisSpacing: 7,
-        children: surahs.map((s) => GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(
-            builder: (_) => ReaderScreen(surah: s),
-          )),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-            decoration: BoxDecoration(color: context.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: context.border)),
-            child: Row(children: [
-              Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Surah ${s.number}',
-                      style: TextStyle(fontSize: 7, fontFamily: 'sans-serif', color: context.textDim)),
-                  Text(s.nameTransliteration,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.text)),
-                  Text('${s.verses} verses',
-                      style: TextStyle(fontSize: 8, fontFamily: 'sans-serif', color: context.textDim)),
-                ],
-              )),
-              Text(s.nameArabic,
-                  style: TextStyle(fontFamily: 'Scheherazade', fontSize: 16,
-                      color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-            ]),
-          ),
-        )).toList(),
+      Column(
+        children: [
+          Row(children: [
+            Expanded(child: _popularTile(context, surahs[0])),
+            const SizedBox(width: 7),
+            Expanded(child: _popularTile(context, surahs[1])),
+          ]),
+          const SizedBox(height: 7),
+          Row(children: [
+            Expanded(child: _popularTile(context, surahs[2])),
+            const SizedBox(width: 7),
+            Expanded(child: _popularTile(context, surahs[3])),
+          ]),
+        ],
       ),
     ]);
   }
