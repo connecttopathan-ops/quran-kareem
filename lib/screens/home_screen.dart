@@ -122,6 +122,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               curve: Curves.easeInOut);
         }
       });
+    } else if (payload == 'read_quran') {
+      NotificationService.notificationPayload.value = null;
+      // Switch to the Quran tab (index 1 = SurahListScreen).
+      setState(() => _currentIndex = 1);
     }
   }
 

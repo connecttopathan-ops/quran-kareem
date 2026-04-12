@@ -475,6 +475,7 @@ class NotificationService {
         details: details,
         scheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'read_quran',
       );
     }
 
@@ -490,6 +491,7 @@ class NotificationService {
         details: details,
         scheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'read_quran',
       );
     }
   }
