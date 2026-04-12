@@ -1407,8 +1407,35 @@ class _LocationSheetState extends State<_LocationSheet> {
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // CONTINUE READING
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-class _ContinueCard extends StatelessWidget {
+class _ContinueCard extends StatefulWidget {
   const _ContinueCard();
+
+  @override
+  State<_ContinueCard> createState() => _ContinueCardState();
+}
+
+class _ContinueCardState extends State<_ContinueCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+  late Animation<double> _pulseAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.35, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1428,13 +1455,39 @@ class _ContinueCard extends StatelessWidget {
           onTap: () => Navigator.push(context, MaterialPageRoute(
             builder: (_) => ReaderScreen(surah: surah),
           )),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
-            decoration: BoxDecoration(color: context.surface,
+          child: AnimatedBuilder(
+            animation: _pulseAnim,
+            builder: (context, child) => Container(
+              padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+              decoration: BoxDecoration(
+                color: context.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
-                boxShadow: AppShadows.card(context.isDark)),
+                border: Border.all(
+                  color: AppColors.gold.withOpacity(_pulseAnim.value),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  ...AppShadows.card(context.isDark),
+                  BoxShadow(
+                    color: AppColors.gold.withOpacity(_pulseAnim.value * 0.20),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: child,
+            ),
             child: Row(children: [
+              // Gold accent bar on left edge
+              Container(
+                width: 3,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 11),
               Container(width: 36, height: 36,
                 decoration: BoxDecoration(color: AppColors.goldDim.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(9),
@@ -1447,7 +1500,7 @@ class _ContinueCard extends StatelessWidget {
                 Text('Surah ${surah.number} · ${surah.verses} verses',
                     style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
               ])),
-              Icon(Icons.chevron_right, size: 18, color: context.textDim),
+              Icon(Icons.chevron_right, size: 18, color: AppColors.gold),
             ]),
           ),
         ),
