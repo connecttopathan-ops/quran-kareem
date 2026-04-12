@@ -1448,60 +1448,74 @@ class _ContinueCardState extends State<_ContinueCard>
       );
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Continue Reading'.toUpperCase(),
-            style: TextStyle(fontSize: 8, letterSpacing: 2.5,
-                color: context.textDim, fontFamily: 'sans-serif')),
+            style: TextStyle(
+                fontSize: 8,
+                letterSpacing: 2.5,
+                fontFamily: 'sans-serif',
+                fontWeight: FontWeight.w700,
+                color: context.isDark ? Colors.white : Colors.black)),
         const SizedBox(height: 6),
         GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(
             builder: (_) => ReaderScreen(surah: surah),
           )),
-          child: AnimatedBuilder(
-            animation: _pulseAnim,
-            builder: (context, child) => Container(
-              padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
-              decoration: BoxDecoration(
-                color: context.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.gold.withOpacity(_pulseAnim.value),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  ...AppShadows.card(context.isDark),
-                  BoxShadow(
-                    color: AppColors.gold.withOpacity(_pulseAnim.value * 0.20),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+          // RepaintBoundary: isolates animation repaints to this card only —
+          // the rest of the home screen is not touched each frame.
+          child: RepaintBoundary(
+            child: Stack(
+              children: [
+                // Static card — built once, never rebuilt by the animation.
+                Container(
+                  padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+                  decoration: BoxDecoration(
+                    color: context.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: AppShadows.card(context.isDark),
                   ),
-                ],
-              ),
-              child: child,
-            ),
-            child: Row(children: [
-              // Gold accent bar on left edge
-              Container(
-                width: 3,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.gold,
-                  borderRadius: BorderRadius.circular(2),
+                  child: Row(children: [
+                    Container(
+                      width: 3,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.gold,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Container(width: 36, height: 36,
+                      decoration: BoxDecoration(
+                          color: AppColors.goldDim.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(color: context.border)),
+                      child: Center(child: QIcon.book(size: 16, color: AppColors.gold))),
+                    const SizedBox(width: 11),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(surahName,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
+                      Text('Surah ${surah.number} · ${surah.verses} verses',
+                          style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
+                    ])),
+                    Icon(Icons.chevron_right, size: 18, color: AppColors.gold),
+                  ]),
                 ),
-              ),
-              const SizedBox(width: 11),
-              Container(width: 36, height: 36,
-                decoration: BoxDecoration(color: AppColors.goldDim.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(color: context.border)),
-                child: Center(child: QIcon.book(size: 16, color: AppColors.gold))),
-              const SizedBox(width: 11),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(surahName,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
-                Text('Surah ${surah.number} · ${surah.verses} verses',
-                    style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
-              ])),
-              Icon(Icons.chevron_right, size: 18, color: AppColors.gold),
-            ]),
+                // Animated border overlay — only this thin DecoratedBox repaints
+                // at 60 fps. Card content above is completely unaffected.
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) => DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.gold.withOpacity(_pulseAnim.value),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ]);
