@@ -265,6 +265,12 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
             onGrant: () async {
               await Permission.ignoreBatteryOptimizations.request();
               await _recheck();
+              // If exact alarm is still pending, automatically prompt for it now.
+              // The user tapped the last row — chain straight into alarm settings
+              // so they don't have to notice and tap row 2 separately.
+              if (mounted && _showExactRow && !_exactGranted) {
+                await NotificationService().openExactAlarmSettings();
+              }
             },
           ),
 
