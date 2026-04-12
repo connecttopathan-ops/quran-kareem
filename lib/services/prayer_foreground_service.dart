@@ -89,16 +89,27 @@ class PrayerForegroundService {
 
 /// Runs inside the foreground-service Dart isolate.
 ///
-/// Intentionally simple: reads prefs, calculates the next prayer, updates
-/// the persistent notification, and sets a [Timer] to refresh at the prayer
-/// boundary.  No flutter_local_notifications usage here — prayer alarm
-/// notifications are handled by AlarmManager in the main process.
+/// Notification format:
+///   Title: "Dubai | 22 Sha'ban 1447"
+///   Text (upcoming):  "Dhuhr, 12:34  In 00:45:10"
+///   Text (elapsed):   "Dhuhr, 12:34  ◉ +05:56"   ← 30-min grace period
 class PrayerTaskHandler extends TaskHandler {
   Timer? _boundaryTimer;
-  Timer? _tickTimer;   // 1-second tick for live countdown
+  Timer? _tickTimer;    // 1-second tick drives the live display
+  Timer? _graceTimer;   // fires after 30-min grace period → load next prayer
+
+  // Upcoming prayer (shown while grace period is not active)
   String? _nextName;
   DateTime? _nextTime;
+
+  // Last prayer that passed (shown during grace period)
+  String? _lastPrayerName;
+  DateTime? _lastPrayerTime;
+  bool _inElapsedMode = false;
+
   String _cityName = '';
+
+  static const _graceMinutes = 30;
 
   static const _hijriMonths = [
     'Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
@@ -113,16 +124,18 @@ class PrayerTaskHandler extends TaskHandler {
     await _loadNextPrayer();
   }
 
-  /// Called every 60 s — full recalculation in case prefs changed.
+  /// Called every 60 s — skipped during grace period so elapsed display
+  /// is not interrupted; a 'refresh' signal always forces a reload.
   @override
   void onRepeatEvent(DateTime timestamp) {
-    _loadNextPrayer();
+    if (!_inElapsedMode) _loadNextPrayer();
   }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _boundaryTimer?.cancel();
     _tickTimer?.cancel();
+    _graceTimer?.cancel();
   }
 
   @override
@@ -135,6 +148,10 @@ class PrayerTaskHandler extends TaskHandler {
   Future<void> _loadNextPrayer() async {
     _boundaryTimer?.cancel();
     _tickTimer?.cancel();
+    _graceTimer?.cancel();
+    _inElapsedMode = false;
+    _lastPrayerName = null;
+    _lastPrayerTime = null;
 
     final prefs = await SharedPreferences.getInstance();
     final lat = prefs.getDouble('lat');
@@ -184,49 +201,88 @@ class PrayerTaskHandler extends TaskHandler {
     _nextName = nextName;
     _nextTime = nextTime;
 
-    // Boundary timer: fires exactly at the prayer time so the notification
-    // switches to the next prayer instantly.
-    _boundaryTimer = Timer(nextTime.difference(now), _loadNextPrayer);
+    // Boundary timer: when prayer time arrives, enter the 30-min grace period.
+    _boundaryTimer = Timer(nextTime.difference(now), _enterElapsedMode);
 
-    // 1-second tick: drives the live countdown display.
-    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateNotification());
+    // 1-second tick drives the live display.
+    _tickTimer = Timer.periodic(
+        const Duration(seconds: 1), (_) => _updateNotification());
     _updateNotification();
   }
 
-  /// Updates the persistent notification to match Salatuk's style:
-  ///   Title: "Dubai | 22 Sha'ban 1447"
-  ///   Text:  "Maghrib, 18:43  -01:22"   (prayer time + live countdown)
-  void _updateNotification() {
-    if (_nextName == null || _nextTime == null) return;
-    final now = DateTime.now();
-    final rem = _nextTime!.difference(now);
-    if (rem.isNegative) return;
+  /// Called exactly at a prayer time. Switches the notification to elapsed
+  /// mode ("◉ +MM:SS") and starts the 30-minute grace timer.
+  void _enterElapsedMode() {
+    _lastPrayerName = _nextName;
+    _lastPrayerTime = _nextTime;
+    _inElapsedMode = true;
 
+    // After the grace period, load the next upcoming prayer.
+    _graceTimer = Timer(
+        const Duration(minutes: _graceMinutes), _loadNextPrayer);
+
+    // _tickTimer is still running — it will now render elapsed mode.
+    _updateNotification();
+  }
+
+  // ── Notification rendering ────────────────────────────────────────────────
+
+  void _updateNotification() {
+    final now = DateTime.now();
     final (hy, hm, hd) = _toHijri(now);
     final hijriStr = '$hd ${_hijriMonths[hm - 1]} $hy';
     final title = _cityName.isNotEmpty ? '$_cityName | $hijriStr' : hijriStr;
+
+    if (_inElapsedMode) {
+      _renderElapsed(title, now);
+    } else {
+      _renderUpcoming(title, now);
+    }
+  }
+
+  /// Upcoming: "Maghrib, 16:26  In 00:30:03"
+  void _renderUpcoming(String title, DateTime now) {
+    if (_nextName == null || _nextTime == null) return;
+    final rem = _nextTime!.difference(now);
+    if (rem.isNegative) return;
 
     final local = _nextTime!.toLocal();
     final ph = local.hour.toString().padLeft(2, '0');
     final pm = local.minute.toString().padLeft(2, '0');
 
-    // Countdown: always includes seconds so the display visibly ticks.
-    // > 1 h → "-7h 09:23"   ≤ 1 h → "-09:23"
-    final String countdown;
-    final totalSeconds = rem.inSeconds;
-    final h = totalSeconds ~/ 3600;
-    final m = (totalSeconds % 3600) ~/ 60;
-    final s = totalSeconds % 60;
-    final mmss = '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-    if (h >= 1) {
-      countdown = '-${h}h $mmss';
-    } else {
-      countdown = '-$mmss';
-    }
+    final total = rem.inSeconds;
+    final h = total ~/ 3600;
+    final m = (total % 3600) ~/ 60;
+    final s = total % 60;
+    final countdown =
+        '${h.toString().padLeft(2, '0')}:'
+        '${m.toString().padLeft(2, '0')}:'
+        '${s.toString().padLeft(2, '0')}';
 
     FlutterForegroundTask.updateService(
       notificationTitle: title,
-      notificationText: '$_nextName, $ph:$pm  $countdown',
+      notificationText: '$_nextName, $ph:$pm  In $countdown',
+    );
+  }
+
+  /// Elapsed: "Maghrib, 16:26  ◉ +05:56"
+  void _renderElapsed(String title, DateTime now) {
+    if (_lastPrayerName == null || _lastPrayerTime == null) return;
+    final elapsed = now.difference(_lastPrayerTime!);
+
+    final local = _lastPrayerTime!.toLocal();
+    final ph = local.hour.toString().padLeft(2, '0');
+    final pm = local.minute.toString().padLeft(2, '0');
+
+    final total = elapsed.inSeconds.clamp(0, 99 * 60 + 59);
+    final m = total ~/ 60;
+    final s = total % 60;
+    final mmss =
+        '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+
+    FlutterForegroundTask.updateService(
+      notificationTitle: title,
+      notificationText: '$_lastPrayerName, $ph:$pm  ◉ +$mmss',
     );
   }
 
