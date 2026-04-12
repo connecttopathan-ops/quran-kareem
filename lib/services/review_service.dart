@@ -11,7 +11,8 @@ class ReviewService {
   // ── Configuration ────────────────────────────────────────────────────────────
   // Paste your deployed Google Apps Script URL here.
   // Extensions → Apps Script → Deploy → New deployment → Web app → Anyone.
-  static const String _sheetUrl = 'YOUR_APPS_SCRIPT_URL';
+  static const String _sheetUrl =
+      'https://script.google.com/macros/s/AKfycbxMnAIZBcB2iEI9SkqacgoDUdw-M9LQbFioE_XtXn8hMNWf-zVbxC_Ui3hUqMaYzCN0/exec';
 
   // iOS App Store numeric ID (find it in App Store Connect → App Information).
   static const String _appStoreId = 'YOUR_APP_STORE_ID';
