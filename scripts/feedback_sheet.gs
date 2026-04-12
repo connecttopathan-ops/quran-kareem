@@ -15,7 +15,7 @@
  *  7. Re-deploy after any code changes (Deploy → Manage deployments → edit).
  *
  * SHEET STRUCTURE (auto-created on first submission):
- *   A: Timestamp  B: Date (ISO)  C: Platform  D: Streak  E: Feedback
+ *   A: Timestamp  B: Date (ISO)  C: Platform  D: City  E: Language  F: Streak  G: Feedback
  */
 
 var SHEET_NAME = 'Feedback'; // Change if you want a different tab name.
@@ -49,17 +49,19 @@ function _appendRow(data) {
 
   // Write header row if the sheet is empty.
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['Timestamp', 'Date (app)', 'Platform', 'Streak', 'Feedback']);
-    sheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    sheet.appendRow(['Timestamp', 'Date (app)', 'Platform', 'City', 'Language', 'Streak', 'Feedback']);
+    sheet.getRange(1, 1, 1, 7).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
 
   sheet.appendRow([
-    new Date(),                        // A: server timestamp
-    data.date    || '',                // B: date from device (ISO string)
-    data.platform || 'unknown',        // C: android / ios
-    data.streak  != null ? data.streak : '', // D: day streak
-    data.feedback || '',               // E: free-text feedback
+    new Date(),                                      // A: server timestamp
+    data.date     || '',                             // B: date from device (ISO string)
+    data.platform || 'unknown',                      // C: android / ios
+    data.city     || '',                             // D: prayer location city
+    data.language || '',                             // E: translation language code
+    data.streak   != null ? data.streak : '',        // F: day streak
+    data.feedback || '',                             // G: free-text feedback
   ]);
 }
 

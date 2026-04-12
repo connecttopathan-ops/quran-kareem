@@ -97,6 +97,10 @@ class ReviewService {
       return false;
     }
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final city = prefs.getString('cityName') ?? '';
+      final language = prefs.getString('langCode') ?? 'en';
+
       final response = await http
           .post(
             Uri.parse(_sheetUrl),
@@ -106,6 +110,8 @@ class ReviewService {
               'streak': streak,
               'platform': Platform.isAndroid ? 'android' : 'ios',
               'date': DateTime.now().toIso8601String(),
+              'city': city,
+              'language': language,
             }),
           )
           .timeout(const Duration(seconds: 10));
