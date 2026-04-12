@@ -60,7 +60,44 @@ class NotificationService {
   // preserving any per-channel OS settings the user has customised.
   static const int _channelVersion = 1;
 
+  /// Writes reminder defaults to SharedPreferences the very first time the
+  /// app runs.  Uses [containsKey] so existing users' choices are never touched.
+  Future<void> _seedDefaultsIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Morning reading reminder — 6:00 AM, enabled
+    if (!prefs.containsKey('reminder_morning_enabled')) {
+      await prefs.setBool('reminder_morning_enabled', true);
+    }
+    if (!prefs.containsKey('reminder_morning_hour')) {
+      await prefs.setInt('reminder_morning_hour', 6);
+    }
+    if (!prefs.containsKey('reminder_morning_minute')) {
+      await prefs.setInt('reminder_morning_minute', 0);
+    }
+    // Evening reading reminder — 8:00 PM, enabled
+    if (!prefs.containsKey('reminder_evening_enabled')) {
+      await prefs.setBool('reminder_evening_enabled', true);
+    }
+    if (!prefs.containsKey('reminder_evening_hour')) {
+      await prefs.setInt('reminder_evening_hour', 20);
+    }
+    if (!prefs.containsKey('reminder_evening_minute')) {
+      await prefs.setInt('reminder_evening_minute', 0);
+    }
+    // Ayah of the Day — 11:00 AM, enabled
+    if (!prefs.containsKey('ayah_notification_enabled')) {
+      await prefs.setBool('ayah_notification_enabled', true);
+    }
+    if (!prefs.containsKey('ayah_notification_hour')) {
+      await prefs.setInt('ayah_notification_hour', 11);
+    }
+    if (!prefs.containsKey('ayah_notification_minute')) {
+      await prefs.setInt('ayah_notification_minute', 0);
+    }
+  }
+
   Future<void> init() async {
+    await _seedDefaultsIfNeeded();
     tzdata.initializeTimeZones();
     final String timeZoneName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));

@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           .scheduleAllPrayers(pt.lat, pt.lng, pt.calcMethod, mode, adhanType: adhanType);
 
       // Refresh ayah of the day (30-day window — renew on each app open)
-      final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? false;
+      final ayahEnabled = prefs.getBool('ayah_notification_enabled') ?? true;
       await NotificationService().scheduleAyahNotifications(
         enabled: ayahEnabled,
         hour: prefs.getInt('ayah_notification_hour') ?? 11,
@@ -193,10 +193,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
       // Refresh daily reading reminders
       await NotificationService().scheduleDailyReminders(
-        morningEnabled: prefs.getBool('reminder_morning_enabled') ?? false,
+        morningEnabled: prefs.getBool('reminder_morning_enabled') ?? true,
         morningHour: prefs.getInt('reminder_morning_hour') ?? 6,
         morningMinute: prefs.getInt('reminder_morning_minute') ?? 0,
-        eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? false,
+        eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? true,
         eveningHour: prefs.getInt('reminder_evening_hour') ?? 20,
         eveningMinute: prefs.getInt('reminder_evening_minute') ?? 0,
       );
