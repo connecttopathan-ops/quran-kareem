@@ -291,7 +291,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Consumer<AppState>(
       builder: (context, state, _) {
         final screens = [
-          _HomeTab(scrollController: _scrollController, ayahKey: _ayahKey),
+          // TickerMode pauses all animations (pulsing border, blink dot,
+          // countdown timer animation) when the home tab is not active.
+          // Without this, hidden-tab animations burn GPU cycles at 60fps
+          // and cause jank on the Quran/Settings tabs.
+          TickerMode(
+            enabled: _currentIndex == 0,
+            child: _HomeTab(scrollController: _scrollController, ayahKey: _ayahKey),
+          ),
           const SurahListScreen(),
           const SettingsScreen(),
         ];
