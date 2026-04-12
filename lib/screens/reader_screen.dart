@@ -95,6 +95,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _isBookmarked = false;
   final ScrollController _scrollController = ScrollController();
   bool _hasRestoredScroll = false;
+  final Set<int> _seenVerseNumbers = {};
+
+  void _onVerseSeen(int verseNumber) {
+    if (_seenVerseNumbers.add(verseNumber)) {
+      context.read<AppState>().recordVerseRead();
+    }
+  }
 
   @override
   void initState() {
@@ -458,6 +465,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   state: state,
                   translText: translService.getText(
                       state.langCode, widget.surah.number, verse.number),
+                  onFirstSeen: () => _onVerseSeen(verse.number),
                 );
               },
             ),
@@ -660,18 +668,40 @@ class _SurahHeader extends StatelessWidget {
 }
 
 // \u2500\u2500 Verse Card \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-class _VerseCard extends StatelessWidget {
+class _VerseCard extends StatefulWidget {
   final Verse verse;
   final Surah surah;
   final AppState state;
   /// Pre-resolved translation text from [TranslationService] (preferred).
   final String? translText;
+  /// Called the first time this verse enters the viewport (once per session per verse).
+  final VoidCallback? onFirstSeen;
   const _VerseCard({
     required this.verse,
     required this.surah,
     required this.state,
     this.translText,
+    this.onFirstSeen,
   });
+
+  @override
+  State<_VerseCard> createState() => _VerseCardState();
+}
+
+class _VerseCardState extends State<_VerseCard> {
+  @override
+  void initState() {
+    super.initState();
+    // Post-frame so we don't trigger a provider write during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onFirstSeen?.call();
+    });
+  }
+
+  Verse get verse => widget.verse;
+  Surah get surah => widget.surah;
+  AppState get state => widget.state;
+  String? get translText => widget.translText;
 
   @override
   Widget build(BuildContext context) {
