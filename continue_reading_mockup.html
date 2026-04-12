@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Continue Reading — Card Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 32px 20px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #CBA830;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 40px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Two-column layout: light | dark */
+  .option-section {
+    margin-bottom: 48px;
+  }
+  .option-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    color: #CBA830;
+    text-align: center;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .option-desc {
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .phones-row {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Phone shell */
+  .phone {
+    width: 320px;
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    position: relative;
+  }
+  .phone-light { background: #F9F3E8; }
+  .phone-dark  { background: #0D0A04; }
+
+  /* Status bar */
+  .status-bar {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .status-bar-light { background: #F9F3E8; color: #333; }
+  .status-bar-dark  { background: #0D0A04; color: #ddd; }
+  .status-time { flex: 1; }
+  .status-icons { font-size: 9px; }
+
+  /* App header */
+  .app-header {
+    padding: 10px 16px 10px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+  }
+  .app-header-light { border-color: #D4C090; background: #F9F3E8; }
+  .app-header-dark  { border-color: #2A2010; background: #0D0A04; }
+
+  .greeting-label {
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .greeting-label-light { color: #9A8060; }
+  .greeting-label-dark  { color: #706050; }
+
+  .greeting-name { font-family: 'Noto Serif', serif; font-size: 17px; font-weight: 400; margin-top: 1px; }
+  .greeting-name-light { color: #1A1208; }
+  .greeting-name-dark  { color: #F5EDD8; }
+
+  .greeting-name span { color: #CBA830; }
+  .greeting-arabic { font-family: 'Scheherazade New', serif; font-size: 13px; margin-top: 1px; }
+  .greeting-arabic-light { color: #8B6914; }
+  .greeting-arabic-dark  { color: #CBA830; }
+
+  /* Scroll body */
+  .phone-body {
+    padding: 12px 13px 0;
+    height: 510px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Prayer card (same for all, abbreviated) */
+  .prayer-card {
+    border-radius: 14px;
+    padding: 11px 13px;
+    margin-bottom: 10px;
+    border-width: 1px;
+    border-style: solid;
+  }
+  .prayer-card-light { background: #fff; border-color: #D4C090; }
+  .prayer-card-dark  { background: #1A1508; border-color: #2A2010; }
+
+  .prayer-row { display: flex; justify-content: space-between; align-items: center; }
+  .prayer-next { font-size: 9px; letter-spacing: 1.5px; font-weight: 700; }
+  .prayer-next-light { color: #9A8060; }
+  .prayer-next-dark  { color: #706050; }
+  .prayer-name { font-family: 'Noto Serif', serif; font-size: 16px; font-weight: 600; }
+  .prayer-name-light { color: #1A1208; }
+  .prayer-name-dark  { color: #F5EDD8; }
+  .prayer-countdown { font-size: 11px; font-weight: 700; color: #CBA830; }
+
+  /* Quick actions mini */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+  .qa-btn {
+    border-radius: 10px;
+    padding: 8px 10px;
+    border-width: 1px;
+    border-style: solid;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qa-btn-light { background: #fff; border-color: #D4C090; color: #2A1E0E; }
+  .qa-btn-dark  { background: #1A1508; border-color: #2A2010; color: #F5EDD8; }
+  .qa-icon { font-size: 13px; }
+
+  /* Section label */
+  .section-label {
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .section-label-light { color: #9A8060; }
+  .section-label-dark  { color: #706050; }
+
+  /* ── OPTION A: Gold gradient hero card ── */
+  .card-a-light {
+    background: linear-gradient(135deg, #FDF3D8, #F5E6B8);
+    border: 1.5px solid rgba(203,168,48,0.55);
+    border-radius: 16px;
+    padding: 14px 14px 14px 16px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 16px rgba(203,168,48,0.22), 0 2px 8px rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .card-a-dark {
+    background: linear-gradient(135deg, #2A1E06, #1A1304);
+    border: 1.5px solid rgba(203,168,48,0.38);
+    border-radius: 16px;
+    padding: 14px 14px 14px 16px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 18px rgba(203,168,48,0.14), 0 2px 8px rgba(0,0,0,0.35);
+    cursor: pointer;
+  }
+  .card-a-left { flex: 1; }
+  .card-a-tag {
+    font-size: 8px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: #CBA830;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 7px;
+  }
+  .card-a-surah-light { font-family: 'Noto Serif', serif; font-size: 19px; font-weight: 700; color: #1A0E00; line-height: 1.1; }
+  .card-a-surah-dark  { font-family: 'Noto Serif', serif; font-size: 19px; font-weight: 700; color: #F5EDD8; line-height: 1.1; }
+  .card-a-meta { font-size: 9.5px; margin-top: 3px; }
+  .card-a-meta-light { color: rgba(139,105,20,0.80); }
+  .card-a-meta-dark  { color: rgba(203,168,48,0.65); }
+  .card-a-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #CBA830;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-top: 10px;
+  }
+  .card-a-arabic-light { font-family: 'Scheherazade New', serif; font-size: 44px; color: rgba(203,168,48,0.38); line-height: 1; }
+  .card-a-arabic-dark  { font-family: 'Scheherazade New', serif; font-size: 44px; color: rgba(203,168,48,0.28); line-height: 1; }
+
+  /* ── OPTION B: Animated border + accent bar ── */
+  .card-b-light {
+    background: #fff;
+    border-radius: 14px;
+    border: 1.5px solid #CBA830;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(203,168,48,0.18), 0 1px 4px rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+  .card-b-dark {
+    background: #1A1508;
+    border-radius: 14px;
+    border: 1.5px solid rgba(203,168,48,0.5);
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(203,168,48,0.12), 0 1px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  .card-b-bar { width: 4px; background: #CBA830; flex-shrink: 0; border-radius: 2px 0 0 2px; }
+  .card-b-inner { padding: 11px 12px; flex: 1; display: flex; align-items: center; gap: 10px; }
+  .card-b-icon-wrap-light {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(203,168,48,0.10);
+    border: 1px solid rgba(203,168,48,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .card-b-icon-wrap-dark {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(203,168,48,0.12);
+    border: 1px solid rgba(203,168,48,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .card-b-text { flex: 1; }
+  .card-b-label { font-size: 8px; letter-spacing: 2px; font-weight: 700; color: #CBA830; margin-bottom: 4px; text-transform: uppercase; }
+  .card-b-surah { font-family: 'Noto Serif', serif; font-size: 16px; font-weight: 700; }
+  .card-b-surah-light { color: #1A1208; }
+  .card-b-surah-dark  { color: #F5EDD8; }
+  .card-b-meta { font-size: 9.5px; margin-top: 2px; }
+  .card-b-meta-light { color: #9A8060; }
+  .card-b-meta-dark  { color: #706050; }
+  .card-b-chevron { font-size: 18px; color: #CBA830; }
+
+  /* Pulse ring animation */
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0px rgba(203,168,48,0.45); }
+    70%  { box-shadow: 0 0 0 6px rgba(203,168,48,0); }
+    100% { box-shadow: 0 0 0 0px rgba(203,168,48,0); }
+  }
+  .card-b-light { animation: pulse-ring 2.2s ease-out infinite; }
+  .card-b-dark  { animation: pulse-ring 2.2s ease-out infinite; }
+
+  /* ── OPTION C: Two-tone split card ── */
+  .card-c-light {
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    border: 1px solid #D4C090;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+    cursor: pointer;
+    height: 76px;
+  }
+  .card-c-dark {
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    border: 1px solid #2A2010;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.35);
+    cursor: pointer;
+    height: 76px;
+  }
+  .card-c-left-light {
+    width: 42%;
+    background: linear-gradient(135deg, #CBA830, #8B6914);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10px 12px;
+  }
+  .card-c-left-dark {
+    width: 42%;
+    background: linear-gradient(135deg, #8B6914, #4A3408);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10px 12px;
+  }
+  .card-c-left-label { font-size: 7.5px; letter-spacing: 1.5px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 4px; }
+  .card-c-left-icon { font-size: 22px; }
+  .card-c-right-light {
+    flex: 1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+  }
+  .card-c-right-dark {
+    flex: 1;
+    background: #1A1508;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+  }
+  .card-c-surah { font-family: 'Noto Serif', serif; font-size: 14px; font-weight: 700; }
+  .card-c-surah-light { color: #1A1208; }
+  .card-c-surah-dark  { color: #F5EDD8; }
+  .card-c-meta { font-size: 9px; margin-top: 2px; }
+  .card-c-meta-light { color: #9A8060; }
+  .card-c-meta-dark  { color: #706050; }
+  .card-c-arrow-light { font-size: 16px; color: #D4C090; }
+  .card-c-arrow-dark  { font-size: 16px; color: #3A2E10; }
+
+  /* ── OPTION D: Sticky top placement (same card, moved above prayer) ── */
+  .card-d-banner-light {
+    background: linear-gradient(90deg, rgba(203,168,48,0.13), rgba(203,168,48,0.05));
+    border: 1px solid rgba(203,168,48,0.40);
+    border-radius: 12px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .card-d-banner-dark {
+    background: linear-gradient(90deg, rgba(203,168,48,0.10), rgba(203,168,48,0.03));
+    border: 1px solid rgba(203,168,48,0.30);
+    border-radius: 12px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .card-d-dot { width: 7px; height: 7px; border-radius: 50%; background: #CBA830; flex-shrink: 0; animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .card-d-text { flex: 1; }
+  .card-d-label { font-size: 8px; letter-spacing: 1.5px; font-weight: 700; color: #CBA830; text-transform: uppercase; }
+  .card-d-surah { font-family: 'Noto Serif', serif; font-size: 13px; font-weight: 600; }
+  .card-d-surah-light { color: #1A1208; }
+  .card-d-surah-dark  { color: #F5EDD8; }
+  .card-d-arrow { font-size: 16px; color: #CBA830; }
+
+  /* Divider */
+  .divider { height: 1px; background: #333; margin: 40px 0; }
+
+  /* Mode label above phone */
+  .mode-tag {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<h1>Continue Reading — Design Options</h1>
+<p class="subtitle">4 options · Light &amp; Dark mode</p>
+
+<!-- ═══════════════════════════════════════════════════════ OPTION A -->
+<div class="option-section">
+  <div class="option-label">Option A — Gold Gradient Hero Card</div>
+  <div class="option-desc">Warm gold gradient background · Large decorative Arabic name · "Open Surah →" pill button<br>Most visually distinctive — commands attention immediately</div>
+  <div class="phones-row">
+
+    <!-- Light -->
+    <div>
+      <div class="mode-tag">☀ Light Mode</div>
+      <div class="phone phone-light">
+        <div class="status-bar status-bar-light"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-light">
+          <div class="greeting-label greeting-label-light">Good Morning</div>
+          <div class="greeting-name greeting-name-light">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-light">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <!-- Prayer card -->
+          <div class="prayer-card prayer-card-light">
+            <div class="prayer-row">
+              <div>
+                <div class="prayer-next prayer-next-light">NEXT PRAYER</div>
+                <div class="prayer-name prayer-name-light">Dhuhr</div>
+              </div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <!-- Quick actions -->
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <!-- OPTION A CARD -->
+          <div class="card-a-light">
+            <div class="card-a-left">
+              <div class="card-a-tag">📖 CONTINUE READING</div>
+              <div class="card-a-surah-light">Al-Baqarah</div>
+              <div class="card-a-meta card-a-meta-light">Surah 2 · 286 verses · Medinan</div>
+              <div class="card-a-pill">Open Surah →</div>
+            </div>
+            <div class="card-a-arabic-light">البقرة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div>
+      <div class="mode-tag">🌙 Dark Mode</div>
+      <div class="phone phone-dark">
+        <div class="status-bar status-bar-dark"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-dark">
+          <div class="greeting-label greeting-label-dark">Good Morning</div>
+          <div class="greeting-name greeting-name-dark">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-dark">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="prayer-card prayer-card-dark">
+            <div class="prayer-row">
+              <div>
+                <div class="prayer-next prayer-next-dark">NEXT PRAYER</div>
+                <div class="prayer-name prayer-name-dark">Dhuhr</div>
+              </div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <div class="card-a-dark">
+            <div class="card-a-left">
+              <div class="card-a-tag">📖 CONTINUE READING</div>
+              <div class="card-a-surah-dark">Al-Baqarah</div>
+              <div class="card-a-meta card-a-meta-dark">Surah 2 · 286 verses · Medinan</div>
+              <div class="card-a-pill">Open Surah →</div>
+            </div>
+            <div class="card-a-arabic-dark">البقرة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════ OPTION B -->
+<div class="option-section">
+  <div class="option-label">Option B — Pulsing Gold Border + Accent Bar</div>
+  <div class="option-desc">Continuous gold pulse glow · Left accent bar · Larger icon · Subtle but alive<br>Feels native to the app style — draws the eye without being loud</div>
+  <div class="phones-row">
+
+    <div>
+      <div class="mode-tag">☀ Light Mode</div>
+      <div class="phone phone-light">
+        <div class="status-bar status-bar-light"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-light">
+          <div class="greeting-label greeting-label-light">Good Morning</div>
+          <div class="greeting-name greeting-name-light">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-light">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="prayer-card prayer-card-light">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-light">NEXT PRAYER</div><div class="prayer-name prayer-name-light">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <div class="card-b-light">
+            <div class="card-b-bar"></div>
+            <div class="card-b-inner">
+              <div class="card-b-icon-wrap-light">📖</div>
+              <div class="card-b-text">
+                <div class="card-b-label">Continue Reading</div>
+                <div class="card-b-surah card-b-surah-light">Al-Baqarah</div>
+                <div class="card-b-meta card-b-meta-light">Surah 2 · 286 verses</div>
+              </div>
+              <div class="card-b-chevron">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="mode-tag">🌙 Dark Mode</div>
+      <div class="phone phone-dark">
+        <div class="status-bar status-bar-dark"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-dark">
+          <div class="greeting-label greeting-label-dark">Good Morning</div>
+          <div class="greeting-name greeting-name-dark">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-dark">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="prayer-card prayer-card-dark">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-dark">NEXT PRAYER</div><div class="prayer-name prayer-name-dark">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <div class="card-b-dark">
+            <div class="card-b-bar"></div>
+            <div class="card-b-inner">
+              <div class="card-b-icon-wrap-dark">📖</div>
+              <div class="card-b-text">
+                <div class="card-b-label">Continue Reading</div>
+                <div class="card-b-surah card-b-surah-dark">Al-Baqarah</div>
+                <div class="card-b-meta card-b-meta-dark">Surah 2 · 286 verses</div>
+              </div>
+              <div class="card-b-chevron">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════ OPTION C -->
+<div class="option-section">
+  <div class="option-label">Option C — Two-Tone Split Card</div>
+  <div class="option-desc">Bold gold left panel · Clean white/dark right panel · Strong contrast<br>Works well for users who scan quickly — left side is unmissable</div>
+  <div class="phones-row">
+
+    <div>
+      <div class="mode-tag">☀ Light Mode</div>
+      <div class="phone phone-light">
+        <div class="status-bar status-bar-light"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-light">
+          <div class="greeting-label greeting-label-light">Good Morning</div>
+          <div class="greeting-name greeting-name-light">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-light">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="prayer-card prayer-card-light">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-light">NEXT PRAYER</div><div class="prayer-name prayer-name-light">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <div class="card-c-light">
+            <div class="card-c-left-light">
+              <div class="card-c-left-label">Continue Reading</div>
+              <div class="card-c-left-icon">📖</div>
+            </div>
+            <div class="card-c-right-light">
+              <div>
+                <div class="card-c-surah card-c-surah-light">Al-Baqarah</div>
+                <div class="card-c-meta card-c-meta-light">Surah 2 · 286 verses · Medinan</div>
+              </div>
+              <div class="card-c-arrow-light">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="mode-tag">🌙 Dark Mode</div>
+      <div class="phone phone-dark">
+        <div class="status-bar status-bar-dark"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-dark">
+          <div class="greeting-label greeting-label-dark">Good Morning</div>
+          <div class="greeting-name greeting-name-dark">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-dark">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="prayer-card prayer-card-dark">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-dark">NEXT PRAYER</div><div class="prayer-name prayer-name-dark">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+          <div class="card-c-dark">
+            <div class="card-c-left-dark">
+              <div class="card-c-left-label">Continue Reading</div>
+              <div class="card-c-left-icon">📖</div>
+            </div>
+            <div class="card-c-right-dark">
+              <div>
+                <div class="card-c-surah card-c-surah-dark">Al-Baqarah</div>
+                <div class="card-c-meta card-c-meta-dark">Surah 2 · 286 verses · Medinan</div>
+              </div>
+              <div class="card-c-arrow-dark">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════════════════════════════════════════ OPTION D -->
+<div class="option-section">
+  <div class="option-label">Option D — Sticky Top Banner (repositioned)</div>
+  <div class="option-desc">Same card redesigned as a compact banner · Moved above prayer times · Blinking gold dot<br>First thing the eye hits when the app opens — no scrolling needed</div>
+  <div class="phones-row">
+
+    <div>
+      <div class="mode-tag">☀ Light Mode</div>
+      <div class="phone phone-light">
+        <div class="status-bar status-bar-light"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-light">
+          <div class="greeting-label greeting-label-light">Good Morning</div>
+          <div class="greeting-name greeting-name-light">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-light">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <!-- D: banner ABOVE prayer card -->
+          <div class="card-d-banner-light">
+            <div class="card-d-dot"></div>
+            <div class="card-d-text">
+              <div class="card-d-label">Continue Reading</div>
+              <div class="card-d-surah card-d-surah-light">Al-Baqarah · Surah 2</div>
+            </div>
+            <div class="card-d-arrow">›</div>
+          </div>
+          <div class="prayer-card prayer-card-light">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-light">NEXT PRAYER</div><div class="prayer-name prayer-name-light">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-light"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="mode-tag">🌙 Dark Mode</div>
+      <div class="phone phone-dark">
+        <div class="status-bar status-bar-dark"><span class="status-time">9:41</span><span class="status-icons">▐▐▐ ◀◀</span></div>
+        <div class="app-header app-header-dark">
+          <div class="greeting-label greeting-label-dark">Good Morning</div>
+          <div class="greeting-name greeting-name-dark">Assalamu <span>Alaikum</span></div>
+          <div class="greeting-arabic greeting-arabic-dark">اَلسَّلَامُ عَلَيْكُمْ</div>
+        </div>
+        <div class="phone-body">
+          <div class="card-d-banner-dark">
+            <div class="card-d-dot"></div>
+            <div class="card-d-text">
+              <div class="card-d-label">Continue Reading</div>
+              <div class="card-d-surah card-d-surah-dark">Al-Baqarah · Surah 2</div>
+            </div>
+            <div class="card-d-arrow">›</div>
+          </div>
+          <div class="prayer-card prayer-card-dark">
+            <div class="prayer-row">
+              <div><div class="prayer-next prayer-next-dark">NEXT PRAYER</div><div class="prayer-name prayer-name-dark">Dhuhr</div></div>
+              <div class="prayer-countdown">in 2h 14m 08s</div>
+            </div>
+          </div>
+          <div class="quick-actions">
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">🕌</span> Qibla</div>
+            <div class="qa-btn qa-btn-dark"><span class="qa-icon">📿</span> Duas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
