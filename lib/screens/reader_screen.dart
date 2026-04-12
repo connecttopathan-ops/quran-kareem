@@ -207,103 +207,209 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   void _openLanguagePicker(AppState state) {
+    final searchCtrl = TextEditingController();
+    // Pre-scroll so the current language is roughly centred on open.
+    final selIdx = kLanguages.indexWhere((l) => l.code == state.langCode);
+    final scrollCtrl = ScrollController(
+      initialScrollOffset:
+          selIdx > 0 ? (selIdx * 58.0 - 130.0).clamp(0.0, 9999.0) : 0.0,
+    );
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) {
-        return Container(
-          decoration: BoxDecoration(
-            color: context.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(color: context.border),
-          ),
-          padding: EdgeInsets.fromLTRB(
-              16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final query = searchCtrl.text;
+            final filtered = query.isEmpty
+                ? kLanguages
+                : kLanguages
+                    .where((l) =>
+                        l.name
+                            .toLowerCase()
+                            .contains(query.toLowerCase()) ||
+                        l.nativeName
+                            .toLowerCase()
+                            .contains(query.toLowerCase()))
+                    .toList();
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.75,
               ),
-              const SizedBox(height: 12),
-              Text('Translation Language',
-                  style: TextStyle(
-                      color: context.text,
-                      fontSize: 17,
-                      fontFamily: 'serif',
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 320,
-                child: ListView.builder(
-                  itemCount: kLanguages.length,
-                  itemBuilder: (ctx, i) {
-                    final lang = kLanguages[i];
-                    final selected = state.langCode == lang.code;
-                    return GestureDetector(
-                      onTap: () {
-                        state.setLanguage(lang.code);
-                        context.read<TranslationService>().loadSurahTranslation(
-                            lang.code, widget.surah.number);
-                        Navigator.pop(ctx);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? AppColors.goldDim.withOpacity(0.1)
-                              : context.surface2,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: selected ? AppColors.gold : context.border,
-                            width: selected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(children: [
-                          Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(lang.name,
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          color: selected
-                                              ? AppColors.gold
-                                              : context.text,
-                                          fontWeight: selected
-                                              ? FontWeight.w600
-                                              : FontWeight.normal)),
-                                  Text(lang.nativeName,
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: context.textDim,
-                                          fontFamily: 'sans-serif')),
-                                ]),
-                          ),
-                          if (selected) QIcon.check(size: 16, color: AppColors.gold),
-                        ]),
+              decoration: BoxDecoration(
+                color: context.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border.all(color: context.border),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                  16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: context.border,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Translation Language',
+                      style: TextStyle(
+                          color: context.text,
+                          fontSize: 17,
+                          fontFamily: 'serif',
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  // Search field
+                  TextField(
+                    controller: searchCtrl,
+                    style: TextStyle(color: context.text, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Search language...',
+                      hintStyle:
+                          TextStyle(color: context.textDim, fontSize: 13),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.all(11),
+                        child: QIcon.search(
+                            size: 17, color: context.textDim),
+                      ),
+                      suffixIcon: query.isNotEmpty
+                          ? IconButton(
+                              icon: QIcon.close(
+                                  size: 16, color: context.textDim),
+                              onPressed: () {
+                                searchCtrl.clear();
+                                setModalState(() {});
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: context.surface2,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide:
+                            const BorderSide(color: AppColors.gold),
+                      ),
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onChanged: (_) => setModalState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  // Language list
+                  Flexible(
+                    child: filtered.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text('No languages found',
+                                  style: TextStyle(
+                                      color: context.textDim,
+                                      fontFamily: 'sans-serif')),
+                            ),
+                          )
+                        : ListView.builder(
+                            controller:
+                                query.isEmpty ? scrollCtrl : null,
+                            itemCount: filtered.length,
+                            itemBuilder: (_, i) {
+                              final lang = filtered[i];
+                              final selected =
+                                  state.langCode == lang.code;
+                              return GestureDetector(
+                                onTap: () {
+                                  state.setLanguage(lang.code);
+                                  context
+                                      .read<TranslationService>()
+                                      .loadSurahTranslation(
+                                          lang.code,
+                                          widget.surah.number);
+                                  Navigator.pop(sheetCtx);
+                                },
+                                child: AnimatedContainer(
+                                  duration:
+                                      const Duration(milliseconds: 150),
+                                  margin:
+                                      const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? AppColors.goldDim
+                                            .withOpacity(0.1)
+                                        : context.surface2,
+                                    borderRadius:
+                                        BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: selected
+                                          ? AppColors.gold
+                                          : context.border,
+                                      width: selected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(children: [
+                                    Expanded(
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(lang.name,
+                                                style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: selected
+                                                        ? AppColors.gold
+                                                        : context.text,
+                                                    fontWeight: selected
+                                                        ? FontWeight.w600
+                                                        : FontWeight
+                                                            .normal)),
+                                            Text(lang.nativeName,
+                                                style: TextStyle(
+                                                    fontSize: 11,
+                                                    color:
+                                                        context.textDim,
+                                                    fontFamily:
+                                                        'sans-serif')),
+                                          ]),
+                                    ),
+                                    if (selected)
+                                      QIcon.check(
+                                          size: 16,
+                                          color: AppColors.gold),
+                                  ]),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
-    );
+    ).whenComplete(() {
+      searchCtrl.dispose();
+      scrollCtrl.dispose();
+    });
   }
 
   void _openSettings() {
