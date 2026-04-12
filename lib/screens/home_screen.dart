@@ -124,8 +124,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       });
     } else if (payload == 'read_quran') {
       NotificationService.notificationPayload.value = null;
-      // Switch to the Quran tab (index 1 = SurahListScreen).
-      setState(() => _currentIndex = 1);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final state = context.read<AppState>();
+        final surah = kSurahs.firstWhere(
+          (s) => s.number == state.lastSurahNumber,
+          orElse: () => kSurahs.first,
+        );
+        Navigator.push(context, MaterialPageRoute(
+          builder: (_) => ReaderScreen(surah: surah),
+        ));
+      });
     }
   }
 
