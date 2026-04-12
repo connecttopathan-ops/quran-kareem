@@ -847,12 +847,10 @@ class _PrayerGridState extends State<_PrayerGrid>
   late AnimationController _blinkCtrl;
   late Animation<double> _blinkAnim;
   Timer? _countdownTimer;
-  late DateTime _targetTime;
 
   @override
   void initState() {
     super.initState();
-    _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
 
     _blinkCtrl = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -866,14 +864,6 @@ class _PrayerGridState extends State<_PrayerGrid>
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
-  }
-
-  @override
-  void didUpdateWidget(_PrayerGrid old) {
-    super.didUpdateWidget(old);
-    if (old.pt != widget.pt) {
-      _targetTime = DateTime.now().add(widget.pt.timeUntilNext);
-    }
   }
 
   @override
@@ -915,6 +905,31 @@ class _PrayerGridState extends State<_PrayerGrid>
   }
 
   int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  /// Computes the next upcoming prayer and the Duration until it, live from
+  /// the prayer time strings. Unlike [widget.pt.nextPrayerName] / [widget.pt.timeUntilNext]
+  /// (which are frozen at construction time), this always reflects the current clock.
+  (String, Duration) _computeNextPrayer() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final prayers = [
+      ('Fajr', widget.pt.fajrStr),
+      ('Dhuhr', widget.pt.dhuhrStr),
+      ('Asr', widget.pt.asrStr),
+      ('Maghrib', widget.pt.maghribStr),
+      ('Isha', widget.pt.ishaStr),
+    ];
+    for (final (name, timeStr) in prayers) {
+      final t = _parseTime(timeStr);
+      final dt = DateTime(today.year, today.month, today.day, t.hour, t.minute);
+      if (dt.isAfter(now)) return (name, dt.difference(now));
+    }
+    // All five prayers for today have passed — wrap to Fajr tomorrow.
+    final fajr = _parseTime(widget.pt.fajrStr);
+    final tomorrow = today.add(const Duration(days: 1));
+    final tomorrowFajr = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, fajr.hour, fajr.minute);
+    return ('Fajr', tomorrowFajr.difference(now));
+  }
 
   Widget _buildNextRow(BuildContext context, String next, String countdown, String currentPrayer) {
     final sunriseTime = widget.pt.sunriseTime;
@@ -1063,7 +1078,7 @@ class _PrayerGridState extends State<_PrayerGrid>
       ('Maghrib', widget.pt.maghribStr, 5),
       ('Isha',    widget.pt.ishaStr,    13),
     ];
-    final next = widget.pt.nextPrayerName;
+    final (next, rem) = _computeNextPrayer();
     final currentPrayer = _getCurrentPrayer({
       'Fajr': widget.pt.fajrStr,
       'Dhuhr': widget.pt.dhuhrStr,
@@ -1072,11 +1087,9 @@ class _PrayerGridState extends State<_PrayerGrid>
       'Isha': widget.pt.ishaStr,
     });
 
-    final rem = _targetTime.difference(DateTime.now());
-    final remClamped = rem.isNegative ? Duration.zero : rem;
-    final h = remClamped.inHours;
-    final m = remClamped.inMinutes % 60;
-    final s = remClamped.inSeconds % 60;
+    final h = rem.inHours;
+    final m = rem.inMinutes % 60;
+    final s = rem.inSeconds % 60;
     final countdown = '${h}h ${m}m ${s}s';
 
     return GestureDetector(
