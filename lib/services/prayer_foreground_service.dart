@@ -92,7 +92,7 @@ class PrayerForegroundService {
 /// Notification format:
 ///   Title: "Dubai | 22 Sha'ban 1447"
 ///   Text (upcoming):  "Dhuhr, 12:34  In 00:45:10"
-///   Text (elapsed):   "Dhuhr, 12:34  ◉ +05:56"   ← 30-min grace period
+///   Text (elapsed):   "Dhuhr, 12:34  +05:56"   ← 30-min grace period
 class PrayerTaskHandler extends TaskHandler {
   Timer? _boundaryTimer;
   Timer? _tickTimer;    // 1-second tick drives the live display
@@ -171,31 +171,77 @@ class PrayerTaskHandler extends TaskHandler {
     final params = _paramsFor(calcMethodId);
     final now = DateTime.now();
 
-    // Find the next upcoming prayer across today and (if needed) tomorrow.
+    // ── Compute today's prayer times (reused by both checks below) ────────
+    final todayPt = adhan.PrayerTimes(
+      coords,
+      adhan.DateComponents(now.year, now.month, now.day),
+      params,
+    );
+    final todayTimes = <(String, DateTime)>[
+      ('Fajr',    todayPt.fajr),
+      ('Dhuhr',   todayPt.dhuhr),
+      ('Asr',     todayPt.asr),
+      ('Maghrib', todayPt.maghrib),
+      ('Isha',    todayPt.isha),
+    ];
+
+    // ── Grace-window check ────────────────────────────────────────────────
+    // If the service restarted (reboot, OS kill) after a prayer passed but
+    // within the 30-min grace window, resume elapsed mode for that prayer
+    // instead of jumping straight to the next upcoming one.
+    for (final (name, time) in todayTimes.reversed) {
+      if (time.isBefore(now)) {
+        final elapsedSecs = now.difference(time).inSeconds;
+        if (elapsedSecs <= _graceMinutes * 60) {
+          _lastPrayerName = name;
+          _lastPrayerTime = time;
+          _inElapsedMode = true;
+          final remaining = Duration(minutes: _graceMinutes) -
+              Duration(seconds: elapsedSecs);
+          _graceTimer = Timer(remaining, _loadNextPrayer);
+          _tickTimer = Timer.periodic(
+              const Duration(seconds: 1), (_) => _updateNotification());
+          _updateNotification();
+          return;
+        }
+        break; // Most recent past prayer is outside the grace window.
+      }
+    }
+
+    // ── Find next upcoming prayer ─────────────────────────────────────────
     DateTime? nextTime;
     String? nextName;
-    outer:
-    for (var day = 0; day <= 1; day++) {
-      final date = now.add(Duration(days: day));
-      final pt = adhan.PrayerTimes(
+
+    for (final (name, time) in todayTimes) {
+      if (time.isAfter(now)) {
+        nextTime = time;
+        nextName = name;
+        break;
+      }
+    }
+
+    if (nextTime == null) {
+      final tomorrow = now.add(const Duration(days: 1));
+      final tomorrowPt = adhan.PrayerTimes(
         coords,
-        adhan.DateComponents(date.year, date.month, date.day),
+        adhan.DateComponents(tomorrow.year, tomorrow.month, tomorrow.day),
         params,
       );
-      for (final (name, time) in [
-        ('Fajr', pt.fajr),
-        ('Dhuhr', pt.dhuhr),
-        ('Asr', pt.asr),
-        ('Maghrib', pt.maghrib),
-        ('Isha', pt.isha),
+      for (final (name, time) in <(String, DateTime)>[
+        ('Fajr',    tomorrowPt.fajr),
+        ('Dhuhr',   tomorrowPt.dhuhr),
+        ('Asr',     tomorrowPt.asr),
+        ('Maghrib', tomorrowPt.maghrib),
+        ('Isha',    tomorrowPt.isha),
       ]) {
         if (time.isAfter(now)) {
           nextTime = time;
           nextName = name;
-          break outer;
+          break;
         }
       }
     }
+
     if (nextTime == null) return;
 
     _nextName = nextName;
@@ -211,7 +257,7 @@ class PrayerTaskHandler extends TaskHandler {
   }
 
   /// Called exactly at a prayer time. Switches the notification to elapsed
-  /// mode ("◉ +MM:SS") and starts the 30-minute grace timer.
+  /// mode ("+MM:SS") and starts the 30-minute grace timer.
   void _enterElapsedMode() {
     _lastPrayerName = _nextName;
     _lastPrayerTime = _nextTime;
@@ -265,7 +311,7 @@ class PrayerTaskHandler extends TaskHandler {
     );
   }
 
-  /// Elapsed: "Maghrib, 16:26  ◉ +05:56"
+  /// Elapsed: "Maghrib, 16:26  +05:56"
   void _renderElapsed(String title, DateTime now) {
     if (_lastPrayerName == null || _lastPrayerTime == null) return;
     final elapsed = now.difference(_lastPrayerTime!);
@@ -282,7 +328,7 @@ class PrayerTaskHandler extends TaskHandler {
 
     FlutterForegroundTask.updateService(
       notificationTitle: title,
-      notificationText: '$_lastPrayerName, $ph:$pm  ◉ +$mmss',
+      notificationText: '$_lastPrayerName, $ph:$pm  +$mmss',
     );
   }
 
