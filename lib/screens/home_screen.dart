@@ -29,6 +29,7 @@ import '../data/curated_ayahs.dart';
 import '../widgets/permissions_onboarding.dart';
 import '../widgets/review_dialog.dart';
 import 'hifz_screen.dart';
+import 'asma_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1717,16 +1718,9 @@ class _QuickActionsCard extends StatelessWidget {
         icon: Icons.format_list_numbered_rounded,
         label: '99 Names',
         subtitle: 'Asma ul Husna',
-        comingSoon: true,
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('99 Names of Allah — coming soon',
-                style: TextStyle(fontFamily: 'sans-serif')),
-            backgroundColor: AppColors.goldDark,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        ),
+        comingSoon: false,
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const AsmaScreen())),
       ),
       (
         icon: Icons.accessibility_new_rounded,
