@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +6,9 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'firebase_options.dart';
 import 'models/app_state.dart';
+import 'services/analytics_service.dart';
 import 'services/location_service.dart';
 import 'services/audio_service.dart';
 import 'services/audio_handler.dart';
@@ -25,6 +28,7 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Set up foreground service communication port before runApp so the
   // service isolate can send data to the UI isolate after a cold boot.
   FlutterForegroundTask.initCommunicationPort();
@@ -89,6 +93,7 @@ class QuranApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
+            navigatorObservers: [AnalyticsService.observer],
             home: const HomeScreen(),
             routes: {
               '/duas': (context) => const DuasScreen(),
