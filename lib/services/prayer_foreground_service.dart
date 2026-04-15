@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:adhan/adhan.dart' as adhan;
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'notification_service.dart';
@@ -9,6 +11,15 @@ import 'notification_service.dart';
 @pragma('vm:entry-point')
 void prayerForegroundTaskCallback() {
   FlutterForegroundTask.setTaskHandler(PrayerTaskHandler());
+}
+
+/// Watchdog callback — runs every 15 min via AlarmManager in a background
+/// isolate. Restarts the foreground service if the OS killed it.
+@pragma('vm:entry-point')
+Future<void> prayerServiceWatchdog() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  PrayerForegroundService.setup();
+  await PrayerForegroundService.start();
 }
 
 /// Controls the prayer-times foreground service (Android only).
@@ -36,8 +47,8 @@ class PrayerForegroundService {
         channelName: 'Prayer Times Service',
         channelDescription:
             'Shows next prayer and ensures accurate notifications.',
-        channelImportance: NotificationChannelImportance.LOW,
-        priority: NotificationPriority.LOW,
+        channelImportance: NotificationChannelImportance.DEFAULT,
+        priority: NotificationPriority.DEFAULT,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: false,
@@ -51,6 +62,10 @@ class PrayerForegroundService {
     );
   }
 
+  // Unique alarm ID for the 15-minute watchdog — must not clash with
+  // notification IDs used by NotificationService (1-35, 50-51, 100-129).
+  static const _watchdogAlarmId = 999;
+
   /// Start the service if not running, or refresh its data if already running.
   /// Safe to call on every app open.
   static Future<void> start() async {
@@ -58,17 +73,28 @@ class PrayerForegroundService {
     if (await FlutterForegroundTask.isRunningService) {
       // Already running — just tell it to re-read prefs and update.
       FlutterForegroundTask.sendDataToTask('refresh');
-      return;
+    } else {
+      await FlutterForegroundTask.startService(
+        serviceId: 512,
+        notificationTitle: 'Get Quran',
+        notificationText: 'Loading prayer times…',
+        callback: prayerForegroundTaskCallback,
+        // v9.1+: pass service type at runtime so startForeground() includes it.
+        // Required when targetSdk >= 34 (Android 14+) — without this the OS
+        // throws InvalidForegroundServiceTypeException and the service is killed.
+        serviceTypes: [ForegroundServiceTypes.dataSync],
+      );
     }
-    await FlutterForegroundTask.startService(
-      serviceId: 512,
-      notificationTitle: 'Get Quran',
-      notificationText: 'Loading prayer times…',
-      callback: prayerForegroundTaskCallback,
-      // v9.1+: pass service type at runtime so startForeground() includes it.
-      // Required when targetSdk >= 34 (Android 14+) — without this the OS
-      // throws InvalidForegroundServiceTypeException and the service is killed.
-      serviceTypes: [ForegroundServiceTypes.dataSync],
+    // Schedule a watchdog alarm every 15 min to restart the service if the
+    // OS killed it while the app was closed. rescheduleOnReboot ensures it
+    // survives device reboots alongside autoRunOnBoot.
+    await AndroidAlarmManager.periodic(
+      const Duration(minutes: 15),
+      _watchdogAlarmId,
+      prayerServiceWatchdog,
+      exact: false,
+      wakeup: true,
+      rescheduleOnReboot: true,
     );
   }
 
@@ -95,7 +121,7 @@ class PrayerForegroundService {
 ///   Text (elapsed):   "Dhuhr, 12:34  +05:56"   ← 30-min grace period
 class PrayerTaskHandler extends TaskHandler {
   Timer? _boundaryTimer;
-  Timer? _tickTimer;    // 1-second tick drives the live display
+  Timer? _tickTimer;    // 15-second tick drives the live display
   Timer? _graceTimer;   // fires after 30-min grace period → load next prayer
 
   // Upcoming prayer (shown while grace period is not active)
@@ -200,7 +226,7 @@ class PrayerTaskHandler extends TaskHandler {
               Duration(seconds: elapsedSecs);
           _graceTimer = Timer(remaining, _loadNextPrayer);
           _tickTimer = Timer.periodic(
-              const Duration(seconds: 1), (_) => _updateNotification());
+              const Duration(seconds: 15), (_) => _updateNotification());
           _updateNotification();
           return;
         }
@@ -250,9 +276,9 @@ class PrayerTaskHandler extends TaskHandler {
     // Boundary timer: when prayer time arrives, enter the 30-min grace period.
     _boundaryTimer = Timer(nextTime.difference(now), _enterElapsedMode);
 
-    // 1-second tick drives the live display.
+    // 15-second tick drives the live display.
     _tickTimer = Timer.periodic(
-        const Duration(seconds: 1), (_) => _updateNotification());
+        const Duration(seconds: 15), (_) => _updateNotification());
     _updateNotification();
   }
 
