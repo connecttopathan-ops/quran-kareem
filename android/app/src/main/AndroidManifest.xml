@@ -22,6 +22,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Disable Advertising ID collection in Firebase Analytics.
+             This app contains no ads; GAID provides no benefit and
+             avoids the Play Console advertising ID declaration requirement. -->
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
