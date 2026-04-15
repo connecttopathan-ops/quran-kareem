@@ -18,6 +18,10 @@ void prayerForegroundTaskCallback() {
 @pragma('vm:entry-point')
 Future<void> prayerServiceWatchdog() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // AndroidAlarmManager must be initialised in every isolate that calls it,
+  // including this background one. Without this, periodic() silently fails
+  // and the watchdog stops rescheduling itself after the first restart.
+  await AndroidAlarmManager.initialize();
   PrayerForegroundService.setup();
   await PrayerForegroundService.start();
 }
