@@ -121,7 +121,7 @@ class PrayerForegroundService {
 ///   Text (elapsed):   "Dhuhr, 12:34  +05:56"   ← 30-min grace period
 class PrayerTaskHandler extends TaskHandler {
   Timer? _boundaryTimer;
-  Timer? _tickTimer;    // 15-second tick drives the live display
+  Timer? _tickTimer;    // 1-second tick drives the live display
   Timer? _graceTimer;   // fires after 30-min grace period → load next prayer
 
   // Upcoming prayer (shown while grace period is not active)
@@ -226,7 +226,7 @@ class PrayerTaskHandler extends TaskHandler {
               Duration(seconds: elapsedSecs);
           _graceTimer = Timer(remaining, _loadNextPrayer);
           _tickTimer = Timer.periodic(
-              const Duration(seconds: 15), (_) => _updateNotification());
+              const Duration(seconds: 1), (_) => _updateNotification());
           _updateNotification();
           return;
         }
@@ -276,9 +276,9 @@ class PrayerTaskHandler extends TaskHandler {
     // Boundary timer: when prayer time arrives, enter the 30-min grace period.
     _boundaryTimer = Timer(nextTime.difference(now), _enterElapsedMode);
 
-    // 15-second tick drives the live display.
+    // 1-second tick drives the live display.
     _tickTimer = Timer.periodic(
-        const Duration(seconds: 15), (_) => _updateNotification());
+        const Duration(seconds: 1), (_) => _updateNotification());
     _updateNotification();
   }
 
