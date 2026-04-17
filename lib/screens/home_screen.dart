@@ -8,7 +8,6 @@ import '../models/app_state.dart';
 import '../services/location_service.dart';
 import '../services/audio_service.dart';
 import '../services/notification_service.dart';
-import '../services/prayer_foreground_service.dart';
 import '../widgets/q_icons.dart';
 import '../data/quran_data.dart';
 import 'surah_list_screen.dart';
@@ -185,15 +184,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         (e) => e.name == adhanStr,
         orElse: () => AdhanType.makkah,
       );
-      // Start (or restart) the persistent foreground service — provides the
-      // live countdown status-bar notification. AlarmManager (scheduleAllPrayers)
-      // runs independently for the actual prayer-time alarm pop-ups.
-      if (mode != PrayerNotificationMode.off) {
-        await PrayerForegroundService.start();
-      } else {
-        await PrayerForegroundService.stop();
-      }
-
       await NotificationService()
           .scheduleAllPrayers(pt.lat, pt.lng, pt.calcMethod, mode, adhanType: adhanType);
 

@@ -2,10 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'firebase_options.dart';
 import 'models/app_state.dart';
 import 'services/analytics_service.dart';
@@ -15,7 +13,6 @@ import 'services/audio_handler.dart';
 import 'services/quran_service.dart';
 import 'services/translation_service.dart';
 import 'services/notification_service.dart';
-import 'services/prayer_foreground_service.dart';
 import 'services/book_download_service.dart';
 import 'services/audio_download_service.dart';
 import 'screens/home_screen.dart';
@@ -33,17 +30,10 @@ void main() async {
   if (defaultTargetPlatform == TargetPlatform.android) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
-  // Set up foreground service communication port before runApp so the
-  // service isolate can send data to the UI isolate after a cold boot.
-  FlutterForegroundTask.initCommunicationPort();
-  PrayerForegroundService.setup();
   try {
     await NotificationService().init();
   } catch (_) {}
   await AudioDownloadService().init();
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    await AndroidAlarmManager.initialize();
-  }
   // JustAudioBackground registers the app as a media player with iOS
   // (needed for Control Center / lock screen Now Playing widget to appear).
   // Our native NowPlayingPlugin re-registers MPRemoteCommandCenter handlers

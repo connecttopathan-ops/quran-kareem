@@ -3,8 +3,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <!-- Required for Android 14+ to declare foreground service type -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -85,16 +83,6 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/qibla_widget_info"/>
         </receiver>
-
-        <!-- Prayer times foreground service (flutter_foreground_task v9+) -->
-        <!-- Class was renamed ForegroundTaskService→ForegroundService in v9.x.
-             The plugin does NOT declare this service in its own manifest, so
-             the app must do it. foregroundServiceType is required on Android 14+. -->
-        <service
-            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="dataSync"
-            android:stopWithTask="false"
-            android:exported="false"/>
 
         <receiver android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"/>
