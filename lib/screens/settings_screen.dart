@@ -9,6 +9,7 @@ import '../widgets/q_icons.dart';
 import '../services/audio_service.dart';
 import '../services/book_download_service.dart';
 import '../services/quran_service.dart';
+import '../services/review_service.dart';
 import 'text_settings_screen.dart';
 import 'book_language_screen.dart';
 
@@ -113,6 +114,7 @@ class SettingsScreen extends StatelessWidget {
                         subtitle: 'Version 1.0.0',
                         trailing: null,
                       ),
+                      _RateAppTile(),
                     ],
                   ),
                 ),
@@ -653,6 +655,48 @@ class _TranslationSourceTile extends StatelessWidget {
             ),
           const SizedBox(height: 4),
         ],
+      ),
+    );
+  }
+}
+
+// ── Rate App tile ─────────────────────────────────────────────────────────────
+
+class _RateAppTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => ReviewService.requestNativeReview(),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.star_outline_rounded, color: AppColors.gold, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Rate Get Quran',
+                      style: TextStyle(fontSize: 14, color: context.text)),
+                  const SizedBox(height: 2),
+                  Text('Share your feedback on the Play Store',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textDim, size: 20),
+          ],
+        ),
       ),
     );
   }
