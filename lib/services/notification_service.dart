@@ -567,12 +567,12 @@ class NotificationService {
     final startIndex = now.difference(tz.TZDateTime(tz.local, now.year, 1, 1)).inDays %
         curatedAyahs.length;
 
+    tz.TZDateTime base = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    if (base.isBefore(now)) base = base.add(const Duration(days: 1));
+
     for (int i = 0; i < _ayahDays; i++) {
       final ayah = curatedAyahs[(startIndex + i) % curatedAyahs.length];
-      tz.TZDateTime scheduled = tz.TZDateTime(
-          tz.local, now.year, now.month, now.day, hour, minute);
-      scheduled = scheduled.add(Duration(days: i));
-      if (scheduled.isBefore(now)) scheduled = scheduled.add(const Duration(days: 1));
+      final tz.TZDateTime scheduled = base.add(Duration(days: i));
 
       await _safeZonedSchedule(
         id: _ayahBaseId + i,

@@ -218,7 +218,7 @@ class AppState extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     final lastOpenStr = p.getString('lastOpenDate');
     final today = DateTime.now();
-    final todayStr = '${today.year}-${today.month}-${today.day}';
+    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     if (lastOpenStr == null) {
       _dayStreak = 1;
