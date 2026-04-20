@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReviewService {
   ReviewService._();
@@ -14,8 +15,10 @@ class ReviewService {
   static const String _sheetUrl =
       'https://script.google.com/macros/s/AKfycbxMnAIZBcB2iEI9SkqacgoDUdw-M9LQbFioE_XtXn8hMNWf-zVbxC_Ui3hUqMaYzCN0/exec';
 
-  // iOS App Store numeric ID (find it in App Store Connect → App Information).
   static const String _appStoreId = 'YOUR_APP_STORE_ID';
+  static const String _androidPackage = 'co.getquran.app';
+  static const String _playStoreUrl =
+      'https://play.google.com/store/apps/details?id=$_androidPackage';
 
   // Day-streak milestones that trigger a review prompt.
   static const int _firstMilestone = 2;
@@ -75,18 +78,34 @@ class ReviewService {
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   /// Triggers the native Play Store / App Store review sheet.
-  /// Falls back to opening the store listing if the sheet isn't available.
+  /// Falls back to openStoreListing, then a direct URL open as last resort.
   static Future<void> requestNativeReview() async {
+    final review = InAppReview.instance;
+    bool handled = false;
+
     try {
-      final review = InAppReview.instance;
       if (await review.isAvailable()) {
         await review.requestReview();
-      } else {
-        await review.openStoreListing(appStoreId: _appStoreId);
+        handled = true;
       }
     } catch (e) {
-      debugPrint('[ReviewService] native review failed: $e');
+      debugPrint('[ReviewService] requestReview failed: $e');
     }
+
+    if (!handled) {
+      try {
+        await review.openStoreListing(appStoreId: _appStoreId);
+        handled = true;
+      } catch (e) {
+        debugPrint('[ReviewService] openStoreListing failed: $e');
+      }
+    }
+
+    if (!handled && Platform.isAndroid) {
+      await launchUrl(Uri.parse(_playStoreUrl),
+          mode: LaunchMode.externalApplication);
+    }
+
     await markCompleted();
   }
 
