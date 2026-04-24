@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 class QuranAudioHandler {
   final AudioPlayer _player = AudioPlayer();
+
+  static bool _backgroundInitialized = false;
   final StreamController<String> _commandController =
       StreamController<String>.broadcast();
 
@@ -113,6 +116,21 @@ class QuranAudioHandler {
     _watchdogTimer?.cancel();
     _watchdogLastMs = null;
     _watchdogStaleTicks = 0;
+    // Initialise JustAudioBackground on first play so the foreground service
+    // only starts when the user explicitly presses play (Play Store policy).
+    if (!_backgroundInitialized) {
+      try {
+        await JustAudioBackground.init(
+          androidNotificationChannelId: 'co.getquran.app.audio',
+          androidNotificationChannelName: 'Quran Audio',
+          preloadArtwork: true,
+        );
+        _backgroundInitialized = true;
+        print('[QuranAudio] JustAudioBackground.init succeeded');
+      } catch (e) {
+        print('[QuranAudio] JustAudioBackground.init FAILED: $e');
+      }
+    }
     try {
       // Use setAudioSource with tag so just_audio_background populates
       // MPNowPlayingInfoCenter for the iOS lock screen widget.

@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'models/app_state.dart';
@@ -34,22 +33,8 @@ void main() async {
     await NotificationService().init();
   } catch (_) {}
   await AudioDownloadService().init();
-  // JustAudioBackground registers the app as a media player with iOS
-  // (needed for Control Center / lock screen Now Playing widget to appear).
-  // Our native NowPlayingPlugin re-registers MPRemoteCommandCenter handlers
-  // on every setNowPlaying call so they always override just_audio_background's.
-  try {
-    await JustAudioBackground.init(
-      androidNotificationChannelId: 'co.getquran.app.audio',
-      androidNotificationChannelName: 'Quran Audio',
-      preloadArtwork: true,
-    );
-    print('[QuranAudio] JustAudioBackground.init succeeded');
-  } catch (e) {
-    print('[QuranAudio] JustAudioBackground.init FAILED: $e');
-  }
-  // just_audio_background manages the audio session and lock screen widget;
-  // no AudioService.init needed — create the handler directly.
+  // JustAudioBackground is now initialised lazily inside QuranAudioHandler
+  // on the first play() call, so no foreground service starts at launch.
   final handler = QuranAudioHandler();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
