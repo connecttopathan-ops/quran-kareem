@@ -10,9 +10,12 @@
     <!-- Allows the onboarding sheet to request battery optimisation exemption.
          The system shows a dialog; no manual settings navigation needed. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <!-- Foreground service used solely for Quran audio playback (user-initiated).
-         FOREGROUND_SERVICE base permission is supplied by the audio_service plugin
-         via manifest merge — we only declare the specific type permission here. -->
+    <!-- Both permissions required for Android foreground service audio playback.
+         FOREGROUND_SERVICE is the base permission (required on all API levels).
+         FOREGROUND_SERVICE_MEDIA_PLAYBACK is the type-specific permission (API 34+).
+         The audio_service plugin does NOT reliably inject FOREGROUND_SERVICE via
+         manifest merge on all build configurations, so we declare it explicitly. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
 
     <!-- Required for url_launcher to open https:// and market:// URLs on Android 11+ -->
