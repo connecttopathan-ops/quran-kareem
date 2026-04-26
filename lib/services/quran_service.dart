@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/surah.dart';
@@ -266,21 +267,109 @@ class QuranService extends ChangeNotifier {
   final Set<int> _loaded = {};
   final Set<String> _loadedTranslations = {};
 
+  bool _bundledArabicLoaded = false;
+  final Map<String, Map<String, dynamic>> _bundledTranslationCache = {};
+
   QuranService() {
     _verses.addAll(kQuranData);
     loadTranslationSources();
+    unawaited(_loadBundledText());
+  }
+
+  /// Load Arabic text + transliteration from the bundled asset.
+  /// The file is populated by scripts/download_arabic_quran.py during CI.
+  /// Falls back silently if the file is empty or unavailable.
+  Future<void> _loadBundledText() async {
+    try {
+      final jsonStr = await rootBundle.loadString('assets/quran_text.json');
+      final raw = jsonDecode(jsonStr);
+      if (raw is! Map || raw.isEmpty) return;
+      final data = raw as Map<String, dynamic>;
+      final arabic = data['arabic'] as Map<String, dynamic>?;
+      final translit = data['transliteration'] as Map<String, dynamic>?;
+      if (arabic == null || arabic.isEmpty) return;
+
+      for (int s = 1; s <= 114; s++) {
+        final sKey = '$s';
+        final arabicSurah = arabic[sKey] as Map<String, dynamic>?;
+        if (arabicSurah == null) continue;
+        final translitSurah = translit?[sKey] as Map<String, dynamic>?;
+
+        final existing = _verses[s] ?? [];
+        _verses[s] = List.generate(existing.length, (i) {
+          final vKey = '${i + 1}';
+          return Verse(
+            number: existing[i].number,
+            arabic: arabicSurah[vKey] as String? ?? existing[i].arabic,
+            transliteration: translitSurah?[vKey] as String? ?? '',
+            translations: existing[i].translations,
+          );
+        });
+      }
+      _bundledArabicLoaded = true;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Load a single surah's translation from the bundled assets/translations/{lang}.json.
+  /// Parses and caches the full language file on first access.
+  Future<void> _loadBundledTranslation(int surahNumber, String langCode) async {
+    final tKey = '${surahNumber}_$langCode';
+    if (_loadedTranslations.contains(tKey)) return;
+
+    try {
+      if (!_bundledTranslationCache.containsKey(langCode)) {
+        final jsonStr =
+            await rootBundle.loadString('assets/translations/$langCode.json');
+        _bundledTranslationCache[langCode] =
+            jsonDecode(jsonStr) as Map<String, dynamic>;
+      }
+
+      final data = _bundledTranslationCache[langCode]!;
+      final surahData = data['$surahNumber'] as Map<String, dynamic>?;
+      if (surahData == null) return;
+
+      final verses = _verses[surahNumber];
+      if (verses == null || verses.isEmpty) return;
+
+      for (int i = 0; i < verses.length; i++) {
+        final text = surahData['${i + 1}'] as String? ?? '';
+        verses[i].translations[langCode] = VerseTranslation(
+          transliteration: verses[i].transliteration,
+          translation: text,
+        );
+      }
+      _loadedTranslations.add(tKey);
+      notifyListeners();
+    } catch (_) {}
   }
 
   List<Verse> getVerses(int surahNumber) => _verses[surahNumber] ?? [];
   bool isLoading(int surahNumber) => _loading.contains(surahNumber);
   bool isLoaded(int surahNumber) => _loaded.contains(surahNumber);
 
-  /// Load a surah. Uses alquran.cloud 3-edition batch API for Arabic +
-  /// transliteration + translation. Implements 7-day cache with background
-  /// refresh and next-surah prefetch.
+  /// Load a surah. When bundled Arabic asset is available it is used directly,
+  /// skipping the network fetch for Arabic text. Translations are served from
+  /// bundled assets/translations/{lang}.json first, with network as fallback.
   Future<void> loadSurah(int surahNumber,
       {String langCode = 'en', bool prefetch = true}) async {
     if (_loading.contains(surahNumber)) return;
+
+    // Fast path: bundled Arabic text already loaded — only fetch translation.
+    if (_bundledArabicLoaded) {
+      _loaded.add(surahNumber);
+      final tKey = '${surahNumber}_$langCode';
+      if (!_loadedTranslations.contains(tKey)) {
+        await _loadBundledTranslation(surahNumber, langCode);
+        if (!_loadedTranslations.contains(tKey)) {
+          await loadTranslation(surahNumber, langCode, editionForCode(langCode));
+        }
+      }
+      if (prefetch && surahNumber < 114) {
+        unawaited(loadSurah(surahNumber + 1, langCode: langCode, prefetch: false));
+      }
+      return;
+    }
 
     // If surah Arabic data already loaded, just ensure translation is available.
     if (_loaded.contains(surahNumber)) {

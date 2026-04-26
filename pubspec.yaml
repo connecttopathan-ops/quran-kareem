@@ -1,7 +1,7 @@
 name: quran_kareem
 description: Get Quran - A beautiful Quran app
 publish_to: 'none'
-version: 1.0.10+48
+version: 1.0.11+49
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -49,6 +49,7 @@ flutter:
   assets:
     - assets/icon/
     - assets/translations/
+    - assets/quran_text.json
     - assets/audio/adhan_makkah.mp3
     - assets/audio/adhan_madinah.mp3
     - assets/audio/adhan_makkah_fajr.mp3

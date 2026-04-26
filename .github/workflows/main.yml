@@ -25,6 +25,8 @@ jobs:
         run: python3 scripts/download_ur_roman.py
       - name: Download all 46 bundled translations (alquran.cloud)
         run: python3 scripts/download_all_translations.py
+      - name: Download Arabic Quran text + transliteration (alquran.cloud)
+        run: python3 scripts/download_arabic_quran.py
       - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
         run: |
           if [ -f assets/books/bukhari_index.json ] && [ -f assets/books/muslim_index.json ]; then
@@ -77,6 +79,8 @@ jobs:
         run: python3 scripts/download_ur_roman.py
       - name: Download all 46 bundled translations (alquran.cloud)
         run: python3 scripts/download_all_translations.py
+      - name: Download Arabic Quran text + transliteration (alquran.cloud)
+        run: python3 scripts/download_arabic_quran.py
       - name: Bundle hadith assets (Bukhari & Muslim — EN, AR, UR)
         run: |
           if [ -f assets/books/bukhari_index.json ] && [ -f assets/books/muslim_index.json ]; then
