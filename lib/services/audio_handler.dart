@@ -11,18 +11,17 @@ class QuranAudioHandler {
   final StreamController<String> _commandController =
       StreamController<String>.broadcast();
 
-  // iOS 26: setUpPlayerItemStatusObservation Swift continuation leaks.
-  // processingState.completed may not fire; playing state can churn during init.
+  // End-of-surah detection layers.
+  // With a ConcatenatingAudioSource playlist, just_audio handles verse-to-verse
+  // transitions natively. These layers only fire when the entire surah ends.
   //
-  // Three detection layers:
   //   1. processingState.completed (fast, may not fire on iOS 26)
   //   2. playing true→false, guarded by 1s minimum play time
-  //      (prevents false trigger from iOS 26 init state churn)
-  //   3. Timer.periodic watchdog: position stale for 800ms = track ended
+  //   3. Timer.periodic watchdog: position stale for 800ms
   bool _completionFired = false;
   bool _intentionalStop = false;
   bool _wasPlaying = false;
-  DateTime? _playStartTime; // Set when playing first becomes true after a load
+  DateTime? _playStartTime;
 
   // Layer 3 watchdog
   Timer? _watchdogTimer;
@@ -56,7 +55,7 @@ class QuranAudioHandler {
         return;
       }
       final posMs = _player.position.inMilliseconds;
-      if (posMs < 200) return; // Skip silence at track start
+      if (posMs < 200) return;
 
       final lastMs = _watchdogLastMs;
       final delta = lastMs == null ? 9999 : (posMs - lastMs).abs();
@@ -87,13 +86,10 @@ class QuranAudioHandler {
     print('[QuranAudio] playerState playing=${state.playing} proc=${state.processingState}');
 
     if (!_wasPlaying && state.playing) {
-      // Track when playback actually began (for layer 2 guard)
       _playStartTime = DateTime.now();
     }
 
-    // Layer 2: playing→stopped, but only after ≥1s of actual playback.
-    // This prevents iOS 26 init state churn (playing=true/false within the
-    // first ~200ms after play() is called) from firing a spurious autoNext.
+    // Layer 2: playing→stopped, guarded by ≥1s of actual playback.
     if (_wasPlaying && !state.playing && !_intentionalStop) {
       final elapsed = _playStartTime != null
           ? DateTime.now().difference(_playStartTime!)
@@ -108,8 +104,28 @@ class QuranAudioHandler {
     _wasPlaying = state.playing;
   }
 
-  Future<void> playFromUrl(String url, MediaItem item) async {
-    print('[QuranAudio] playFromUrl url=$url');
+  Future<void> _initBackground() async {
+    if (_backgroundInitialized) return;
+    try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'co.getquran.app.audio',
+        androidNotificationChannelName: 'Quran Audio',
+        preloadArtwork: true,
+      );
+      _backgroundInitialized = true;
+      print('[QuranAudio] JustAudioBackground.init succeeded');
+    } catch (e) {
+      print('[QuranAudio] JustAudioBackground.init FAILED: $e');
+    }
+  }
+
+  /// Loads [urls] as a gapless playlist and starts at [startIndex].
+  /// just_audio handles all verse-to-verse transitions natively without
+  /// any Dart code running between them — safe for background playback.
+  /// [autoNext] only fires when the entire playlist (surah) finishes.
+  Future<void> playPlaylist(
+      List<String> urls, List<MediaItem> items, int startIndex) async {
+    print('[QuranAudio] playPlaylist verses=${urls.length} startIndex=$startIndex');
     _intentionalStop = true;
     _completionFired = false;
     _wasPlaying = false;
@@ -117,35 +133,32 @@ class QuranAudioHandler {
     _watchdogTimer?.cancel();
     _watchdogLastMs = null;
     _watchdogStaleTicks = 0;
-    // Initialise JustAudioBackground on first play so the foreground service
-    // only starts when the user explicitly presses play (Play Store policy).
-    if (!_backgroundInitialized) {
-      try {
-        await JustAudioBackground.init(
-          androidNotificationChannelId: 'co.getquran.app.audio',
-          androidNotificationChannelName: 'Quran Audio',
-          preloadArtwork: true,
-        );
-        _backgroundInitialized = true;
-        print('[QuranAudio] JustAudioBackground.init succeeded');
-      } catch (e) {
-        print('[QuranAudio] JustAudioBackground.init FAILED: $e');
-      }
-    }
+
+    await _initBackground();
+
+    final playlist = ConcatenatingAudioSource(
+      children: [
+        for (int i = 0; i < urls.length; i++)
+          AudioSource.uri(Uri.parse(urls[i]), tag: items[i]),
+      ],
+    );
+
     try {
-      // iOS 26: Swift continuation leaks mean setAudioSource never resolves,
-      // so we cap the wait at 300 ms — AVPlayer still loads internally.
-      // On Android setAudioSource resolves normally; no timeout needed.
-      final src = AudioSource.uri(Uri.parse(url), tag: item);
       if (Platform.isIOS) {
-        await _player.setAudioSource(src).timeout(const Duration(milliseconds: 300));
+        // iOS 26: Swift continuation leaks — cap wait, AVPlayer still loads.
+        await _player
+            .setAudioSource(playlist,
+                initialIndex: startIndex, initialPosition: Duration.zero)
+            .timeout(const Duration(milliseconds: 500));
       } else {
-        await _player.setAudioSource(src);
+        await _player.setAudioSource(playlist,
+            initialIndex: startIndex, initialPosition: Duration.zero);
       }
-      print('[QuranAudio] setAudioSource done');
+      print('[QuranAudio] setAudioSource playlist done');
     } catch (e) {
-      print('[QuranAudio] setAudioSource error: $e — playing anyway');
+      print('[QuranAudio] setAudioSource playlist error: $e — playing anyway');
     }
+
     try {
       await _player.play().timeout(const Duration(seconds: 5));
     } catch (e) {

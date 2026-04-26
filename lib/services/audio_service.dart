@@ -102,6 +102,7 @@ class AudioService extends ChangeNotifier {
   // Held explicitly to prevent garbage collection cancelling the subscriptions.
   late final StreamSubscription _playbackStateSub;
   late final StreamSubscription _commandSub;
+  late final StreamSubscription _currentIndexSub;
 
   String get reciterId => _reciterId;
   Reciter get reciter => Reciter.byId(_reciterId);
@@ -139,6 +140,18 @@ class AudioService extends ChangeNotifier {
       }
     });
     _commandSub = _handler.commands.listen(_handleCommand);
+
+    // Track which verse just_audio is playing natively within the playlist.
+    _currentIndexSub = _handler.player.currentIndexStream.listen((index) {
+      if (index == null || _nowPlaying == null) return;
+      final newVerse = index + 1; // playlist is 0-based, verses are 1-based
+      if (_nowPlaying!.verseNumber != newVerse) {
+        _nowPlaying = _nowPlaying!.copyWith(verseNumber: newVerse);
+        notifyListeners();
+        if (Platform.isIOS) _updateNativeNowPlaying(_nowPlaying!);
+      }
+    });
+
     // Handle remote commands sent back from the native Now Playing plugin
     // (lock screen play/pause/next/previous buttons).
     _nowPlayingChannel.setMethodCallHandler((call) async {
@@ -166,7 +179,8 @@ class AudioService extends ChangeNotifier {
     print('[QuranService] _handleCommand cmd=$cmd nowPlaying=${_nowPlaying?.surahNumber}:${_nowPlaying?.verseNumber}');
     switch (cmd) {
       case 'autoNext':
-        await _autoNextVerse();
+        // Entire surah playlist finished — advance to the next surah.
+        await nextSurah();
         break;
       case 'nextSurah':
         await nextSurah();
@@ -238,6 +252,9 @@ class AudioService extends ChangeNotifier {
     extras: {'surahNumber': np.surahNumber, 'verseNumber': np.verseNumber},
   );
 
+  /// Loads the entire surah as a gapless playlist starting at [verseNumber].
+  /// just_audio handles all verse-to-verse transitions natively — no Dart
+  /// code runs between verses, so background audio is uninterrupted.
   Future<void> playVerse({
     required int surahNumber,
     required String surahName,
@@ -256,38 +273,23 @@ class AudioService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _handler.playFromUrl(
-          await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
+      // Resolve all verse URLs for the surah in parallel.
+      final urls = await Future.wait([
+        for (int v = 1; v <= totalVerses; v++) _verseUrl(offset + v),
+      ]);
+      final items = [
+        for (int v = 1; v <= totalVerses; v++)
+          _makeMediaItem(_nowPlaying!.copyWith(verseNumber: v)),
+      ];
+      await _handler.playPlaylist(urls, items, verseNumber - 1);
       await _handler.player.setSpeed(_playbackSpeed);
-      _updateNativeNowPlaying(_nowPlaying!);
+      if (Platform.isIOS) _updateNativeNowPlaying(_nowPlaying!);
     } catch (e) {
       print('[QuranService] playVerse error: $e');
       _isLoading = false;
       _isPlaying = false;
       _error = 'Failed to play audio';
       notifyListeners();
-    }
-  }
-
-  /// Called when the current verse finishes. Advances to the next verse or
-  /// next surah without calling stop(), keeping the iOS audio session active.
-  Future<void> _autoNextVerse() async {
-    print('[QuranService] _autoNextVerse entry nowPlaying=${_nowPlaying?.surahNumber}:${_nowPlaying?.verseNumber}');
-    if (_nowPlaying == null) return;
-    if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
-      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
-      print('[QuranService] _autoNextVerse advancing to verse ${_nowPlaying!.verseNumber}');
-      notifyListeners();
-      try {
-        await _handler.playFromUrl(
-            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-        _updateNativeNowPlaying(_nowPlaying!);
-      } catch (e) {
-        print('[QuranService] _autoNextVerse error: $e');
-      }
-    } else {
-      print('[QuranService] _autoNextVerse end of surah, calling nextSurah');
-      await nextSurah();
     }
   }
 
@@ -310,26 +312,16 @@ class AudioService extends ChangeNotifier {
   Future<void> nextVerse() async {
     if (_nowPlaying == null) return;
     if (_nowPlaying!.verseNumber < _nowPlaying!.totalVerses) {
-      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber + 1);
-      notifyListeners();
-      try {
-        await _handler.playFromUrl(
-            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-        _updateNativeNowPlaying(_nowPlaying!);
-      } catch (_) {}
+      // Seek to start of the next playlist item (0-based index = verseNumber).
+      await _handler.player.seek(Duration.zero, index: _nowPlaying!.verseNumber);
     }
   }
 
   Future<void> previousVerse() async {
     if (_nowPlaying == null) return;
     if (_nowPlaying!.verseNumber > 1) {
-      _nowPlaying = _nowPlaying!.copyWith(verseNumber: _nowPlaying!.verseNumber - 1);
-      notifyListeners();
-      try {
-        await _handler.playFromUrl(
-            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-        _updateNativeNowPlaying(_nowPlaying!);
-      } catch (_) {}
+      // Seek to start of the previous playlist item (0-based index = verseNumber - 2).
+      await _handler.player.seek(Duration.zero, index: _nowPlaying!.verseNumber - 2);
     }
   }
 
@@ -362,11 +354,12 @@ class AudioService extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     await p.setString('reciterId', id);
     if (_nowPlaying != null) {
-      try {
-        await _handler.playFromUrl(
-            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-        _updateNativeNowPlaying(_nowPlaying!);
-      } catch (_) {}
+      await playVerse(
+        surahNumber: _nowPlaying!.surahNumber,
+        surahName: _nowPlaying!.surahName,
+        verseNumber: _nowPlaying!.verseNumber,
+        totalVerses: _nowPlaying!.totalVerses,
+      );
     }
     notifyListeners();
   }
@@ -376,11 +369,12 @@ class AudioService extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     await p.setString('audioLanguage', langCode);
     if (_nowPlaying != null) {
-      try {
-        await _handler.playFromUrl(
-            await _verseUrl(_nowPlaying!.absoluteVerseNumber), _makeMediaItem(_nowPlaying!));
-        _updateNativeNowPlaying(_nowPlaying!);
-      } catch (_) {}
+      await playVerse(
+        surahNumber: _nowPlaying!.surahNumber,
+        surahName: _nowPlaying!.surahName,
+        verseNumber: _nowPlaying!.verseNumber,
+        totalVerses: _nowPlaying!.totalVerses,
+      );
     }
     notifyListeners();
   }
@@ -400,6 +394,7 @@ class AudioService extends ChangeNotifier {
   void dispose() {
     _playbackStateSub.cancel();
     _commandSub.cancel();
+    _currentIndexSub.cancel();
     _handler.dispose();
     super.dispose();
   }
