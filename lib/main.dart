@@ -33,8 +33,12 @@ void main() async {
     await NotificationService().init();
   } catch (_) {}
   await AudioDownloadService().init();
-  // JustAudioBackground is now initialised lazily inside QuranAudioHandler
-  // on the first play() call, so no foreground service starts at launch.
+  // Initialise JustAudioBackground at launch so the Android foreground
+  // service is ready before the user presses play.  The FGS must call
+  // startForeground() within 5 s of startForegroundService(); if we wait
+  // until play() is tapped the startup and play() calls overlap, the
+  // play() future never resolves in time, and Android kills the process.
+  await QuranAudioHandler.initBackground();
   final handler = QuranAudioHandler();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,

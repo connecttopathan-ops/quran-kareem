@@ -104,7 +104,7 @@ class QuranAudioHandler {
     _wasPlaying = state.playing;
   }
 
-  Future<void> _initBackground() async {
+  static Future<void> initBackground() async {
     if (_backgroundInitialized) return;
     try {
       await JustAudioBackground.init(
@@ -118,6 +118,8 @@ class QuranAudioHandler {
       print('[QuranAudio] JustAudioBackground.init FAILED: $e');
     }
   }
+
+  Future<void> _initBackground() => QuranAudioHandler.initBackground();
 
   /// Loads [urls] as a gapless playlist and starts at [startIndex].
   /// just_audio handles all verse-to-verse transitions natively without
@@ -160,7 +162,16 @@ class QuranAudioHandler {
     }
 
     try {
-      await _player.play().timeout(const Duration(seconds: 5));
+      // iOS 26: Swift continuation leaks cause play() to never resolve —
+      // cap the wait. On Android the timeout caused an FGS ANR because
+      // just_audio_background needs the play() Future to complete in order
+      // to call startForeground(); cancelling it early left the service in
+      // an invalid state → Android killed the process.
+      if (Platform.isIOS) {
+        await _player.play().timeout(const Duration(seconds: 5));
+      } else {
+        await _player.play();
+      }
     } catch (e) {
       print('[QuranAudio] play() error/timeout: $e');
     }
