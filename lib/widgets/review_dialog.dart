@@ -123,7 +123,8 @@ class _ReviewDialogState extends State<_ReviewDialog> {
 
   Future<void> _onLoveIt() async {
     Navigator.of(context).pop();
-    await ReviewService.requestNativeReview();
+    await ReviewService.openStorePage();
+    await ReviewService.markCompleted();
   }
 
   Future<void> _onLater() async {
