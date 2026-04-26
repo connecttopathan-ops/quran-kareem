@@ -188,7 +188,9 @@ class AudioService extends ChangeNotifier {
   }
 
   /// Pushes now-playing metadata to MPNowPlayingInfoCenter via the native plugin.
+  /// iOS only — the channel does not exist on Android.
   void _updateNativeNowPlaying(NowPlaying np, {bool playing = true}) {
+    if (!Platform.isIOS) return;
     final duration = _handler.player.duration;
     print('[QuranService] _updateNativeNowPlaying title=${np.surahName} verse=${np.verseNumber} playing=$playing');
     _nowPlayingChannel.invokeMethod('setNowPlaying', {

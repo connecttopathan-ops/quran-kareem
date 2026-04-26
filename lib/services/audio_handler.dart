@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -132,15 +133,18 @@ class QuranAudioHandler {
       }
     }
     try {
-      // Use setAudioSource with tag so just_audio_background populates
-      // MPNowPlayingInfoCenter for the iOS lock screen widget.
-      // Short timeout: iOS 26 continuation leaks but AVPlayer still loads.
-      await _player
-          .setAudioSource(AudioSource.uri(Uri.parse(url), tag: item))
-          .timeout(const Duration(milliseconds: 300));
+      // iOS 26: Swift continuation leaks mean setAudioSource never resolves,
+      // so we cap the wait at 300 ms — AVPlayer still loads internally.
+      // On Android setAudioSource resolves normally; no timeout needed.
+      final src = AudioSource.uri(Uri.parse(url), tag: item);
+      if (Platform.isIOS) {
+        await _player.setAudioSource(src).timeout(const Duration(milliseconds: 300));
+      } else {
+        await _player.setAudioSource(src);
+      }
       print('[QuranAudio] setAudioSource done');
     } catch (e) {
-      print('[QuranAudio] setAudioSource timeout (iOS 26 expected) — playing anyway');
+      print('[QuranAudio] setAudioSource error: $e — playing anyway');
     }
     try {
       await _player.play().timeout(const Duration(seconds: 5));
