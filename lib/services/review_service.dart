@@ -77,6 +77,18 @@ class ReviewService {
 
   // ── Actions ──────────────────────────────────────────────────────────────────
 
+  /// Opens the store listing directly — always works for user-initiated taps.
+  /// Use this from Settings; use requestNativeReview() for automatic prompts.
+  static Future<void> openStorePage() async {
+    if (Platform.isAndroid) {
+      await launchUrl(Uri.parse(_playStoreUrl),
+          mode: LaunchMode.externalApplication);
+    } else {
+      final review = InAppReview.instance;
+      await review.openStoreListing(appStoreId: _appStoreId);
+    }
+  }
+
   /// Triggers the native Play Store / App Store review sheet.
   /// Falls back to openStoreListing, then a direct URL open as last resort.
   static Future<void> requestNativeReview() async {

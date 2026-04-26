@@ -111,7 +111,7 @@ class SettingsScreen extends StatelessWidget {
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
-                        subtitle: 'Version 1.0.0',
+                        subtitle: 'Version 1.0.10',
                         trailing: null,
                       ),
                       _RateAppTile(),
@@ -666,7 +666,7 @@ class _RateAppTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => ReviewService.requestNativeReview(),
+      onTap: () => ReviewService.openStorePage(),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
