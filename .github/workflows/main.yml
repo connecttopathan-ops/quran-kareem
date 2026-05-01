@@ -2,7 +2,7 @@ name: Build Quran App AAB
 
 on:
   push:
-    branches: [ main, claude/check-missing-items-4JdPM, claude/fix-ios-flutter-build-fHNRQ ]
+    branches: [ main, claude/check-missing-items-4JdPM, claude/fix-ios-flutter-build-fHNRQ, claude/code-session-work-xihCz ]
   workflow_dispatch:
 
 jobs:
