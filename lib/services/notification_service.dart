@@ -275,6 +275,12 @@ class NotificationService {
     final coordinates = adhan.Coordinates(lat, lng);
     final params = _adhanParamsForMethod(calcMethodId);
 
+    // Load custom Jumu'ah time override once (set by user in prayer settings)
+    final prefs = await SharedPreferences.getInstance();
+    final jumuahEnabled = prefs.getBool('jumuah_custom_enabled') ?? false;
+    final jumuahHour = prefs.getInt('jumuah_hour') ?? 13;
+    final jumuahMinute = prefs.getInt('jumuah_minute') ?? 15;
+
     int slotId = _prayerBaseId;
 
     for (int day = 0; day < _prayerDays; day++) {
@@ -286,22 +292,30 @@ class NotificationService {
       );
 
       final prayerDateTimes = [pt.fajr, pt.dhuhr, pt.asr, pt.maghrib, pt.isha];
+      final isFriday = date.weekday == DateTime.friday;
 
       for (int p = 0; p < _prayerNames.length; p++) {
-        final prayerDT = prayerDateTimes[p];
-        final scheduledDate = tz.TZDateTime.from(prayerDT, tz.local);
+        // Dhuhr becomes Jumu'ah on Fridays
+        final displayName = (p == 1 && isFriday) ? 'Jumu\'ah' : _prayerNames[p];
+
+        // Use custom Jumu'ah time if the user has set one
+        final rawDT = prayerDateTimes[p];
+        final effectiveDT = (p == 1 && isFriday && jumuahEnabled)
+            ? DateTime(date.year, date.month, date.day, jumuahHour, jumuahMinute)
+            : rawDT;
+        final scheduledDate = tz.TZDateTime.from(effectiveDT, tz.local);
 
         if (scheduledDate.isBefore(now)) {
           slotId++;
           continue; // skip prayers that have already passed
         }
 
-        final details = _buildNotificationDetails(_prayerNames[p], mode, adhanType);
+        final details = _buildNotificationDetails(displayName, mode, adhanType);
 
         await _safeZonedSchedule(
           id: slotId,
           title: 'Prayer Time 🕌',
-          body: "It's time for ${_prayerNames[p]}",
+          body: "It's time for $displayName",
           scheduledDate: scheduledDate,
           details: details,
           scheduleMode: scheduleMode,

@@ -25,6 +25,10 @@ class _PrayerNotificationSettingsScreenState
   String? _playingId; // 'makkah' | 'madinah' | null
   bool _pendingSave = false;
 
+  bool _jumuahEnabled = false;
+  int _jumuahHour = 13;
+  int _jumuahMinute = 15;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +56,9 @@ class _PrayerNotificationSettingsScreenState
     final adhanStr = prefs.getString('adhan_type') ?? 'makkah';
     if (!mounted) return;
     setState(() {
+      _jumuahEnabled = prefs.getBool('jumuah_custom_enabled') ?? false;
+      _jumuahHour = prefs.getInt('jumuah_hour') ?? 13;
+      _jumuahMinute = prefs.getInt('jumuah_minute') ?? 15;
       // Default to singleVibration on first launch (not off)
       _mode = modeStr == null
           ? PrayerNotificationMode.singleVibration
@@ -126,6 +133,9 @@ class _PrayerNotificationSettingsScreenState
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('prayer_notification_mode', _mode.name);
       await prefs.setString('adhan_type', _adhanType.name);
+      await prefs.setBool('jumuah_custom_enabled', _jumuahEnabled);
+      await prefs.setInt('jumuah_hour', _jumuahHour);
+      await prefs.setInt('jumuah_minute', _jumuahMinute);
 
       if (_mode == PrayerNotificationMode.off) {
         await NotificationService().cancelPrayerNotifications();
@@ -309,6 +319,9 @@ class _PrayerNotificationSettingsScreenState
                       ],
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  _SectionHeader('FRIDAY JUMU\'AH'),
+                  _buildJumuahSection(),
                   const SizedBox(height: 8),
                   _SectionHeader('TEST'),
                   _buildTestSection(),
@@ -511,6 +524,78 @@ class _PrayerNotificationSettingsScreenState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildJumuahSection() {
+    final h = _jumuahHour.toString().padLeft(2, '0');
+    final m = _jumuahMinute.toString().padLeft(2, '0');
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            value: _jumuahEnabled,
+            onChanged: (v) => setState(() => _jumuahEnabled = v),
+            activeColor: AppColors.gold,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            title: Text('Custom Jumu\'ah time',
+                style: TextStyle(fontSize: 14, color: context.text)),
+            subtitle: Text(
+              'Override the Friday Dhuhr alarm for your mosque\'s Jumu\'ah',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: context.textDim,
+                  fontFamily: 'sans-serif'),
+            ),
+          ),
+          if (_jumuahEnabled) ...[
+            Divider(height: 1, color: context.border),
+            ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              title: Text('Jumu\'ah notification time',
+                  style: TextStyle(fontSize: 14, color: context.text)),
+              trailing: GestureDetector(
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime:
+                        TimeOfDay(hour: _jumuahHour, minute: _jumuahMinute),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _jumuahHour = picked.hour;
+                      _jumuahMinute = picked.minute;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.gold.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border:
+                        Border.all(color: AppColors.gold.withOpacity(0.4)),
+                  ),
+                  child: Text('$h:$m',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.gold,
+                          fontFamily: 'sans-serif')),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 

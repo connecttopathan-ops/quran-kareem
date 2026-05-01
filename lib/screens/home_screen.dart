@@ -834,14 +834,15 @@ class _PrayerSection extends StatelessWidget {
 
 // Rakah breakdown data
 const _kRakahRows = {
-  'Fajr':    [('Sunnah', 2), ('Fard', 2)],
-  'Dhuhr':   [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2)],
-  'Asr':     [('Sunnah', 4), ('Fard', 4)],
-  'Maghrib': [('Fard', 3), ('Sunnah', 2)],
-  'Isha':    [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2), ('Witr', 3)],
+  'Fajr':     [('Sunnah', 2), ('Fard', 2)],
+  'Dhuhr':    [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2)],
+  'Jumu\'ah': [('Fard', 2)],
+  'Asr':      [('Sunnah', 4), ('Fard', 4)],
+  'Maghrib':  [('Fard', 3), ('Sunnah', 2)],
+  'Isha':     [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2), ('Witr', 3)],
 };
 const _kRakahTotal = {
-  'Fajr': 4, 'Dhuhr': 10, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
+  'Fajr': 4, 'Dhuhr': 10, 'Jumu\'ah': 2, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -980,9 +981,10 @@ class _PrayerGridState extends State<_PrayerGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final isFriday = DateTime.now().weekday == DateTime.friday;
     final prayers = [
       ('Fajr',    widget.pt.fajrStr,    4),
-      ('Dhuhr',   widget.pt.dhuhrStr,   10),
+      (isFriday ? 'Jumu\'ah' : 'Dhuhr', widget.pt.dhuhrStr, isFriday ? 2 : 10),
       ('Asr',     widget.pt.asrStr,     8),
       ('Maghrib', widget.pt.maghribStr, 5),
       ('Isha',    widget.pt.ishaStr,    13),
@@ -1013,7 +1015,8 @@ class _PrayerGridState extends State<_PrayerGrid> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: List.generate(5, (i) {
                 final p = prayers[i];
-                final isCurrent = p.$1 == currentPrayer;
+                final isCurrent = p.$1 == currentPrayer ||
+                    (isFriday && p.$1 == 'Jumu\'ah' && currentPrayer == 'Dhuhr');
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => setState(
@@ -1145,7 +1148,9 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
 
   @override
   Widget build(BuildContext context) {
-    final (next, rem) = _computeNextPrayerFrom(widget.pt);
+    final (nextRaw, rem) = _computeNextPrayerFrom(widget.pt);
+    final isFriday = DateTime.now().weekday == DateTime.friday;
+    final next = (isFriday && nextRaw == 'Dhuhr') ? 'Jumu\'ah' : nextRaw;
     final currentPrayer = _getCurrentPrayerName({
       'Fajr': widget.pt.fajrStr,
       'Dhuhr': widget.pt.dhuhrStr,
