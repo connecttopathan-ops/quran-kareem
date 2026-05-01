@@ -1,7 +1,7 @@
 name: quran_kareem
 description: Get Quran - A beautiful Quran app
 publish_to: 'none'
-version: 1.0.14+52
+version: 1.0.15+53
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

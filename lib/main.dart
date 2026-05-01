@@ -24,11 +24,7 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Firebase is currently configured for Android only; skip init on other
-  // platforms (iOS, etc.) to prevent an UnsupportedError crash at launch.
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  }
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   try {
     await NotificationService().init();
   } catch (_) {}

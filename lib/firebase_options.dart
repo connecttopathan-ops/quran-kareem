@@ -7,6 +7,8 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
+      case TargetPlatform.iOS:
+        return ios;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not configured for this platform.',
@@ -20,5 +22,15 @@ class DefaultFirebaseOptions {
     messagingSenderId: '861194761749',
     projectId: 'get-quran',
     storageBucket: 'get-quran.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyD94_iHRfXsNBORgIdxKLJGQTNvoSzXPo4',
+    appId: '1:861194761749:ios:83362027029aef2b13c01c',
+    messagingSenderId: '861194761749',
+    projectId: 'get-quran',
+    storageBucket: 'get-quran.firebasestorage.app',
+    iosClientId: null,
+    iosBundleId: 'co.getquran.app',
   );
 }
