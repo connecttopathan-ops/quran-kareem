@@ -29,6 +29,7 @@ import '../widgets/permissions_onboarding.dart';
 import '../widgets/review_dialog.dart';
 import 'hifz_screen.dart';
 import 'asma_screen.dart';
+import 'hasanat_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1716,6 +1717,14 @@ class _QuickActionsCard extends StatelessWidget {
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const AsmaScreen())),
+      ),
+      (
+        icon: Icons.volunteer_activism_rounded,
+        label: 'Hasanat',
+        subtitle: 'Rewards calculator',
+        comingSoon: false,
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const HasanatCalculatorScreen())),
       ),
       (
         icon: Icons.accessibility_new_rounded,
