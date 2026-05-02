@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasanat Calculator — v2 Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 40px 20px; gap: 40px; flex-wrap: wrap; }
+
+  .phone { width: 390px; min-height: 844px; background: #F7F3EE; border-radius: 40px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #333; display: flex; flex-direction: column; }
+  .phone.dark { background: #121212; }
+
+  .status-bar { padding: 14px 24px 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #1a1a1a; background: inherit; }
+  .dark .status-bar { color: #fff; }
+
+  /* App bar with subtitle */
+  .app-bar { padding: 4px 16px 12px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .dark .app-bar { border-bottom-color: rgba(255,255,255,0.06); }
+  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #C9A84C; flex-shrink: 0; margin-top: 2px; }
+  .dark .back-btn { background: rgba(255,255,255,0.08); }
+  .app-bar-titles { flex: 1; }
+  .app-bar-title { font-size: 17px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+  .dark .app-bar-title { color: #fff; }
+  .app-bar-subtitle { font-size: 11px; color: #888; margin-top: 2px; font-style: italic; letter-spacing: 0.2px; }
+  .dark .app-bar-subtitle { color: #aaa; }
+
+  .tabs { display: flex; padding: 0 16px; border-bottom: 1px solid rgba(0,0,0,0.06); background: inherit; }
+  .dark .tabs { border-bottom-color: rgba(255,255,255,0.06); }
+  .tab { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; font-weight: 600; color: #999; border-bottom: 2px solid transparent; }
+  .tab.active { color: #C9A84C; border-bottom-color: #C9A84C; }
+
+  .screen-body { flex: 1; overflow-y: auto; padding: 18px 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #999; margin-bottom: 6px; }
+
+  /* Niyyah reminder banner — appears at top */
+  .niyyah-banner { background: linear-gradient(135deg, #fff8e1, #fffbf0); border: 1.5px solid #C9A84C; border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .dark .niyyah-banner { background: linear-gradient(135deg, #1e1808, #1a1500); }
+  .niyyah-icon { font-size: 18px; flex-shrink: 0; }
+  .niyyah-text { font-size: 12.5px; color: #6b5320; line-height: 1.5; font-weight: 500; }
+  .dark .niyyah-text { color: #d4b870; }
+  .niyyah-text strong { color: #8a6500; font-weight: 700; }
+  .dark .niyyah-text strong { color: #e8c84c; }
+
+  /* Inputs */
+  .amount-row { display: flex; gap: 10px; align-items: stretch; }
+  .amount-input { flex: 1; background: #fff; border: 1.5px solid #e8e0d0; border-radius: 12px; padding: 14px 16px; font-size: 22px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
+  .dark .amount-input { background: #1e1e1e; border-color: #2a2a2a; color: #fff; }
+  .amount-input .currency-symbol { font-size: 16px; color: #C9A84C; font-weight: 700; }
+  .currency-select { background: #C9A84C; color: #fff; border-radius: 12px; padding: 0 14px; font-size: 14px; font-weight: 700; display: flex; align-items: center; min-width: 80px; justify-content: center; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #fff; border: 1.5px solid #e0d8c8; color: #666; white-space: nowrap; }
+  .dark .chip { background: #1e1e1e; border-color: #333; color: #aaa; }
+  .chip.selected { background: #C9A84C; border-color: #C9A84C; color: #fff; }
+
+  /* PROMISE CARDS — the hero. Each Quran/hadith reference is its own card. */
+  .promise-card { background: #fff; border: 2px solid #C9A84C; border-radius: 18px; padding: 20px; position: relative; overflow: hidden; }
+  .dark .promise-card { background: #1a1612; }
+
+  .promise-tag { position: absolute; top: 14px; right: 14px; background: rgba(201,168,76,0.15); color: #C9A84C; padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+  .dark .promise-tag { background: rgba(201,168,76,0.2); }
+
+  .promise-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #C9A84C; margin-bottom: 12px; }
+
+  .promise-arabic { font-size: 22px; text-align: right; color: #1a1a1a; line-height: 2; margin-bottom: 14px; font-family: 'Traditional Arabic', 'Scheherazade New', serif; direction: rtl; font-weight: 500; }
+  .dark .promise-arabic { color: #fff; }
+
+  .promise-translation { font-size: 14px; line-height: 1.7; color: #333; margin-bottom: 12px; }
+  .dark .promise-translation { color: #ddd; }
+  .promise-translation em { color: #C9A84C; font-weight: 700; font-style: normal; }
+
+  .promise-source { font-size: 11.5px; font-weight: 700; color: #C9A84C; letter-spacing: 0.4px; padding-top: 10px; border-top: 1px solid rgba(201,168,76,0.2); }
+
+  /* Footnote-style number — small, secondary */
+  .footnote-number { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: rgba(201,168,76,0.08); border-radius: 12px; border: 1px dashed rgba(201,168,76,0.4); }
+  .dark .footnote-number { background: rgba(201,168,76,0.1); }
+  .footnote-label { font-size: 11.5px; color: #888; }
+  .dark .footnote-label { color: #aaa; }
+  .footnote-value { font-size: 18px; font-weight: 800; color: #C9A84C; letter-spacing: -0.3px; }
+
+  /* Conditions card */
+  .conditions-card { background: #f0f7f4; border: 1.5px solid #6dbe8a; border-radius: 14px; padding: 14px 16px; }
+  .dark .conditions-card { background: #0d1f12; border-color: #2a4d36; }
+  .conditions-title { font-size: 12px; font-weight: 800; color: #2e7d52; letter-spacing: 0.4px; margin-bottom: 10px; text-transform: uppercase; }
+  .dark .conditions-title { color: #6dbe8a; }
+  .condition-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: #2e5d42; line-height: 1.5; padding: 4px 0; }
+  .dark .condition-item { color: #9ad1af; }
+  .condition-check { color: #6dbe8a; font-weight: 800; flex-shrink: 0; }
+
+  /* Disclaimer */
+  .disclaimer { background: rgba(0,0,0,0.04); border-radius: 10px; padding: 12px 14px; font-size: 11px; color: #888; line-height: 1.55; display: flex; gap: 8px; align-items: flex-start; }
+  .dark .disclaimer { background: rgba(255,255,255,0.04); }
+  .disclaimer-icon { flex-shrink: 0; }
+
+  .phone-label { text-align: center; color: #999; font-size: 13px; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.3px; }
+  .phone-tag { color: #C9A84C; font-weight: 700; }
+
+  /* Comparison note */
+  .compare-note { background: #2a2a2a; color: #ccc; padding: 14px 18px; border-radius: 12px; font-size: 12.5px; line-height: 1.6; max-width: 380px; margin-top: 20px; border-left: 3px solid #C9A84C; }
+  .compare-note strong { color: #C9A84C; }
+</style>
+</head>
+<body>
+
+<!-- ONE TIME — LIGHT — V2 -->
+<div>
+  <p class="phone-label">One Time — <span class="phone-tag">Light · Theologically refined</span></p>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="app-bar-titles">
+        <div class="app-bar-title">Hasanat Calculator</div>
+        <div class="app-bar-subtitle">Rewards promised in the Quran & Hadeeth</div>
+      </div>
+    </div>
+    <div class="tabs"><div class="tab active">One Time</div><div class="tab">Recurring</div></div>
+    <div class="screen-body">
+
+      <div class="niyyah-banner">
+        <div class="niyyah-icon">✦</div>
+        <div class="niyyah-text"><strong>Renew your niyyah.</strong> All deeds are by intention. Only Allah knows what He accepts.</div>
+      </div>
+
+      <div>
+        <div class="section-label">Amount</div>
+        <div class="amount-row">
+          <div class="amount-input"><span class="currency-symbol">$</span><span>100</span></div>
+          <div class="currency-select">USD ▾</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Type of Deed</div>
+        <div class="chips">
+          <div class="chip selected">Sadaqah</div>
+          <div class="chip">Sadaqah Jariyah</div>
+          <div class="chip">Feeding the Poor</div>
+          <div class="chip">Masjid / Orphans</div>
+        </div>
+      </div>
+
+      <!-- PROMISE CARD 1 — the hero of the screen -->
+      <div class="promise-card">
+        <div class="promise-tag">QURAN</div>
+        <div class="promise-label">✦ Allah's Promise</div>
+        <div class="promise-arabic">مَّثَلُ ٱلَّذِينَ يُنفِقُونَ أَمْوَٰلَهُمْ فِى سَبِيلِ ٱللَّهِ كَمَثَلِ حَبَّةٍ أَنۢبَتَتْ سَبْعَ سَنَابِلَ فِى كُلِّ سُنۢبُلَةٍ مِّا۟ئَةُ حَبَّةٍ</div>
+        <div class="promise-translation">"The example of those who spend their wealth in the way of Allah is like a seed that sprouts seven ears, in each ear <em>one hundred grains</em>. And Allah multiplies for whom He wills."</div>
+        <div class="promise-source">— Surah Al-Baqarah 2:261</div>
+      </div>
+
+      <!-- PROMISE CARD 2 — base 10× from another verse -->
+      <div class="promise-card">
+        <div class="promise-tag">QURAN</div>
+        <div class="promise-label">✦ The Minimum Promise</div>
+        <div class="promise-arabic">مَن جَآءَ بِٱلْحَسَنَةِ فَلَهُۥ عَشْرُ أَمْثَالِهَا</div>
+        <div class="promise-translation">"Whoever comes with a good deed will have <em>ten times the like thereof</em>."</div>
+        <div class="promise-source">— Surah Al-An'am 6:160</div>
+      </div>
+
+      <!-- Small footnote-style numbers, not a giant gold card -->
+      <div class="footnote-number">
+        <span class="footnote-label">Minimum (per 6:160):</span>
+        <span class="footnote-value">1,000 hasanat</span>
+      </div>
+      <div class="footnote-number">
+        <span class="footnote-label">Up to (per 2:261):</span>
+        <span class="footnote-value">70,000 hasanat</span>
+      </div>
+
+      <div class="conditions-card">
+        <div class="conditions-title">✦ Conditions for Reward</div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>Sincere intention (ikhlas) — for Allah alone</span></div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>Wealth from a halal source</span></div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>Given without reminder of favour or harm <em>(Quran 2:262)</em></span></div>
+      </div>
+
+      <div class="disclaimer">
+        <div class="disclaimer-icon">ⓘ</div>
+        <div>The figures above are read directly from the cited verses — they are <strong>Allah's promise, not our calculation</strong>. Only Allah knows true acceptance.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ONE TIME — DARK — alternate deed example -->
+<div>
+  <p class="phone-label">Different Deed — <span class="phone-tag">Dark · Salah at Haram</span></p>
+  <div class="phone dark">
+    <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="app-bar-titles">
+        <div class="app-bar-title">Hasanat Calculator</div>
+        <div class="app-bar-subtitle">Rewards promised in the Quran & Hadeeth</div>
+      </div>
+    </div>
+    <div class="tabs"><div class="tab active">One Time</div><div class="tab">Recurring</div></div>
+    <div class="screen-body">
+
+      <div class="niyyah-banner">
+        <div class="niyyah-icon">✦</div>
+        <div class="niyyah-text"><strong>Renew your niyyah.</strong> All deeds are by intention. Only Allah knows what He accepts.</div>
+      </div>
+
+      <div>
+        <div class="section-label">Type of Deed</div>
+        <div class="chips">
+          <div class="chip">Sadaqah</div>
+          <div class="chip selected">Salah</div>
+          <div class="chip">Quran Recitation</div>
+          <div class="chip">Dhikr</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Location</div>
+        <div class="chips">
+          <div class="chip selected">Masjid al-Haram</div>
+          <div class="chip">Masjid an-Nabawi</div>
+          <div class="chip">Masjid al-Aqsa</div>
+          <div class="chip">Other Masjid</div>
+        </div>
+      </div>
+
+      <div class="promise-card">
+        <div class="promise-tag">HADEETH</div>
+        <div class="promise-label">✦ Prophet ﷺ said</div>
+        <div class="promise-translation">"One prayer in this masjid of mine is better than <em>one thousand prayers</em> elsewhere, except Masjid al-Haram. And one prayer in Masjid al-Haram is better than <em>one hundred thousand prayers</em> elsewhere."</div>
+        <div class="promise-source">— Sunan Ibn Majah 1406 (Sahih)</div>
+      </div>
+
+      <div class="footnote-number">
+        <span class="footnote-label">One salah equals:</span>
+        <span class="footnote-value">100,000 salawat</span>
+      </div>
+
+      <div class="conditions-card">
+        <div class="conditions-title">✦ Conditions for Reward</div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>Performed with proper purification (wudu)</span></div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>With khushu' — humility and presence of heart</span></div>
+        <div class="condition-item"><span class="condition-check">✓</span><span>Following the Sunnah of the Prophet ﷺ</span></div>
+      </div>
+
+      <div class="disclaimer">
+        <div class="disclaimer-icon">ⓘ</div>
+        <div>This figure is the <strong>Prophet's ﷺ words</strong> from authentic narration — not our calculation. Only Allah knows true acceptance.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="compare-note">
+  <strong>Key changes from v1:</strong><br><br>
+  • Subtitle "Rewards promised in the Quran & Hadeeth" — frames the app as a reader of the texts, not an authority<br>
+  • Niyyah banner appears <em>before</em> any number<br>
+  • Ayah/hadith card is the visual hero — large Arabic, clear translation, source<br>
+  • Numbers shown as <em>footnotes</em>, not giant gold cards — sourced directly to specific verses<br>
+  • No multiplier stacking — each promise shown as its own card<br>
+  • Conditions card included (ikhlas, halal source, no reminder of favour)<br>
+  • Disclaimer says "Allah's promise, not our calculation"
+</div>
+
+</body>
+</html>
