@@ -55,9 +55,14 @@ class QiblaScreen extends StatefulWidget {
 
 class _QiblaScreenState extends State<QiblaScreen>
     with TickerProviderStateMixin {
-  // Heading smoothing
+  // Heading smoothing (buffer kept small for responsiveness)
   final List<double> _headingBuffer = [];
   double _smoothHeading = 0;
+
+  // Raw sensor data for tilt-compensated heading
+  AccelerometerEvent? _lastAccel;
+  MagnetometerEvent? _lastMag;
+  StreamSubscription<MagnetometerEvent>? _magSub;
 
   // Tilt
   bool _isTilted = false;
@@ -68,6 +73,9 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   // Haptic "on target" guard
   bool _hapticFired = false;
+
+  // Calibration cooldown — avoid spamming the overlay
+  DateTime? _lastCalibrationTime;
 
   // Calibration overlay
   bool _showCalibration = true;
@@ -92,9 +100,9 @@ class _QiblaScreenState extends State<QiblaScreen>
     // Auto-dismiss calibration overlay after 3 seconds
     Future.delayed(const Duration(seconds: 3), _dismissCalibration);
 
-    // Tilt detection
+    // Tilt detection + raw sensor fusion source
     _accelSub = accelerometerEventStream().listen((event) {
-      // z-axis close to ±9.8 means flat; significant x/y tilt = tilted
+      _lastAccel = event;
       final tiltAngle = acos(event.z.abs() / sqrt(
               event.x * event.x + event.y * event.y + event.z * event.z)) *
           180 / pi;
@@ -102,6 +110,13 @@ class _QiblaScreenState extends State<QiblaScreen>
       if (tilted != _isTilted) {
         setState(() => _isTilted = tilted);
       }
+      _updateHeadingFromSensors();
+    });
+
+    // Magnetometer — primary heading source (enables tilt compensation)
+    _magSub = magnetometerEventStream().listen((event) {
+      _lastMag = event;
+      _updateHeadingFromSensors();
     });
   }
 
@@ -110,6 +125,7 @@ class _QiblaScreenState extends State<QiblaScreen>
     _lissajousCtrl.dispose();
     _fadeCtrl.dispose();
     _accelSub?.cancel();
+    _magSub?.cancel();
     super.dispose();
   }
 
@@ -138,22 +154,81 @@ class _QiblaScreenState extends State<QiblaScreen>
     return (atan2(sinSum, cosSum) * 180 / pi + 360) % 360;
   }
 
+  // flutter_compass is kept as cold-start fallback only.
+  // Once raw sensor data arrives, heading comes from _updateHeadingFromSensors.
   void _onCompassEvent(CompassEvent event) {
+    if (_lastMag != null && _lastAccel != null) return;
     final h = event.heading ?? 0.0;
-    _headingBuffer.add(h);
-    if (_headingBuffer.length > 10) _headingBuffer.removeAt(0);
-    _smoothHeading = _circularMean(_headingBuffer);
+    _applyHeadingReading(h);
+  }
 
-    // Derive accuracy from heading variance
+  // Tilt-compensated heading using roll/pitch from accelerometer.
+  // Projects the magnetometer onto the horizontal plane before computing bearing.
+  double _computeTiltHeading(AccelerometerEvent accel, MagnetometerEvent mag) {
+    final ax = accel.x, ay = accel.y, az = accel.z;
+    final mx = mag.x, my = mag.y, mz = mag.z;
+
+    if (sqrt(ax * ax + ay * ay + az * az) < 0.1) return _smoothHeading;
+
+    final roll = atan2(ay, az);
+    final pitch = atan2(-ax, sqrt(ay * ay + az * az));
+
+    final xh = mx * cos(pitch) +
+        my * sin(roll) * sin(pitch) +
+        mz * cos(roll) * sin(pitch);
+    final yh = my * cos(roll) - mz * sin(roll);
+
+    if (xh == 0 && yh == 0) return _smoothHeading;
+    return (atan2(-yh, xh) * 180 / pi + 360) % 360;
+  }
+
+  void _updateHeadingFromSensors() {
+    final accel = _lastAccel;
+    final mag = _lastMag;
+    if (accel == null || mag == null) return;
+    _applyHeadingReading(_computeTiltHeading(accel, mag));
+  }
+
+  void _applyHeadingReading(double heading) {
+    // Clear stale buffer on large jumps so the needle snaps quickly
+    if (_headingBuffer.isNotEmpty) {
+      final diff = ((heading - _smoothHeading + 540) % 360) - 180;
+      if (diff.abs() > 45) _headingBuffer.clear();
+    }
+
+    _headingBuffer.add(heading);
+    if (_headingBuffer.length > 5) _headingBuffer.removeAt(0);
+
+    final newSmooth = _circularMean(_headingBuffer);
+
+    int newAccuracy = _accuracyLevel;
     if (_headingBuffer.length >= 3) {
-      final mean = _smoothHeading;
       double variance = 0;
       for (final a in _headingBuffer) {
-        final d = ((a - mean + 540) % 360) - 180;
+        final d = ((a - newSmooth + 540) % 360) - 180;
         variance += d * d;
       }
       variance /= _headingBuffer.length;
-      _accuracyLevel = variance < 9 ? 2 : variance < 36 ? 1 : 0;
+      newAccuracy = variance < 9 ? 2 : variance < 36 ? 1 : 0;
+    }
+
+    final changed =
+        (newSmooth - _smoothHeading).abs() > 0.3 || newAccuracy != _accuracyLevel;
+    if (!mounted || !changed) return;
+
+    setState(() {
+      _smoothHeading = newSmooth;
+      _accuracyLevel = newAccuracy;
+    });
+
+    // Auto-prompt recalibration on persistent noise, with 30-second cooldown
+    if (newAccuracy == 0 && !_showCalibration) {
+      final now = DateTime.now();
+      if (_lastCalibrationTime == null ||
+          now.difference(_lastCalibrationTime!) > const Duration(seconds: 30)) {
+        _lastCalibrationTime = now;
+        _showCalibrationOverlay();
+      }
     }
   }
 
