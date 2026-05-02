@@ -15,7 +15,7 @@ class ReviewService {
   static const String _sheetUrl =
       'https://script.google.com/macros/s/AKfycbxMnAIZBcB2iEI9SkqacgoDUdw-M9LQbFioE_XtXn8hMNWf-zVbxC_Ui3hUqMaYzCN0/exec';
 
-  static const String _appStoreId = 'YOUR_APP_STORE_ID';
+  static const String _appStoreId = '6760704164';
   static const String _androidPackage = 'co.getquran.app';
   static const String _playStoreUrl =
       'https://play.google.com/store/apps/details?id=$_androidPackage';
