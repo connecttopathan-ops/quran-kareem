@@ -322,8 +322,8 @@ class _RecurringTabState extends State<_RecurringTab>
         Text(
           _formatDuration(_months),
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
             color: AppColors.gold,
             fontFamily: 'serif',
           ),
@@ -463,36 +463,34 @@ class _NiyyahBanner extends StatelessWidget {
             color:
                 context.isDark ? AppColors.darkGoldBorder : AppColors.goldBorder),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.brightness_2_rounded,
-              size: 16,
-              color: context.isDark ? AppColors.gold : AppColors.goldDark),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
+          Row(
+            children: [
+              Icon(Icons.favorite_rounded,
+                  size: 14,
+                  color: context.isDark ? AppColors.gold : AppColors.goldDark),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Renew your niyyah',
                 style: TextStyle(
                   fontSize: 12.5,
-                  height: 1.45,
-                  color: context.isDark ? AppColors.warmWhite : AppColors.deepText,
+                  fontWeight: FontWeight.w700,
+                  color: context.isDark ? AppColors.gold : AppColors.goldDark,
                   fontFamily: 'sans-serif',
                 ),
-                children: [
-                  TextSpan(
-                      text: 'Renew your niyyah. ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: context.isDark
-                            ? AppColors.gold
-                            : AppColors.goldDark,
-                      )),
-                  const TextSpan(
-                      text:
-                          'All deeds are by intention. Only Allah knows what He accepts.'),
-                ],
               ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'All deeds are by intention. Only Allah knows what He accepts.',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.45,
+              color: context.isDark ? AppColors.warmWhite : AppColors.deepText,
+              fontFamily: 'sans-serif',
             ),
           ),
         ],
@@ -533,7 +531,7 @@ class _AmountRow extends StatelessWidget {
               children: [
                 Text(currencySymbol,
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.gold,
                         fontFamily: 'sans-serif')),
@@ -548,14 +546,14 @@ class _AmountRow extends StatelessWidget {
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
                     ],
                     style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: context.text,
                         fontFamily: 'serif'),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 14),
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
@@ -568,8 +566,8 @@ class _AmountRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           onTap: () => _pickCurrency(context, currencyCode, onCurrencyChanged),
           child: Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: AppColors.gold,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -579,13 +577,13 @@ class _AmountRow extends StatelessWidget {
               children: [
                 Text(currencyCode,
                     style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         fontFamily: 'sans-serif')),
                 const SizedBox(width: 4),
                 const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 18, color: Colors.white),
+                    size: 16, color: Colors.white),
               ],
             ),
           ),
@@ -687,17 +685,17 @@ class _ChipsRow extends StatelessWidget {
           onTap: () => onTap(o.key),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: selected ? AppColors.gold : context.surface,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                   color: selected ? AppColors.gold : context.border),
             ),
             child: Text(
               o.label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: selected ? Colors.white : context.text,
                 fontFamily: 'sans-serif',
@@ -718,7 +716,7 @@ class _PromiseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isQuran = promise.sourceType == 'quran';
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -726,7 +724,7 @@ class _PromiseCard extends StatelessWidget {
             color: context.isDark
                 ? AppColors.darkGoldBorder
                 : AppColors.goldBorder,
-            width: 1.4),
+            width: 1.2),
         boxShadow: AppShadows.card(context.isDark),
       ),
       child: Column(
@@ -781,8 +779,8 @@ class _PromiseCard extends StatelessWidget {
               promise.arabic!,
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
-              style: AppTextStyles.arabic(context.arabic, fontSize: 22)
-                  .copyWith(height: 2.0),
+              style: AppTextStyles.arabic(context.arabic, fontSize: 20)
+                  .copyWith(height: 1.9),
             ),
             const SizedBox(height: 12),
           ],
@@ -820,8 +818,8 @@ class _HighlightedText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = TextStyle(
-      fontSize: 14,
-      height: 1.65,
+      fontSize: 13.5,
+      height: 1.6,
       color: context.text,
       fontFamily: 'serif',
     );
@@ -887,11 +885,11 @@ class _FootnoteNumber extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: AppColors.gold,
               fontFamily: 'serif',
-              letterSpacing: -0.3,
+              letterSpacing: -0.2,
             ),
           ),
           const SizedBox(width: 4),
@@ -927,40 +925,47 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: AppColors.gold,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
               children: [
-                const Icon(Icons.summarize_rounded,
-                    size: 16, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text('Your Giving Plan',
+                Icon(Icons.summarize_rounded,
+                    size: 14,
+                    color: context.isDark
+                        ? AppColors.gold
+                        : AppColors.goldDark),
+                const SizedBox(width: 6),
+                Text('YOUR GIVING PLAN',
                     style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.4,
+                        letterSpacing: 1.2,
+                        color: context.isDark
+                            ? AppColors.goldDim
+                            : AppColors.goldDark,
                         fontFamily: 'sans-serif')),
               ],
             ),
           ),
+          Container(
+              height: 1,
+              color: context.border.withOpacity(0.5),
+              margin: const EdgeInsets.symmetric(horizontal: 12)),
           for (var i = 0; i < rows.length; i++) ...[
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 13),
+                  horizontal: 16, vertical: 11),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(rows[i].label,
                         style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 12,
                             color: context.textDim,
                             fontFamily: 'sans-serif')),
                   ),
                   Text(rows[i].value,
                       style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w700,
                           color: context.text,
                           fontFamily: 'serif')),
