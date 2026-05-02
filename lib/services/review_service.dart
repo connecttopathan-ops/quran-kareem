@@ -20,6 +20,12 @@ class ReviewService {
   static const String _playStoreUrl =
       'https://play.google.com/store/apps/details?id=$_androidPackage';
 
+  /// True when an App Store ID has actually been configured.
+  /// While unset, iOS skips any `openStoreListing` call (which would throw
+  /// with the placeholder) and relies on the native review sheet only.
+  static bool get _hasAppStoreId =>
+      _appStoreId.isNotEmpty && _appStoreId != 'YOUR_APP_STORE_ID';
+
   // Day-streak milestones that trigger a review prompt.
   static const int _firstMilestone = 2;
   static const int _secondMilestone = 14;
@@ -83,9 +89,18 @@ class ReviewService {
     if (Platform.isAndroid) {
       await launchUrl(Uri.parse(_playStoreUrl),
           mode: LaunchMode.externalApplication);
-    } else {
-      final review = InAppReview.instance;
-      await review.openStoreListing(appStoreId: _appStoreId);
+      return;
+    }
+    // iOS: only attempt openStoreListing when we have a real App Store ID.
+    // With the placeholder it throws — fall through to the native review sheet
+    // which can still nudge the user.
+    if (_hasAppStoreId) {
+      await InAppReview.instance.openStoreListing(appStoreId: _appStoreId);
+      return;
+    }
+    final review = InAppReview.instance;
+    if (await review.isAvailable()) {
+      await review.requestReview();
     }
   }
 
@@ -105,11 +120,15 @@ class ReviewService {
     }
 
     if (!handled) {
-      try {
-        await review.openStoreListing(appStoreId: _appStoreId);
-        handled = true;
-      } catch (e) {
-        debugPrint('[ReviewService] openStoreListing failed: $e');
+      // openStoreListing on iOS requires a real App Store ID; with the
+      // placeholder it throws. Skip it on iOS until the ID is set.
+      if (Platform.isAndroid || _hasAppStoreId) {
+        try {
+          await review.openStoreListing(appStoreId: _appStoreId);
+          handled = true;
+        } catch (e) {
+          debugPrint('[ReviewService] openStoreListing failed: $e');
+        }
       }
     }
 

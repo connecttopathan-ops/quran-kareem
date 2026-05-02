@@ -13,9 +13,32 @@ import '../theme/app_theme.dart';
 ///  • Subsequent launches → show only if notifications still not granted
 ///  • Battery / exact alarm → shown once (flag set after first display)
 Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
-  if (!Platform.isAndroid) return;
+  if (!Platform.isAndroid && !Platform.isIOS) return;
 
   final notifGranted = await NotificationService().hasNotificationPermission();
+
+  // iOS: only notification permission is relevant — no battery/exact-alarm concepts.
+  if (Platform.isIOS) {
+    if (notifGranted) return;
+    if (!context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PermissionsSheet(
+        initialNotifGranted: false,
+        initialExactGranted: true,
+        initialBatteryExempt: true,
+        showExactRow: false,
+        showBatteryRow: false,
+        manufacturer: '',
+      ),
+    );
+    return;
+  }
+
   final batteryExempt =
       (await Permission.ignoreBatteryOptimizations.status).isGranted;
 
@@ -48,6 +71,7 @@ Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
       initialExactGranted: exactGranted,
       initialBatteryExempt: batteryExempt,
       showExactRow: showExactRow,
+      showBatteryRow: true,
       manufacturer: manufacturer,
     ),
   );
@@ -60,6 +84,7 @@ class _PermissionsSheet extends StatefulWidget {
   final bool initialExactGranted;
   final bool initialBatteryExempt;
   final bool showExactRow;
+  final bool showBatteryRow;
   final String manufacturer;
 
   const _PermissionsSheet({
@@ -67,6 +92,7 @@ class _PermissionsSheet extends StatefulWidget {
     required this.initialExactGranted,
     required this.initialBatteryExempt,
     required this.showExactRow,
+    required this.showBatteryRow,
     required this.manufacturer,
   });
 
@@ -105,9 +131,13 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
 
   Future<void> _recheck() async {
     final notif = await NotificationService().hasNotificationPermission();
-    final exact = await NotificationService().hasExactAlarmPermission();
-    final battery =
-        (await Permission.ignoreBatteryOptimizations.status).isGranted;
+    // Battery / exact-alarm only exist on Android — skip the lookups on iOS.
+    final exact = Platform.isAndroid
+        ? await NotificationService().hasExactAlarmPermission()
+        : true;
+    final battery = Platform.isAndroid
+        ? (await Permission.ignoreBatteryOptimizations.status).isGranted
+        : true;
     if (mounted) {
       setState(() {
         _notifGranted = notif;
@@ -253,26 +283,25 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
               },
             ),
 
-          // 3. Battery optimisation
-          _PermRow(
-            icon: Icons.battery_saver_outlined,
-            title: 'Always Run in Background',
-            description:
-                'Prevents your phone from blocking prayer alerts when the screen is off',
-            granted: _batteryExempt,
-            tip: _batteryTip,
-            isDark: _isDark,
-            onGrant: () async {
-              await Permission.ignoreBatteryOptimizations.request();
-              await _recheck();
-              // If exact alarm is still pending, automatically prompt for it now.
-              // The user tapped the last row — chain straight into alarm settings
-              // so they don't have to notice and tap row 2 separately.
-              if (mounted && _showExactRow && !_exactGranted) {
-                await NotificationService().openExactAlarmSettings();
-              }
-            },
-          ),
+          // 3. Battery optimisation (Android only)
+          if (widget.showBatteryRow)
+            _PermRow(
+              icon: Icons.battery_saver_outlined,
+              title: 'Always Run in Background',
+              description:
+                  'Prevents your phone from blocking prayer alerts when the screen is off',
+              granted: _batteryExempt,
+              tip: _batteryTip,
+              isDark: _isDark,
+              onGrant: () async {
+                await Permission.ignoreBatteryOptimizations.request();
+                await _recheck();
+                // If exact alarm is still pending, automatically prompt for it now.
+                if (mounted && _showExactRow && !_exactGranted) {
+                  await NotificationService().openExactAlarmSettings();
+                }
+              },
+            ),
 
           const SizedBox(height: 20),
 
