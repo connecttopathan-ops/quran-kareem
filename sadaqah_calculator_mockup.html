@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sadaqah Calculator — Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 375px;
+    min-height: 812px;
+    background: #F7F3EE;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #333;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .phone.dark {
+    background: #121212;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: #F7F3EE;
+    padding: 14px 24px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+  .dark .status-bar { background: #121212; color: #fff; }
+
+  /* App bar */
+  .app-bar {
+    background: #F7F3EE;
+    padding: 4px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .dark .app-bar { background: #121212; border-bottom-color: rgba(255,255,255,0.06); }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    color: #C9A84C;
+  }
+  .dark .back-btn { background: rgba(255,255,255,0.08); }
+
+  .app-bar-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a1a;
+    flex: 1;
+  }
+  .dark .app-bar-title { color: #fff; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: #F7F3EE;
+    padding: 0 16px 0;
+    gap: 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .dark .tabs { background: #121212; border-bottom-color: rgba(255,255,255,0.06); }
+
+  .tab {
+    flex: 1;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: #C9A84C;
+    border-bottom-color: #C9A84C;
+  }
+
+  /* Scroll body */
+  .screen-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 6px;
+  }
+
+  /* Amount row */
+  .amount-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .amount-input {
+    flex: 1;
+    background: #fff;
+    border: 1.5px solid #e8e0d0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dark .amount-input { background: #1e1e1e; border-color: #2a2a2a; color: #fff; }
+
+  .amount-input .currency-symbol {
+    font-size: 16px;
+    color: #C9A84C;
+    font-weight: 700;
+  }
+
+  .currency-select {
+    background: #C9A84C;
+    color: #fff;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    min-width: 72px;
+    justify-content: center;
+  }
+
+  /* Chips */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fff;
+    border: 1.5px solid #e0d8c8;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .dark .chip { background: #1e1e1e; border-color: #333; color: #aaa; }
+
+  .chip.selected {
+    background: #C9A84C;
+    border-color: #C9A84C;
+    color: #fff;
+  }
+
+  /* Hadith card */
+  .hadith-card {
+    background: #fff;
+    border: 1.5px solid #C9A84C;
+    border-radius: 16px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .dark .hadith-card { background: #1a1612; }
+
+  .hadith-card::before {
+    content: '❝';
+    position: absolute;
+    top: -8px;
+    left: 14px;
+    font-size: 60px;
+    color: #C9A84C;
+    opacity: 0.12;
+    line-height: 1;
+  }
+
+  .hadith-arabic {
+    font-size: 18px;
+    text-align: right;
+    color: #C9A84C;
+    line-height: 1.8;
+    margin-bottom: 12px;
+    font-family: 'Traditional Arabic', 'Scheherazade New', serif;
+    direction: rtl;
+  }
+
+  .hadith-text {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #444;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+  .dark .hadith-text { color: #bbb; }
+
+  .hadith-source {
+    font-size: 12px;
+    font-weight: 700;
+    color: #C9A84C;
+    letter-spacing: 0.3px;
+  }
+
+  /* Result cards */
+  .result-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1.5px solid #e8e0d0;
+  }
+  .dark .result-card { background: #1e1e1e; border-color: #2a2a2a; }
+
+  .result-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 6px;
+  }
+
+  .result-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.2;
+  }
+  .dark .result-value { color: #fff; }
+
+  .result-sub {
+    font-size: 12.5px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .result-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .result-row .result-card {
+    flex: 1;
+  }
+
+  /* Range card */
+  .range-card {
+    background: linear-gradient(135deg, #fffbf0, #fff8e1);
+    border: 1.5px solid #e8c84c;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dark .range-card { background: linear-gradient(135deg, #1e1a08, #1a1800); }
+
+  .range-icon { font-size: 24px; }
+
+  .range-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8a6500;
+    line-height: 1.4;
+  }
+  .dark .range-text { color: #e8c84c; }
+
+  /* Big number */
+  .big-number-card {
+    background: #C9A84C;
+    border-radius: 16px;
+    padding: 20px 18px;
+    text-align: center;
+  }
+
+  .big-number-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 6px;
+  }
+
+  .big-number {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .big-number-suffix {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    background: rgba(0,0,0,0.04);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 11.5px;
+    color: #888;
+    line-height: 1.55;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .dark .disclaimer { background: rgba(255,255,255,0.04); }
+
+  .disclaimer-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* Slider */
+  .slider-container {
+    padding: 4px 0;
+  }
+
+  .slider-track {
+    height: 4px;
+    background: #e0d8c8;
+    border-radius: 2px;
+    position: relative;
+    margin: 10px 0;
+  }
+  .dark .slider-track { background: #333; }
+
+  .slider-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 40%;
+    background: #C9A84C;
+    border-radius: 2px;
+  }
+
+  .slider-thumb {
+    position: absolute;
+    top: 50%;
+    left: 40%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background: #C9A84C;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(201,168,76,0.5);
+    border: 2px solid #fff;
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 6px;
+  }
+
+  /* Summary card */
+  .summary-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #e8e0d0;
+    overflow: hidden;
+  }
+  .dark .summary-card { background: #1e1e1e; border-color: #2a2a2a; }
+
+  .summary-header {
+    background: #C9A84C;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .dark .summary-row { border-bottom-color: rgba(255,255,255,0.06); }
+  .summary-row:last-child { border-bottom: none; }
+
+  .summary-row-label {
+    font-size: 13px;
+    color: #666;
+  }
+  .dark .summary-row-label { color: #aaa; }
+
+  .summary-row-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .dark .summary-row-value { color: #fff; }
+
+  .summary-row-value.gold { color: #C9A84C; }
+
+  /* Jariyah note */
+  .jariyah-note {
+    background: linear-gradient(135deg, #f0fff4, #e8fdf0);
+    border: 1.5px solid #6dbe8a;
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .dark .jariyah-note { background: linear-gradient(135deg, #0d1f12, #0a1a0f); }
+
+  .jariyah-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .jariyah-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2e7d52;
+  }
+  .dark .jariyah-title { color: #6dbe8a; }
+
+  .jariyah-text {
+    font-size: 12.5px;
+    color: #555;
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .dark .jariyah-text { color: #9ad1af; }
+
+  .jariyah-source {
+    font-size: 11px;
+    font-weight: 700;
+    color: #2e7d52;
+    margin-top: 8px;
+  }
+  .dark .jariyah-source { color: #6dbe8a; }
+
+  /* Dark mode toggle */
+  .toggle-bar {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .toggle-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active {
+    background: #C9A84C;
+    color: #fff;
+  }
+
+  .toggle-btn:not(.active) {
+    background: #333;
+    color: #aaa;
+  }
+
+  .phone-label {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-family: -apple-system, sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: contents; }
+</style>
+</head>
+<body>
+
+<!-- LIGHT MODE — CALCULATOR TAB -->
+<div>
+  <p class="phone-label">Calculator Tab — Light</p>
+  <div class="phone" id="phone-light">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●</span>
+    </div>
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="app-bar-title">Sadaqah Calculator</div>
+    </div>
+    <div class="tabs">
+      <div class="tab active">Calculator</div>
+      <div class="tab">Plan</div>
+    </div>
+    <div class="screen-body">
+
+      <div>
+        <div class="section-label">Amount</div>
+        <div class="amount-row">
+          <div class="amount-input">
+            <span class="currency-symbol">$</span>
+            <span>100</span>
+          </div>
+          <div class="currency-select">USD ▾</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Category</div>
+        <div class="chips">
+          <div class="chip selected">General Sadaqah</div>
+          <div class="chip">Sadaqah Jariyah</div>
+          <div class="chip">Feeding the Poor</div>
+          <div class="chip">Masjid / Orphans</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Timing</div>
+        <div class="chips">
+          <div class="chip">Regular Day</div>
+          <div class="chip selected">Ramadan</div>
+          <div class="chip">Friday</div>
+          <div class="chip">Laylatul Qadr</div>
+        </div>
+      </div>
+
+      <div class="hadith-card">
+        <div class="hadith-arabic">مَّثَلُ ٱلَّذِينَ يُنفِقُونَ أَمْوَٰلَهُمْ فِى سَبِيلِ ٱللَّهِ كَمَثَلِ حَبَّةٍ أَنۢبَتَتْ سَبْعَ سَنَابِلَ</div>
+        <div class="hadith-text">"The example of those who spend their wealth in the way of Allah is like a seed of grain that sprouts seven ears; in each ear is a hundred grains. And Allah multiplies His reward for whom He wills."</div>
+        <div class="hadith-source">Quran 2:261</div>
+      </div>
+
+      <div class="range-card">
+        <div class="range-icon">✦</div>
+        <div class="range-text">10× minimum — up to 700× or more<br>by Allah's will</div>
+      </div>
+
+      <div class="big-number-card">
+        <div class="big-number-label">Projected Hasanat</div>
+        <div class="big-number">70,000</div>
+        <div class="big-number-suffix">Ramadan multiplier applied</div>
+      </div>
+
+      <div class="disclaimer">
+        <div class="disclaimer-icon">⚠</div>
+        <div>Only Allah knows true acceptance and reward. These figures are derived from Quran 2:261 and related ahadith for educational motivation only — not a guarantee of any specific reward.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DARK MODE — PLAN TAB -->
+<div>
+  <p class="phone-label">Plan Tab — Dark</p>
+  <div class="phone dark">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●●</span>
+    </div>
+    <div class="app-bar">
+      <div class="back-btn">‹</div>
+      <div class="app-bar-title">Sadaqah Calculator</div>
+    </div>
+    <div class="tabs">
+      <div class="tab">Calculator</div>
+      <div class="tab active">Plan</div>
+    </div>
+    <div class="screen-body">
+
+      <div>
+        <div class="section-label">Monthly Amount</div>
+        <div class="amount-row">
+          <div class="amount-input">
+            <span class="currency-symbol">$</span>
+            <span>50</span>
+          </div>
+          <div class="currency-select">USD ▾</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Duration</div>
+        <div class="slider-container">
+          <div style="font-size:18px; font-weight:800; color:#C9A84C; margin-bottom:4px;">5 years</div>
+          <div class="slider-track">
+            <div class="slider-fill"></div>
+            <div class="slider-thumb"></div>
+          </div>
+          <div class="slider-labels">
+            <span>1 month</span>
+            <span>30 years</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Category</div>
+        <div class="chips">
+          <div class="chip">General Sadaqah</div>
+          <div class="chip selected">Sadaqah Jariyah</div>
+          <div class="chip">Feeding the Poor</div>
+          <div class="chip">Masjid / Orphans</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-header">📊 Your Giving Plan</div>
+        <div class="summary-row">
+          <div class="summary-row-label">Monthly contribution</div>
+          <div class="summary-row-value">$50</div>
+        </div>
+        <div class="summary-row">
+          <div class="summary-row-label">Duration</div>
+          <div class="summary-row-value">60 months</div>
+        </div>
+        <div class="summary-row">
+          <div class="summary-row-label">Total given</div>
+          <div class="summary-row-value">$3,000</div>
+        </div>
+        <div class="summary-row">
+          <div class="summary-row-label">Projected hasanat</div>
+          <div class="summary-row-value gold">30,000 – 2,100,000</div>
+        </div>
+      </div>
+
+      <div class="jariyah-note">
+        <div class="jariyah-header">
+          <span>🌱</span>
+          <div class="jariyah-title">Sadaqah Jariyah — Ongoing Reward</div>
+        </div>
+        <div class="jariyah-text">"When a person dies, all their deeds cease except three: a sadaqah jariyah, beneficial knowledge, or a righteous child who prays for them."</div>
+        <div class="jariyah-source">— Sahih Muslim 1631</div>
+      </div>
+
+      <div class="disclaimer">
+        <div class="disclaimer-icon">⚠</div>
+        <div>Only Allah knows true acceptance and reward. These figures are educational estimates based on Quran 2:261 and related ahadith.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
