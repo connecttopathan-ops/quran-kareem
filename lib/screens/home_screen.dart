@@ -1679,8 +1679,37 @@ class _PopularSurahs extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // QUICK ACTIONS CARD
 // ─────────────────────────────────────────────────────────────────────────────
-class _QuickActionsCard extends StatelessWidget {
+class _QuickActionsCard extends StatefulWidget {
   const _QuickActionsCard();
+
+  @override
+  State<_QuickActionsCard> createState() => _QuickActionsCardState();
+}
+
+class _QuickActionsCardState extends State<_QuickActionsCard> {
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _showRightFade = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollCtrl.removeListener(_onScroll);
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final atEnd = _scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 4;
+    if (atEnd == _showRightFade) {
+      setState(() => _showRightFade = !atEnd);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1745,12 +1774,15 @@ class _QuickActionsCard extends StatelessWidget {
 
     return SizedBox(
       height: 122,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(left: 16, right: 8),
-        physics: const BouncingScrollPhysics(),
-        itemCount: actions.length,
-        itemBuilder: (ctx, i) {
+      child: Stack(
+        children: [
+          ListView.builder(
+            controller: _scrollCtrl,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 16, right: 8),
+            physics: const BouncingScrollPhysics(),
+            itemCount: actions.length,
+            itemBuilder: (ctx, i) {
           final a = actions[i];
           final isDimmed = a.comingSoon;
           return GestureDetector(
@@ -1866,6 +1898,31 @@ class _QuickActionsCard extends StatelessWidget {
             ),
           );
         },
+      ),
+          // Right-edge fade as a "swipe for more" affordance.
+          // Auto-hides when the user has scrolled to the end.
+          if (_showRightFade)
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: 28,
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        context.bg.withOpacity(0.0),
+                        context.bg,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
