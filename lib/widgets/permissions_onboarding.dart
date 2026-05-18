@@ -114,7 +114,10 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
     await _recheck();
     if (!mounted) return;
     setState(() => _requesting = false);
-    if (_allCriticalGranted) Navigator.of(context).pop();
+    // The user made a choice in the system dialog (allow or deny) — either
+    // way the onboarding is done. Never keep them on the sheet; they can
+    // change their mind later in Settings.
+    Navigator.of(context).pop();
   }
 
   @override
