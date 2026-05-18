@@ -274,10 +274,7 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
             description: 'Required to receive prayer time alerts',
             granted: _notifGranted,
             isDark: _isDark,
-            onGrant: () async {
-              await Permission.notification.request();
-              await _recheck();
-            },
+            onGrant: _requestNotifications,
           ),
 
           // 2. Precise timing (Android 12–13 only when not auto-granted)
