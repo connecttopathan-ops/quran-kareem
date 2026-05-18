@@ -24,8 +24,8 @@ Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const _PermissionsSheet(
         initialNotifGranted: false,
@@ -106,6 +106,16 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
   late bool _exactGranted;
   late bool _batteryExempt;
   late bool _showExactRow;
+  bool _requesting = false;
+
+  Future<void> _requestNotifications() async {
+    setState(() => _requesting = true);
+    await Permission.notification.request();
+    await _recheck();
+    if (!mounted) return;
+    setState(() => _requesting = false);
+    if (_allCriticalGranted) Navigator.of(context).pop();
+  }
 
   @override
   void initState() {
@@ -305,13 +315,15 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
 
           const SizedBox(height: 20),
 
-          // ── Continue button ─────────────────────────────────────────────
+          // ── Primary action ──────────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _allCriticalGranted
-                  ? () => Navigator.of(context).pop()
-                  : null,
+              onPressed: _requesting
+                  ? null
+                  : (_allCriticalGranted
+                      ? () => Navigator.of(context).pop()
+                      : _requestNotifications),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: Colors.white,
@@ -323,25 +335,34 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
                 elevation: 0,
               ),
               child: Text(
-                _allCriticalGranted ? 'All Set — Continue' : 'Allow Notifications to Continue',
+                _allCriticalGranted ? 'All Set — Continue' : 'Allow Notifications',
                 style: const TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ),
 
-          if (!_notifGranted) ...[
-            const SizedBox(height: 10),
+          // Escape hatch — notifications are optional, never trap the user.
+          if (!_allCriticalGranted) ...[
+            const SizedBox(height: 8),
             Center(
               child: TextButton(
-                onPressed: () async {
-                  // Open app settings as last resort if permission is permanently denied
-                  await openAppSettings();
-                },
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Maybe later',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _subtitleColor),
+                ),
+              ),
+            ),
+            Center(
+              child: TextButton(
+                onPressed: openAppSettings,
                 child: Text(
                   'Open app settings',
-                  style:
-                      TextStyle(fontSize: 12, color: _subtitleColor),
+                  style: TextStyle(fontSize: 12, color: _subtitleColor),
                 ),
               ),
             ),
