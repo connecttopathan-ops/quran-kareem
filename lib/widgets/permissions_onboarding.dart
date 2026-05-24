@@ -111,6 +111,9 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
   Future<void> _requestNotifications() async {
     setState(() => _requesting = true);
     await Permission.notification.request();
+    // Sync flutter_local_notifications' internal iOS authorization state so
+    // it knows which notification options (alert/badge/sound) to use.
+    await NotificationService().syncIOSPermissions();
     await _recheck();
     if (!mounted) return;
     setState(() => _requesting = false);

@@ -223,6 +223,17 @@ class NotificationService {
     return status.isGranted || status.isLimited;
   }
 
+  /// Tells flutter_local_notifications the notification options it should use
+  /// on iOS. Must be called after the user grants permission via permission_handler
+  /// so the plugin's internal authorization state is synced with the OS grant.
+  Future<void> syncIOSPermissions() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
+
   /// Returns true if exact alarms are permitted.
   /// Uses AlarmManager.canScheduleExactAlarms() on Android 12+,
   /// always true on older Android and iOS.
@@ -439,6 +450,8 @@ class NotificationService {
 
     final DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
       presentAlert: true,
+      presentBanner: true,
+      presentList: true,
       presentBadge: true,
       presentSound: mode != PrayerNotificationMode.off,
       sound: iOSSound,
@@ -471,7 +484,7 @@ class NotificationService {
         priority: Priority.high,
         playSound: true,
       ),
-      iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+      iOS: DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentList: true, presentSound: true),
     );
 
     final scheduleMode = await _resolveScheduleMode();
