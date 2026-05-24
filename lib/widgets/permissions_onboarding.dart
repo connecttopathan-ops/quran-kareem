@@ -124,10 +124,14 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
     await _recheck();
     if (!mounted) return;
     setState(() => _requesting = false);
-    // The user made a choice in the system dialog (allow or deny) — either
-    // way the onboarding is done. Never keep them on the sheet; they can
-    // change their mind later in Settings.
-    Navigator.of(context).pop();
+    // iOS: always dismiss after the system dialog — notifications are the only
+    // permission on iOS so the flow is complete.
+    // Android: stay on the sheet so the user can see and grant the remaining
+    // rows (exact alarm, battery optimization). The Continue button updates to
+    // "All Set — Continue" once notifications are granted.
+    if (Platform.isIOS) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
