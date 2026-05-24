@@ -123,15 +123,16 @@ class NotificationService {
       },
     );
 
-    // One-time migration: cancel all stale scheduled notifications that were
-    // stored without an icon field, causing a NullPointerException in
-    // ScheduledNotificationReceiver.setSmallIcon on Android. HomeScreen
-    // reschedules them fresh on the next launch.
+    // One-time migration: cancel stale prayer notifications that were stored
+    // without an icon field, causing a NullPointerException in
+    // ScheduledNotificationReceiver.setSmallIcon on Android. Daily reminders
+    // and ayah notifications are left untouched. HomeScreen reschedules
+    // prayer notifications fresh on the next launch.
     if (defaultTargetPlatform == TargetPlatform.android) {
       final prefs = await SharedPreferences.getInstance();
       const _migrationKey = 'notif_icon_migration_v1';
       if (!(prefs.getBool(_migrationKey) ?? false)) {
-        await _plugin.cancelAll();
+        await cancelPrayerNotifications();
         await prefs.setBool(_migrationKey, true);
       }
     }
