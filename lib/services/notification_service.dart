@@ -631,7 +631,7 @@ class NotificationService {
               '${ayah.translation}\n\n${ayah.message}',
             ),
           ),
-          iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: true),
+          iOS: const DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentList: true, presentSound: true),
         ),
         scheduleMode: scheduleMode,
         payload: 'ayah_of_the_day',
