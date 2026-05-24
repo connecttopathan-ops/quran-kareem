@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
@@ -20,6 +21,12 @@ Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
   // iOS: only notification permission is relevant — no battery/exact-alarm concepts.
   if (Platform.isIOS) {
     if (notifGranted) return;
+    // Show the sheet at most once. If the user tapped "Maybe later" they can
+    // enable notifications later via Settings → Prayer Notifications.
+    final prefs = await SharedPreferences.getInstance();
+    const _shownKey = 'notif_sheet_shown_ios';
+    if (prefs.getBool(_shownKey) ?? false) return;
+    await prefs.setBool(_shownKey, true);
     if (!context.mounted) return;
     await showModalBottomSheet<void>(
       context: context,

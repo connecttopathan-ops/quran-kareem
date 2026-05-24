@@ -123,6 +123,16 @@ class NotificationService {
       },
     );
 
+    // On iOS, sync the plugin's internal authorization state with whatever
+    // the OS has already granted (e.g. from a previous install or session).
+    // Only fires when permission is already determined — never shows a dialog.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final status = await Permission.notification.status;
+      if (status.isGranted || status.isLimited) {
+        await syncIOSPermissions();
+      }
+    }
+
     // One-time migration: cancel stale prayer notifications that were stored
     // without an icon field, causing a NullPointerException in
     // ScheduledNotificationReceiver.setSmallIcon on Android. Daily reminders
