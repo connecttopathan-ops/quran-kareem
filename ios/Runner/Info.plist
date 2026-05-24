@@ -60,6 +60,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>remote-notification</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required by an audio framework used in this app.</string>
