@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   google_fonts: ^6.1.0
   shared_preferences: ^2.2.3
   http: ^1.1.0
@@ -20,7 +22,10 @@ dependencies:
   geolocator: ^13.0.0
   flutter_compass: ^0.8.0
   sensors_plus: ^4.0.0
-  intl: ^0.19.0
+  # Left unpinned on purpose: flutter_localizations pins intl to one exact
+  # version per Flutter release, and any caret constraint here will sooner or
+  # later collide with it on an SDK upgrade.
+  intl: any
   webview_flutter: ^4.4.2
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
@@ -46,6 +51,9 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  # Runs `gen-l10n` from l10n.yaml on pub get and build, turning lib/l10n/*.arb
+  # into the generated L class.
+  generate: true
   assets:
     - assets/icon/
     - assets/translations/

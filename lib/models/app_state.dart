@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/ui_locales.dart';
 import '../models/language.dart';
 
 // Reading themes
@@ -10,7 +11,14 @@ enum ReadingMode { list, page, focus }
 
 class AppState extends ChangeNotifier {
   // ── Language ────────────────────────────────────────────────────
+  /// Which Quran *translation* is shown. One of the 46 codes in `kLanguages`.
   String _langCode = 'en';
+
+  /// Which language the *interface* is in. Deliberately independent of
+  /// [_langCode] — reading an Urdu translation with an English interface is a
+  /// normal thing to want. Holds either [kSystemUiLocale] or a code from
+  /// `kUiLocales`.
+  String _uiLangCode = kSystemUiLocale;
 
   // ── Display ─────────────────────────────────────────────────────
   bool _isDarkMode = false;        // app-level dark mode
@@ -48,6 +56,18 @@ class AppState extends ChangeNotifier {
 
   // ── Getters ─────────────────────────────────────────────────────
   String get langCode           => _langCode;
+
+  /// The stored interface-language choice: either [kSystemUiLocale] or a code
+  /// from `kUiLocales`. The picker binds to this; [uiLocale] is what the app
+  /// actually renders in.
+  String get uiLangCode         => _uiLangCode;
+
+  /// The locale handed to `MaterialApp`, with [kSystemUiLocale] resolved
+  /// against the device. Read at build time rather than cached, so a user who
+  /// changes their phone's language sees the app follow on the next rebuild.
+  Locale get uiLocale => Locale(
+        _uiLangCode == kSystemUiLocale ? detectUiLocale() : _uiLangCode,
+      );
   bool   get isDarkMode         => _isDarkMode;
   ReaderTheme get readerTheme   => _readerTheme;
   double get arabicFontSize     => _arabicFontSize;
@@ -81,6 +101,14 @@ class AppState extends ChangeNotifier {
   Future<void> _loadPrefs() async {
     final p = await SharedPreferences.getInstance();
     _langCode            = p.getString('langCode')     ?? 'en';
+    // Fall back to following the device if the stored code names an interface
+    // language we no longer ship — otherwise dropping a locale would strand
+    // those users on a language the generated bundle has no strings for.
+    final storedUiLang   = p.getString('uiLangCode')   ?? kSystemUiLocale;
+    _uiLangCode = (storedUiLang == kSystemUiLocale ||
+            isSupportedUiLocale(storedUiLang))
+        ? storedUiLang
+        : kSystemUiLocale;
     _isDarkMode          = p.getBool('isDarkMode')     ?? false;
     _readerTheme         = ReaderTheme.values[p.getInt('readerTheme') ?? 0];
     _arabicFontSize      = p.getDouble('arabicSize')   ?? 24.0;
@@ -112,6 +140,18 @@ class AppState extends ChangeNotifier {
     _langCode = code;
     final p = await SharedPreferences.getInstance();
     await p.setString('langCode', code);
+    notifyListeners();
+  }
+
+  /// Sets the interface language. Pass [kSystemUiLocale] to follow the device.
+  ///
+  /// Does not touch [setLanguage] — the Quran translation is a separate
+  /// choice and changing one must never silently change the other.
+  Future<void> setUiLanguage(String code) async {
+    if (code != kSystemUiLocale && !isSupportedUiLocale(code)) return;
+    _uiLangCode = code;
+    final p = await SharedPreferences.getInstance();
+    await p.setString('uiLangCode', code);
     notifyListeners();
   }
 

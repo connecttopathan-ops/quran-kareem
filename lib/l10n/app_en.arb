@@ -1,0 +1,110 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Get Quran",
+  "@appTitle": {
+    "description": "The app's name. Left untranslated in most locales — it is a brand name, not a phrase."
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Title of the settings screen."
+  },
+
+  "about": "About",
+  "@about": {
+    "description": "Section heading above the app name and version in settings."
+  },
+
+  "version": "Version {number}",
+  "@version": {
+    "description": "App version shown in the About section.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "1.1.0"
+      }
+    }
+  },
+
+  "appLanguage": "App Language",
+  "@appLanguage": {
+    "description": "Settings row that chooses the language of the interface itself — buttons, labels, menus. Distinct from translationLanguage, which chooses the Quran translation."
+  },
+
+  "appLanguageSubtitle": "Language of buttons and menus",
+  "@appLanguageSubtitle": {
+    "description": "Explains appLanguage, so it is not confused with the Quran translation setting."
+  },
+
+  "translationLanguage": "Translation Language",
+  "@translationLanguage": {
+    "description": "Settings row that chooses which Quran translation is displayed. Distinct from appLanguage."
+  },
+
+  "translationLanguageSubtitle": "Language of the Quran translation",
+  "@translationLanguageSubtitle": {
+    "description": "Explains translationLanguage, so it is not confused with the interface language."
+  },
+
+  "matchDeviceLanguage": "Match device language",
+  "@matchDeviceLanguage": {
+    "description": "Option in the app language picker that follows the phone's own language setting instead of a fixed choice."
+  },
+
+  "save": "Save",
+  "@save": {
+    "description": "Button that commits a change."
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Button that dismisses a dialog without saving."
+  },
+
+  "done": "Done",
+  "@done": {
+    "description": "Button that closes a screen once the user has finished with it."
+  },
+
+  "continueLabel": "Continue",
+  "@continueLabel": {
+    "description": "Button that moves to the next step. Named continueLabel because `continue` is a reserved word in Dart."
+  },
+
+  "maybeLater": "Maybe later",
+  "@maybeLater": {
+    "description": "Dismisses a permission prompt without granting it. Should read as a genuine option, not a refusal — the user can always come back via Settings."
+  },
+
+  "openAppSettings": "Open app settings",
+  "@openAppSettings": {
+    "description": "Link that opens the operating system's settings page for this app, so a previously denied permission can be granted."
+  },
+
+  "surahVerseCount": "{count, plural, =1{{count} verse} other{{count} verses}}",
+  "@surahVerseCount": {
+    "description": "Number of verses in a surah, shown under its name in lists. Plural because many languages inflect the noun.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "286"
+      }
+    }
+  },
+
+  "surahSubtitle": "Surah {number} · {verses}",
+  "@surahSubtitle": {
+    "description": "Subtitle under a surah name, e.g. 'Surah 2 · 286 verses'. Built from a whole sentence rather than concatenated fragments so word order can change per language.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "2"
+      },
+      "verses": {
+        "type": "String",
+        "example": "286 verses"
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'models/app_state.dart';
 import 'services/analytics_service.dart';
 import 'services/location_service.dart';
@@ -67,11 +68,17 @@ class QuranApp extends StatelessWidget {
                 state.isDarkMode ? Brightness.dark : Brightness.light,
           ));
           return MaterialApp(
-            title: 'Get Quran',
+            onGenerateTitle: (context) => L.of(context).appTitle,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
+            // Interface language. Independent of the Quran translation
+            // language, which lives in AppState.langCode. A locale with no
+            // generated bundle yet falls back to English automatically.
+            locale: state.uiLocale,
+            localizationsDelegates: L.localizationsDelegates,
+            supportedLocales: L.supportedLocales,
             navigatorObservers: [AnalyticsService.observer],
             home: const HomeScreen(),
             routes: {

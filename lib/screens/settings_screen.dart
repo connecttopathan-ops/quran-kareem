@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/ui_locales.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
@@ -57,7 +59,11 @@ class SettingsScreen extends StatelessWidget {
                           activeColor: AppColors.gold,
                         ),
                       ),
-                      _SectionHeader('Translation'),
+                      // Both language settings sit together so the difference
+                      // between them is legible at a glance — they are the one
+                      // pair in this app users are most likely to confuse.
+                      _SectionHeader('Language'),
+                      _AppLanguageSelector(state: state),
                       _LanguageSelector(state: state),
                       _TranslationSourceTile(),
                       _SectionHeader('Reading'),
@@ -111,7 +117,7 @@ class SettingsScreen extends StatelessWidget {
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
-                        subtitle: 'Version 1.1.0',
+                        subtitle: L.of(context).version('1.1.0'),
                         trailing: null,
                       ),
                       _RateAppTile(),
@@ -335,6 +341,69 @@ class _DailyRemindersTile extends StatelessWidget {
             Icon(Icons.chevron_right, color: context.textDim, size: 20),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Chooses the language of the interface itself.
+///
+/// Sits directly above [_LanguageSelector], which chooses the Quran
+/// translation. The two are independent on purpose; the subtitles are what
+/// keeps them apart, so they are worth keeping explicit.
+class _AppLanguageSelector extends StatelessWidget {
+  final AppState state;
+
+  const _AppLanguageSelector({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.appLanguage,
+              style: TextStyle(fontSize: 14, color: context.text)),
+          const SizedBox(height: 2),
+          Text(l.appLanguageSubtitle,
+              style: TextStyle(fontSize: 11, color: context.textDim)),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: state.uiLangCode,
+            isExpanded: true,
+            dropdownColor: context.surface,
+            underline: const SizedBox(),
+            style: TextStyle(fontSize: 13, color: context.text),
+            items: [
+              DropdownMenuItem(
+                value: kSystemUiLocale,
+                child: Text(l.matchDeviceLanguage),
+              ),
+              ...kUiLocales.map(
+                (locale) => DropdownMenuItem(
+                  value: locale.code,
+                  // Native name first — someone looking for their own language
+                  // scans for "Deutsch", not "German". The English name follows
+                  // so a wrong pick is still navigable back out of.
+                  child: Text(locale.nativeName == locale.englishName
+                      ? locale.nativeName
+                      : '${locale.nativeName} (${locale.englishName})'),
+                ),
+              ),
+            ],
+            onChanged: (code) {
+              if (code != null) state.setUiLanguage(code);
+            },
+          ),
+        ],
       ),
     );
   }

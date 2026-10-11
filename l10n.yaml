@@ -1,0 +1,14 @@
+# Configuration for `flutter gen-l10n`.
+#
+# Generation runs automatically because pubspec.yaml sets `flutter: generate: true`,
+# so `flutter pub get` and `flutter build` both refresh the output. The generated
+# files land in lib/l10n/ and are gitignored — nothing to commit, nothing to go stale.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: L
+output-dir: lib/l10n
+
+# Getters return non-nullable Strings, so call sites read `L.of(context).save`
+# without a null check.
+nullable-getter: false
