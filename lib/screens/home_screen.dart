@@ -256,9 +256,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Prayer Times', style: TextStyle(color: context.text, fontFamily: 'serif')),
+        title: Text(L.of(context).prayerTimes,
+            style: TextStyle(color: context.text, fontFamily: 'serif')),
         content: Text(
-          'Allow Get Quran to access your location to automatically calculate accurate prayer times for your area.',
+          L.of(context).locationPermissionBody(L.of(context).appTitle),
           style: TextStyle(color: context.textDim, fontSize: 13, fontFamily: 'sans-serif'),
         ),
         actions: [
@@ -272,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.pop(ctx);
               context.read<LocationService>().fetchLocation();
             },
-            child: const Text('Continue'),
+            child: Text(L.of(context).continueLabel),
           ),
         ],
       ),
@@ -316,9 +317,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   selectedFontSize: 10,
                   unselectedFontSize: 10,
                   items: [
-                    BottomNavigationBarItem(icon: QIcon.home(size: 24), label: 'Home'),
-                    BottomNavigationBarItem(icon: QIcon.book(size: 24), label: 'Quran'),
-                    BottomNavigationBarItem(icon: QIcon.settings(size: 24), label: 'Settings'),
+                    BottomNavigationBarItem(
+                        icon: QIcon.home(size: 24), label: L.of(context).navHome),
+                    BottomNavigationBarItem(
+                        icon: QIcon.book(size: 24), label: L.of(context).navQuran),
+                    BottomNavigationBarItem(
+                        icon: QIcon.settings(size: 24), label: L.of(context).navSettings),
                   ],
                 ),
               ),
@@ -395,7 +399,9 @@ class MiniAudioPlayer extends StatelessWidget {
                             style: TextStyle(fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: context.text)),
-                        Text('${audio.reciter.name} · Verse ${np.verseNumber}/${np.totalVerses}',
+                        Text(
+                            L.of(context).nowPlayingSubtitle(audio.reciter.name,
+                                np.verseNumber, np.totalVerses),
                             style: TextStyle(fontSize: 9,
                                 fontFamily: 'sans-serif',
                                 color: context.textDim)),
@@ -488,9 +494,14 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final now = DateTime.now();
     final h = now.hour;
-    final greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+    final greeting = h < 12
+        ? l.greetingMorning
+        : h < 17
+            ? l.greetingAfternoon
+            : l.greetingEvening;
 
     return Scaffold(
       backgroundColor: context.bg,
@@ -513,15 +524,12 @@ class _HomeTab extends StatelessWidget {
                             style: TextStyle(fontSize: 9, letterSpacing: 2,
                                 color: context.textDim, fontFamily: 'sans-serif')),
                         const SizedBox(height: 2),
-                        RichText(text: TextSpan(
-                          style: TextStyle(fontFamily: 'serif', fontSize: 18,
-                              color: context.text),
-                          children: [
-                            const TextSpan(text: 'Assalamu '),
-                            TextSpan(text: 'Alaikum',
-                                style: TextStyle(color: AppColors.gold)),
-                          ],
-                        )),
+                        // One ARB string rather than two styled spans: the
+                        // phrase must stay whole for translators, so the
+                        // former gold-on-"Alaikum" accent is dropped.
+                        Text(l.salaamGreeting,
+                            style: TextStyle(fontFamily: 'serif', fontSize: 18,
+                                color: context.text)),
                         const SizedBox(height: 2),
                         Text('اَلسَّلَامُ عَلَيْكُمْ',
                             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 14,
@@ -554,7 +562,7 @@ class _HomeTab extends StatelessWidget {
                                   : AppColors.goldDark),
                           const SizedBox(width: 5),
                           Text(
-                            'Sponsor a Quran',
+                            l.sponsorAQuran,
                             style: TextStyle(
                               fontSize: 11,
                               fontFamily: 'sans-serif',
@@ -632,14 +640,27 @@ class _CalPrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const hMonths = ['Muharram', 'Safar', "Rabi' al-Awwal", "Rabi' al-Thani",
-        "Jumada al-Awwal", "Jumada al-Thani", 'Rajab', "Sha'ban",
-        'Ramadan', 'Shawwal', "Dhu al-Qi'dah", 'Dhu al-Hijjah'];
+    final l = L.of(context);
+    final hMonths = [
+      l.hijriMonthMuharram, l.hijriMonthSafar, l.hijriMonthRabiAlAwwal,
+      l.hijriMonthRabiAlThani, l.hijriMonthJumadaAlAwwal,
+      l.hijriMonthJumadaAlThani, l.hijriMonthRajab, l.hijriMonthShaban,
+      l.hijriMonthRamadan, l.hijriMonthShawwal, l.hijriMonthDhuAlQidah,
+      l.hijriMonthDhuAlHijjah,
+    ];
     const hMonthsAr = ['\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645', '\u0635\u064e\u0641\u064e\u0631', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
         '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649', '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629', '\u0631\u064e\u062c\u064e\u0628', '\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
         '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646', '\u0634\u064e\u0648\u064e\u0651\u0627\u0644', '\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629', '\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const wdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    final months = [
+      l.monthShortJan, l.monthShortFeb, l.monthShortMar, l.monthShortApr,
+      l.monthShortMay, l.monthShortJun, l.monthShortJul, l.monthShortAug,
+      l.monthShortSep, l.monthShortOct, l.monthShortNov, l.monthShortDec,
+    ];
+    final wdays = [
+      l.weekdayShortMon, l.weekdayShortTue, l.weekdayShortWed,
+      l.weekdayShortThu, l.weekdayShortFri, l.weekdayShortSat,
+      l.weekdayShortSun,
+    ];
 
     String toAI(int n) {
       const d = ['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'];
@@ -677,7 +698,7 @@ class _CalPrayerCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Islamic Date'.toUpperCase(),
+                  Text(l.islamicDate.toUpperCase(),
                       style: TextStyle(fontSize: 7, letterSpacing: 2, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
                   const SizedBox(height: 1),
@@ -688,7 +709,7 @@ class _CalPrayerCard extends StatelessWidget {
                       style: TextStyle(fontFamily: 'serif', fontSize: 16,
                           fontStyle: FontStyle.italic,
                           color: context.isDark ? AppColors.gold : AppColors.goldDark)),
-                  Text('${h['year']} AH',
+                  Text(l.hijriYear(h['year']!),
                       style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
                 ]),
@@ -700,7 +721,8 @@ class _CalPrayerCard extends StatelessWidget {
                   Text(hMonthsAr[h['month']! - 1],
                       style: TextStyle(fontFamily: 'Scheherazade', fontSize: 15,
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
-                  Text('${wdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}',
+                  Text(l.shortDateLine(wdays[now.weekday - 1],
+                      months[now.month - 1], now.day),
                       style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? const Color(0xFF5a5040) : const Color(0xFF9a7030))),
                 ]),
@@ -736,13 +758,14 @@ class _PrayerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LocationService>(
       builder: (ctx, loc, _) {
+        final l = L.of(context);
         final pt = loc.prayerTimes;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Text('Prayer Times'.toUpperCase(),
+                Text(l.prayerTimes.toUpperCase(),
                     style: TextStyle(fontSize: 7, letterSpacing: 2,
                         color: context.isDark ? AppColors.goldDim : AppColors.goldDark,
                         fontFamily: 'sans-serif')),
@@ -764,12 +787,12 @@ class _PrayerSection extends StatelessWidget {
                             color: context.isDark ? AppColors.gold : AppColors.goldDark),
                         const SizedBox(width: 4),
                         Text(
-                          loc.loading ? 'Locating...'
+                          loc.loading ? l.locating
                               : pt != null && pt.cityName.isNotEmpty
                                   ? (pt.cityName.length > 20
                                       ? '${pt.cityName.substring(0, 18)}\u2026'
                                       : pt.cityName)
-                                  : 'Set Location',
+                                  : l.setLocation,
                           style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
                               color: context.isDark ? AppColors.gold : AppColors.goldDark),
                         ),
@@ -788,7 +811,7 @@ class _PrayerSection extends StatelessWidget {
                     SizedBox(width: 14, height: 14,
                         child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.gold)),
                     const SizedBox(width: 9),
-                    Text('Fetching location...',
+                    Text(l.fetchingLocation,
                         style: TextStyle(fontSize: 11, color: context.textDim,
                             fontFamily: 'sans-serif')),
                   ],
@@ -807,10 +830,10 @@ class _PrayerSection extends StatelessWidget {
                       QIcon.locationPin(size: 13, color: context.textDim),
                       const SizedBox(width: 8),
                       Expanded(child: Text(
-                          loc.error ?? 'Tap to set location for prayer times',
+                          loc.error ?? l.tapToSetLocation,
                           style: TextStyle(fontSize: 11, color: context.textDim,
                               fontFamily: 'sans-serif'))),
-                      Text('Set', style: TextStyle(fontSize: 11, color: AppColors.gold,
+                      Text(l.setLabel, style: TextStyle(fontSize: 11, color: AppColors.gold,
                           fontFamily: 'sans-serif')),
                     ],
                   ),
@@ -835,18 +858,57 @@ class _PrayerSection extends StatelessWidget {
   }
 }
 
-// Rakah breakdown data
-const _kRakahRows = {
-  'Fajr':     [('Sunnah', 2), ('Fard', 2)],
-  'Dhuhr':    [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2)],
-  'Jumu\'ah': [('Fard', 2)],
-  'Asr':      [('Sunnah', 4), ('Fard', 4)],
-  'Maghrib':  [('Fard', 3), ('Sunnah', 2)],
-  'Isha':     [('Sunnah', 4), ('Fard', 4), ('Sunnah', 2), ('Witr', 3)],
-};
+// Rakah breakdown data. The row labels are display copy, so this can no
+// longer be a const map — it is a function of the locale and needs a context.
+// Prayer names stay as the English identifiers used throughout the prayer
+// logic; `_prayerDisplayName` turns one into the label shown to the user.
+List<(String, int)> _rakahRows(BuildContext context, String prayer) {
+  final l = L.of(context);
+  final sunnah = l.rakahSunnah;
+  final fard = l.rakahFard;
+  switch (prayer) {
+    case 'Fajr':
+      return [(sunnah, 2), (fard, 2)];
+    case 'Dhuhr':
+      return [(sunnah, 4), (fard, 4), (sunnah, 2)];
+    case 'Jumu\'ah':
+      return [(fard, 2)];
+    case 'Asr':
+      return [(sunnah, 4), (fard, 4)];
+    case 'Maghrib':
+      return [(fard, 3), (sunnah, 2)];
+    case 'Isha':
+      return [(sunnah, 4), (fard, 4), (sunnah, 2), (l.rakahWitr, 3)];
+    default:
+      return const [];
+  }
+}
+
 const _kRakahTotal = {
   'Fajr': 4, 'Dhuhr': 10, 'Jumu\'ah': 2, 'Asr': 8, 'Maghrib': 5, 'Isha': 13,
 };
+
+/// Localised label for one of the English prayer identifiers used by the
+/// prayer-time logic. Unknown values fall through unchanged.
+String _prayerDisplayName(BuildContext context, String prayer) {
+  final l = L.of(context);
+  switch (prayer) {
+    case 'Fajr':
+      return l.prayerFajr;
+    case 'Dhuhr':
+      return l.prayerDhuhr;
+    case 'Jumu\'ah':
+      return l.prayerJumuah;
+    case 'Asr':
+      return l.prayerAsr;
+    case 'Maghrib':
+      return l.prayerMaghrib;
+    case 'Isha':
+      return l.prayerIsha;
+    default:
+      return prayer;
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRAYER TIME HELPERS (top-level so both _PrayerGridState and _NextPrayerRow
@@ -919,7 +981,8 @@ class _PrayerGridState extends State<_PrayerGrid> {
   int? _tappedIndex;
 
   Widget _buildPopup(BuildContext context, String prayerName) {
-    final rows = _kRakahRows[prayerName] ?? [];
+    final l = L.of(context);
+    final rows = _rakahRows(context, prayerName);
     final total = _kRakahTotal[prayerName] ?? 0;
     return Container(
       padding: const EdgeInsets.all(12),
@@ -932,7 +995,7 @@ class _PrayerGridState extends State<_PrayerGrid> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(prayerName.toUpperCase(),
+          Text(_prayerDisplayName(context, prayerName).toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 9,
@@ -963,7 +1026,7 @@ class _PrayerGridState extends State<_PrayerGrid> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total',
+              Text(l.rakahTotal,
                   style: TextStyle(
                       fontSize: 11,
                       color: AppColors.gold,
@@ -1040,7 +1103,7 @@ class _PrayerGridState extends State<_PrayerGrid> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(p.$1,
+                          Text(_prayerDisplayName(context, p.$1),
                               style: TextStyle(
                                   fontSize: 7,
                                   fontFamily: 'sans-serif',
@@ -1072,7 +1135,7 @@ class _PrayerGridState extends State<_PrayerGrid> {
                                   : context.textDim.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text('${p.$3} rak.',
+                            child: Text(L.of(context).rakahCountShort(p.$3),
                                 style: TextStyle(
                                     fontSize: 9,
                                     fontFamily: 'sans-serif',
@@ -1091,7 +1154,7 @@ class _PrayerGridState extends State<_PrayerGrid> {
           const SizedBox(height: 6),
           // Hint text
           Text(
-            '✦ Tap a prayer to see full rakah breakdown ✦',
+            L.of(context).rakahBreakdownHint,
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 9,
@@ -1154,7 +1217,8 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
     final l = L.of(context);
     final (nextRaw, rem) = _computeNextPrayerFrom(widget.pt);
     final isFriday = DateTime.now().weekday == DateTime.friday;
-    final next = (isFriday && nextRaw == 'Dhuhr') ? 'Jumu\'ah' : nextRaw;
+    final nextId = (isFriday && nextRaw == 'Dhuhr') ? 'Jumu\'ah' : nextRaw;
+    final next = _prayerDisplayName(context, nextId);
     final currentPrayer = _getCurrentPrayerName({
       'Fajr': widget.pt.fajrStr,
       'Dhuhr': widget.pt.dhuhrStr,
@@ -1166,7 +1230,7 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
     final h = rem.inHours;
     final m = rem.inMinutes % 60;
     final s = rem.inSeconds % 60;
-    final countdown = '${h}h ${m}m ${s}s';
+    final countdown = l.durationHoursMinutesSeconds(h, m, s);
 
     final sunriseTime = widget.pt.sunriseTime;
     final now = DateTime.now();
@@ -1212,7 +1276,9 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
       final sh = until.inHours;
       final sm = until.inMinutes % 60;
       final ss = until.inSeconds % 60;
-      final cd = sh > 0 ? '${sh}h ${sm}m ${ss}s' : '${sm}m ${ss}s';
+      final cd = sh > 0
+          ? l.durationHoursMinutesSeconds(sh, sm, ss)
+          : l.durationMinutesSeconds(sm, ss);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1292,24 +1358,28 @@ class _LocationSheetState extends State<_LocationSheet> {
   final _ctrl = TextEditingController();
   List<Location> _results = [];
   bool _searching = false;
-  String? _searchErr;
+  // Held as a flag rather than a message string: the copy is looked up in
+  // build() so it follows a locale change, and _search() has no business
+  // formatting user-facing text.
+  bool _searchFailed = false;
 
   @override
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
   Future<void> _search(String q) async {
     if (q.trim().isEmpty) return;
-    setState(() { _searching = true; _searchErr = null; });
+    setState(() { _searching = true; _searchFailed = false; });
     try {
       _results = await locationFromAddress(q);
       if (mounted) setState(() { _searching = false; });
     } catch (_) {
-      if (mounted) setState(() { _searchErr = 'City not found. Try a different spelling.'; _searching = false; });
+      if (mounted) setState(() { _searchFailed = true; _searching = false; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final loc = context.watch<LocationService>();
     final pt = loc.prayerTimes;
 
@@ -1333,7 +1403,7 @@ class _LocationSheetState extends State<_LocationSheet> {
               padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
               child: Row(
                 children: [
-                  Text('Prayer Times Location',
+                  Text(l.prayerTimesLocation,
                       style: TextStyle(fontFamily: 'serif', fontSize: 17, color: context.text)),
                   const Spacer(),
                   IconButton(
@@ -1368,7 +1438,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                       ),
                       TextButton(
                         onPressed: () { Navigator.pop(context); loc.fetchLocation(); },
-                        child: Text('Re-detect',
+                        child: Text(l.reDetect,
                             style: TextStyle(fontSize: 11, color: AppColors.gold)),
                       ),
                     ],
@@ -1382,7 +1452,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                 controller: _ctrl,
                 style: TextStyle(color: context.text, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Search city or country...',
+                  hintText: l.searchCityHint,
                   hintStyle: TextStyle(color: context.textDim),
                   prefixIcon: Padding(padding: const EdgeInsets.all(11),
                       child: QIcon.search(size: 17, color: context.textDim)),
@@ -1404,10 +1474,10 @@ class _LocationSheetState extends State<_LocationSheet> {
                 textInputAction: TextInputAction.search,
               ),
             ),
-            if (_searchErr != null)
+            if (_searchFailed)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Text(_searchErr!, style: TextStyle(fontSize: 11,
+                child: Text(l.cityNotFound, style: TextStyle(fontSize: 11,
                     color: Colors.red.shade400, fontFamily: 'sans-serif')),
               ),
             if (_results.isNotEmpty)
@@ -1433,7 +1503,7 @@ class _LocationSheetState extends State<_LocationSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Calculation Method'.toUpperCase(),
+                  Text(l.calculationMethod.toUpperCase(),
                       style: TextStyle(fontSize: 8, letterSpacing: 2, color: context.textDim,
                           fontFamily: 'sans-serif')),
                   const SizedBox(height: 8),
@@ -1515,7 +1585,7 @@ class _ContinueCardState extends State<_ContinueCard>
         orElse: () => kSurahs.first,
       );
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Continue Reading'.toUpperCase(),
+        Text(L.of(context).continueReading.toUpperCase(),
             style: TextStyle(
                 fontSize: 8,
                 letterSpacing: 2.5,
@@ -1615,7 +1685,9 @@ class _DailyAyah extends StatelessWidget {
         boxShadow: AppShadows.card(context.isDark),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('✦  Ayah of the Day  ✦'.toUpperCase(),
+        // The ✦ ornaments stay in code: they are decoration, not copy, so
+        // the existing `ayahOfTheDay` string is reused as-is.
+        Text('✦  ${L.of(context).ayahOfTheDay.toUpperCase()}  ✦',
             style: TextStyle(fontSize: 7, letterSpacing: 2,
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark,
                 fontFamily: 'sans-serif')),
@@ -1628,7 +1700,7 @@ class _DailyAyah extends StatelessWidget {
         Divider(color: AppColors.goldDim.withOpacity(0.25)),
         const SizedBox(height: 4),
         Text(
-          '"${ayah.translation}"',
+          L.of(context).quotedText(ayah.translation),
           style: TextStyle(fontSize: 12, fontFamily: 'sans-serif',
               color: context.isDark ? const Color(0xFFb0a080) : const Color(0xFF5a4020)),
         ),
@@ -1692,7 +1764,7 @@ class _PopularSurahs extends StatelessWidget {
         .toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Popular Surahs'.toUpperCase(),
+      Text(L.of(context).popularSurahs.toUpperCase(),
           style: TextStyle(fontSize: 8, letterSpacing: 2.5,
               color: context.textDim, fontFamily: 'sans-serif')),
       const SizedBox(height: 6),
@@ -1751,57 +1823,58 @@ class _QuickActionsCardState extends State<_QuickActionsCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     // coming_soon = true means placeholder — tapping shows a snackbar
     final actions = [
       (
         icon: Icons.explore_rounded,
-        label: 'Qibla',
-        subtitle: 'Find direction',
+        label: l.quickQibla,
+        subtitle: l.quickQiblaSubtitle,
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const QiblaScreen())),
       ),
       (
         icon: Icons.menu_book_rounded,
-        label: 'Duas',
-        subtitle: 'Daily supplications',
+        label: l.quickDuas,
+        subtitle: l.quickDuasSubtitle,
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const DuasScreen())),
       ),
       (
         icon: Icons.auto_stories_rounded,
-        label: 'Hifz',
-        subtitle: 'Memorize Surahs',
+        label: l.quickHifz,
+        subtitle: l.quickHifzSubtitle,
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const HifzScreen())),
       ),
       (
         icon: Icons.format_list_numbered_rounded,
-        label: '99 Names',
-        subtitle: 'Asma ul Husna',
+        label: l.quickNinetyNineNames,
+        subtitle: l.quickNinetyNineNamesSubtitle,
         comingSoon: false,
         onTap: () => Navigator.push(
             context, MaterialPageRoute(builder: (_) => const AsmaScreen())),
       ),
       (
         icon: Icons.volunteer_activism_rounded,
-        label: 'Hasanat',
-        subtitle: 'Rewards calculator',
+        label: l.quickHasanat,
+        subtitle: l.quickHasanatSubtitle,
         comingSoon: false,
         onTap: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const HasanatCalculatorScreen())),
       ),
       (
         icon: Icons.accessibility_new_rounded,
-        label: 'Salah',
-        subtitle: 'Perform prayer',
+        label: l.quickSalah,
+        subtitle: l.quickSalahSubtitle,
         comingSoon: true,
         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Perform Salah — coming soon',
-                style: TextStyle(fontFamily: 'sans-serif')),
+            content: Text(l.salahComingSoon,
+                style: const TextStyle(fontFamily: 'sans-serif')),
             backgroundColor: AppColors.goldDark,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
@@ -1916,7 +1989,7 @@ class _QuickActionsCardState extends State<_QuickActionsCard> {
                               textAlign: TextAlign.center),
                           const SizedBox(height: 2),
                           Text(
-                            isDimmed ? 'Coming soon' : a.subtitle,
+                            isDimmed ? l.comingSoon : a.subtitle,
                             style: TextStyle(
                                 fontSize: 8,
                                 fontFamily: 'sans-serif',
@@ -1972,17 +2045,18 @@ class _Stats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (context, state, _) {
+      final l = L.of(context);
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Your Progress'.toUpperCase(),
+        Text(l.yourProgress.toUpperCase(),
             style: TextStyle(fontSize: 8, letterSpacing: 2.5,
                 color: context.textDim, fontFamily: 'sans-serif')),
         const SizedBox(height: 6),
         Row(children: [
-          _Stat(context, '${state.dayStreak}', 'Day Streak'),
+          _Stat(context, '${state.dayStreak}', l.statDayStreak),
           const SizedBox(width: 7),
-          _Stat(context, '${state.surahsRead}', 'Surahs'),
+          _Stat(context, '${state.surahsRead}', l.statSurahs),
           const SizedBox(width: 7),
-          _Stat(context, '${state.versesRead}', 'Verses'),
+          _Stat(context, '${state.versesRead}', l.statVerses),
         ]),
       ]);
     });
@@ -2046,7 +2120,7 @@ class _BooksHomeSectionState extends State<_BooksHomeSection> {
             // Section header
             Row(
               children: [
-                Text('Islamic Books'.toUpperCase(),
+                Text(L.of(context).sectionIslamicBooks.toUpperCase(),
                     style: TextStyle(
                         fontSize: 8,
                         letterSpacing: 2.5,
@@ -2059,8 +2133,8 @@ class _BooksHomeSectionState extends State<_BooksHomeSection> {
                     MaterialPageRoute(
                         builder: (_) => const IslamicBooksScreen()),
                   ),
-                  child: const Text('See all',
-                      style: TextStyle(
+                  child: Text(L.of(context).seeAll,
+                      style: const TextStyle(
                           fontSize: 11,
                           fontFamily: 'sans-serif',
                           color: AppColors.gold,
@@ -2073,17 +2147,17 @@ class _BooksHomeSectionState extends State<_BooksHomeSection> {
             Row(
               children: [
                 _FilterChip(
-                    label: 'All',
+                    label: L.of(context).filterAll,
                     selected: _filter == 'all',
                     onTap: () => setState(() => _filter = 'all')),
                 const SizedBox(width: 6),
                 _FilterChip(
-                    label: 'Hadith',
+                    label: L.of(context).filterHadith,
                     selected: _filter == 'hadith',
                     onTap: () => setState(() => _filter = 'hadith')),
                 const SizedBox(width: 6),
                 _FilterChip(
-                    label: 'Seerah',
+                    label: L.of(context).filterSeerah,
                     selected: _filter == 'seerah',
                     onTap: () => setState(() => _filter = 'seerah')),
               ],
@@ -2172,19 +2246,20 @@ class _HomeBookCardState extends State<_HomeBookCard> {
     final state = widget.svc.stateFor(widget.book.id);
     final dlProgress = widget.svc.progressFor(widget.book.id);
 
+    final l = L.of(context);
     String badge;
     switch (state) {
       case BookDownloadState.notDownloaded:
-        badge = 'Download to read';
+        badge = l.bookDownloadToRead;
         break;
       case BookDownloadState.downloading:
-        badge = 'Downloading ${(dlProgress * 100).toStringAsFixed(0)}%';
+        badge = l.bookDownloadingPercent((dlProgress * 100).round());
         break;
       case BookDownloadState.downloaded:
-        badge = _readingProgress > 0 ? 'Continue' : 'Start reading';
+        badge = _readingProgress > 0 ? l.continueLabel : l.bookStartReading;
         break;
       case BookDownloadState.failed:
-        badge = 'Tap to retry';
+        badge = l.bookTapToRetry;
         break;
     }
 
@@ -2326,7 +2401,10 @@ class _BookContinueCard extends StatefulWidget {
 
 class _BookContinueCardState extends State<_BookContinueCard> {
   double _progress = 0;
-  String _positionLabel = '';
+  // The raw position is kept as numbers; the label is formatted in build()
+  // where a BuildContext — and therefore the localisations — is available.
+  String? _chapterNum;
+  String? _hadithNum;
 
   @override
   void initState() {
@@ -2344,11 +2422,8 @@ class _BookContinueCardState extends State<_BookContinueCard> {
         _progress = progress;
         if (pos != null) {
           final parts = pos.split(':');
-          final chapterNum = parts.isNotEmpty ? parts[0] : '?';
-          final hadithNum = parts.length > 1 ? parts[1] : '0';
-          _positionLabel = book.category == BookCategory.hadith
-              ? 'Book $chapterNum · Hadith $hadithNum'
-              : 'Chapter $chapterNum';
+          _chapterNum = parts.isNotEmpty ? parts[0] : '?';
+          _hadithNum = parts.length > 1 ? parts[1] : '0';
         }
       });
     }
@@ -2359,10 +2434,17 @@ class _BookContinueCardState extends State<_BookContinueCard> {
     final book = widget.svc.mostRecentBook;
     if (book == null) return const SizedBox.shrink();
 
+    final chapter = _chapterNum;
+    final positionLabel = chapter == null
+        ? null
+        : book.category == BookCategory.hadith
+            ? L.of(context).bookPositionHadith(chapter, _hadithNum ?? '0')
+            : L.of(context).bookPositionChapter(chapter);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Continue Reading'.toUpperCase(),
+        Text(L.of(context).continueReading.toUpperCase(),
             style: TextStyle(
                 fontSize: 8,
                 letterSpacing: 2.5,
@@ -2411,8 +2493,8 @@ class _BookContinueCardState extends State<_BookContinueCard> {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: context.text)),
-                        if (_positionLabel.isNotEmpty)
-                          Text(_positionLabel,
+                        if (positionLabel != null)
+                          Text(positionLabel,
                               style: TextStyle(
                                   fontSize: 10,
                                   color: context.textDim,

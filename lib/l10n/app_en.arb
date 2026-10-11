@@ -773,5 +773,503 @@
         "example": "Al-Baqarah"
       }
     }
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Label under the house icon in the bottom navigation bar of the app. Opens the home dashboard. Very tight space (10px font) — keep it to one short word."
+  },
+  "navQuran": "Quran",
+  "@navQuran": {
+    "description": "Label under the book icon in the bottom navigation bar. Opens the list of Quran chapters. Very tight space — one short word."
+  },
+  "navSettings": "Settings",
+  "@navSettings": {
+    "description": "Label under the gear icon in the bottom navigation bar. Opens the settings screen. Very tight space — one short word."
+  },
+  "prayerTimes": "Prayer Times",
+  "@prayerTimes": {
+    "description": "Used twice: as the title of the dialog that asks for location permission on first launch, and as the small all-caps heading above the five daily prayer times on the home screen. The app uppercases it for the heading."
+  },
+  "locationPermissionBody": "Allow {appName} to access your location to automatically calculate accurate prayer times for your area.",
+  "@locationPermissionBody": {
+    "description": "Body of the dialog shown on first launch asking the user to grant location access. {appName} is the app's own name and is not translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "greetingMorning": "Good Morning",
+  "@greetingMorning": {
+    "description": "Greeting in the home screen header, shown before 12:00. Displayed in small all-caps letters with wide letter spacing, so keep it short."
+  },
+  "greetingAfternoon": "Good Afternoon",
+  "@greetingAfternoon": {
+    "description": "Greeting in the home screen header, shown between 12:00 and 17:00. Displayed in small all-caps letters with wide letter spacing, so keep it short."
+  },
+  "greetingEvening": "Good Evening",
+  "@greetingEvening": {
+    "description": "Greeting in the home screen header, shown from 17:00 onwards. Displayed in small all-caps letters with wide letter spacing, so keep it short."
+  },
+  "salaamGreeting": "Assalamu Alaikum",
+  "@salaamGreeting": {
+    "description": "The large greeting line in the home screen header, directly under the time-of-day greeting. An Arabic salutation — keep it transliterated into the target script rather than translating its meaning. The same phrase in Arabic script appears on the line below it."
+  },
+  "sponsorAQuran": "Sponsor a Quran",
+  "@sponsorAQuran": {
+    "description": "Small pill-shaped button in the top right of the home screen header. Opens a screen where the user can donate a printed Quran to someone else. Fits roughly 18 characters before the pill gets cramped."
+  },
+  "islamicDate": "Islamic Date",
+  "@islamicDate": {
+    "description": "Tiny all-caps caption above today's Hijri (Islamic calendar) date on the home screen calendar card. The app uppercases it; keep it to two short words."
+  },
+  "hijriYear": "{year} AH",
+  "@hijriYear": {
+    "description": "The Hijri year on the home screen calendar card. 'AH' stands for Anno Hegirae, the era marker of the Islamic calendar — use the conventional abbreviation in the target language if one exists.",
+    "placeholders": {
+      "year": {
+        "type": "int",
+        "example": "1447"
+      }
+    }
+  },
+  "hijriMonthMuharram": "Muharram",
+  "@hijriMonthMuharram": {
+    "description": "Name of the 1st month of the Islamic (Hijri) calendar, shown under today's Hijri day number on the home screen calendar card. Transliterate into the target script; do not translate the meaning."
+  },
+  "hijriMonthSafar": "Safar",
+  "@hijriMonthSafar": {
+    "description": "Name of the 2nd month of the Islamic (Hijri) calendar, shown under today's Hijri day number on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthRabiAlAwwal": "Rabi' al-Awwal",
+  "@hijriMonthRabiAlAwwal": {
+    "description": "Name of the 3rd month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthRabiAlThani": "Rabi' al-Thani",
+  "@hijriMonthRabiAlThani": {
+    "description": "Name of the 4th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthJumadaAlAwwal": "Jumada al-Awwal",
+  "@hijriMonthJumadaAlAwwal": {
+    "description": "Name of the 5th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthJumadaAlThani": "Jumada al-Thani",
+  "@hijriMonthJumadaAlThani": {
+    "description": "Name of the 6th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthRajab": "Rajab",
+  "@hijriMonthRajab": {
+    "description": "Name of the 7th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthShaban": "Sha'ban",
+  "@hijriMonthShaban": {
+    "description": "Name of the 8th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthRamadan": "Ramadan",
+  "@hijriMonthRamadan": {
+    "description": "Name of the 9th month of the Islamic (Hijri) calendar, the month of fasting. Shown on the home screen calendar card. Use the spelling customary in the target language."
+  },
+  "hijriMonthShawwal": "Shawwal",
+  "@hijriMonthShawwal": {
+    "description": "Name of the 10th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthDhuAlQidah": "Dhu al-Qi'dah",
+  "@hijriMonthDhuAlQidah": {
+    "description": "Name of the 11th month of the Islamic (Hijri) calendar, shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "hijriMonthDhuAlHijjah": "Dhu al-Hijjah",
+  "@hijriMonthDhuAlHijjah": {
+    "description": "Name of the 12th month of the Islamic (Hijri) calendar, the month of the Hajj pilgrimage. Shown on the home screen calendar card. Transliterate into the target script."
+  },
+  "shortDateLine": "{weekday}, {month} {day}",
+  "@shortDateLine": {
+    "description": "Today's Gregorian date in the top right of the home screen calendar card, e.g. 'Fri, Oct 10'. Built as one string so the parts can be reordered for languages that write the day before the month. {weekday} and {month} are the abbreviations from the weekdayShort* and monthShort* entries.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Fri"
+      },
+      "month": {
+        "type": "String",
+        "example": "Oct"
+      },
+      "day": {
+        "type": "int",
+        "example": "10"
+      }
+    }
+  },
+  "weekdayShortMon": "Mon",
+  "@weekdayShortMon": {
+    "description": "Abbreviation for Monday, used in the small date line on the home screen calendar card (see shortDateLine). Keep it to about three characters."
+  },
+  "weekdayShortTue": "Tue",
+  "@weekdayShortTue": {
+    "description": "Abbreviation for Tuesday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "weekdayShortWed": "Wed",
+  "@weekdayShortWed": {
+    "description": "Abbreviation for Wednesday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "weekdayShortThu": "Thu",
+  "@weekdayShortThu": {
+    "description": "Abbreviation for Thursday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "weekdayShortFri": "Fri",
+  "@weekdayShortFri": {
+    "description": "Abbreviation for Friday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "weekdayShortSat": "Sat",
+  "@weekdayShortSat": {
+    "description": "Abbreviation for Saturday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "weekdayShortSun": "Sun",
+  "@weekdayShortSun": {
+    "description": "Abbreviation for Sunday, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortJan": "Jan",
+  "@monthShortJan": {
+    "description": "Abbreviation for January, used in the small date line on the home screen calendar card (see shortDateLine). Keep it to about three characters."
+  },
+  "monthShortFeb": "Feb",
+  "@monthShortFeb": {
+    "description": "Abbreviation for February, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortMar": "Mar",
+  "@monthShortMar": {
+    "description": "Abbreviation for March, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortApr": "Apr",
+  "@monthShortApr": {
+    "description": "Abbreviation for April, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortMay": "May",
+  "@monthShortMay": {
+    "description": "Abbreviation for May, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortJun": "Jun",
+  "@monthShortJun": {
+    "description": "Abbreviation for June, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortJul": "Jul",
+  "@monthShortJul": {
+    "description": "Abbreviation for July, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortAug": "Aug",
+  "@monthShortAug": {
+    "description": "Abbreviation for August, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortSep": "Sep",
+  "@monthShortSep": {
+    "description": "Abbreviation for September, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortOct": "Oct",
+  "@monthShortOct": {
+    "description": "Abbreviation for October, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortNov": "Nov",
+  "@monthShortNov": {
+    "description": "Abbreviation for November, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "monthShortDec": "Dec",
+  "@monthShortDec": {
+    "description": "Abbreviation for December, used in the small date line on the home screen calendar card. Keep it to about three characters."
+  },
+  "locating": "Locating...",
+  "@locating": {
+    "description": "Text inside the small location pill on the home screen while the device's position is being looked up. Replaced by the city name once it is known."
+  },
+  "setLocation": "Set Location",
+  "@setLocation": {
+    "description": "Text inside the small location pill on the home screen when no location is known yet. Tapping it opens the location picker. Very little room — two short words at most."
+  },
+  "fetchingLocation": "Fetching location...",
+  "@fetchingLocation": {
+    "description": "Status line shown next to a spinner in the prayer times card while the app is determining where the user is."
+  },
+  "tapToSetLocation": "Tap to set location for prayer times",
+  "@tapToSetLocation": {
+    "description": "Prompt filling the prayer times card when no location has been set, so no prayer times can be shown. Tapping the card opens the location picker."
+  },
+  "setLabel": "Set",
+  "@setLabel": {
+    "description": "Short action word at the right edge of the 'tap to set location' row on the home screen; acts as the button for opening the location picker. One word."
+  },
+  "prayerFajr": "Fajr",
+  "@prayerFajr": {
+    "description": "Name of the dawn prayer, the first of the five daily Muslim prayers. Appears as the label on a prayer time card on the home screen, in the countdown to the next prayer, and as the heading of its rakah breakdown. Transliterate into the target script; card labels are very narrow (about 8 characters)."
+  },
+  "prayerDhuhr": "Dhuhr",
+  "@prayerDhuhr": {
+    "description": "Name of the midday prayer, the second of the five daily Muslim prayers. Appears as a prayer time card label on the home screen and in the countdown to the next prayer. Transliterate; keep to about 8 characters."
+  },
+  "prayerAsr": "Asr",
+  "@prayerAsr": {
+    "description": "Name of the afternoon prayer, the third of the five daily Muslim prayers. Appears as a prayer time card label on the home screen and in the countdown to the next prayer. Transliterate; keep to about 8 characters."
+  },
+  "prayerMaghrib": "Maghrib",
+  "@prayerMaghrib": {
+    "description": "Name of the sunset prayer, the fourth of the five daily Muslim prayers. Appears as a prayer time card label on the home screen and in the countdown to the next prayer. Transliterate; keep to about 8 characters."
+  },
+  "prayerIsha": "Isha",
+  "@prayerIsha": {
+    "description": "Name of the night prayer, the last of the five daily Muslim prayers. Appears as a prayer time card label on the home screen and in the countdown to the next prayer. Transliterate; keep to about 8 characters."
+  },
+  "prayerJumuah": "Jumu'ah",
+  "@prayerJumuah": {
+    "description": "Name of the Friday congregational prayer, which replaces the midday Dhuhr prayer on Fridays. Shown in place of prayerDhuhr on the home screen on Fridays. Transliterate; keep to about 8 characters."
+  },
+  "rakahSunnah": "Sunnah",
+  "@rakahSunnah": {
+    "description": "Label for the recommended (non-obligatory) units of prayer in the breakdown panel that opens when a prayer time card is tapped. A row reads e.g. 'Sunnah  2'. Transliterate this Islamic term rather than translating it loosely."
+  },
+  "rakahFard": "Fard",
+  "@rakahFard": {
+    "description": "Label for the obligatory units of prayer in the breakdown panel that opens when a prayer time card is tapped. A row reads e.g. 'Fard  4'. Transliterate this Islamic term."
+  },
+  "rakahWitr": "Witr",
+  "@rakahWitr": {
+    "description": "Label for the Witr units of prayer, performed after the night prayer, in the breakdown panel that opens when a prayer time card is tapped. Transliterate this Islamic term."
+  },
+  "rakahTotal": "Total",
+  "@rakahTotal": {
+    "description": "Label on the summary row at the bottom of the prayer unit breakdown panel, giving the total number of rakahs for that prayer. One short word."
+  },
+  "rakahCountShort": "{count, plural, other{{count} rak.}}",
+  "@rakahCountShort": {
+    "description": "Number of rakahs (units of prayer) on a small badge inside each prayer time card on the home screen, e.g. '4 rak.'. 'rak.' is a deliberate abbreviation of 'rakah' — the badge is only a few characters wide, so abbreviate in the target language too. Add plural categories if the target language inflects the noun.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "rakahBreakdownHint": "✦ Tap a prayer to see full rakah breakdown ✦",
+  "@rakahBreakdownHint": {
+    "description": "One-line hint centred under the row of five prayer time cards on the home screen, telling the user that tapping a card reveals how many rakahs (units of prayer) that prayer has. Keep the ✦ ornaments at both ends; they are decoration, not text."
+  },
+  "durationHoursMinutesSeconds": "{hours}h {minutes}m {seconds}s",
+  "@durationHoursMinutesSeconds": {
+    "description": "A live countdown duration, e.g. '2h 15m 30s'. Used for the time remaining until the next prayer and until sunrise on the home screen. 'h', 'm' and 's' are single-letter abbreviations for hours, minutes and seconds — use the shortest conventional abbreviations in the target language, as this must stay on one line in a very small font.",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "example": "2"
+      },
+      "minutes": {
+        "type": "int",
+        "example": "15"
+      },
+      "seconds": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "durationMinutesSeconds": "{minutes}m {seconds}s",
+  "@durationMinutesSeconds": {
+    "description": "A live countdown duration of less than an hour, e.g. '15m 30s', used for the time remaining until sunrise on the home screen. 'm' and 's' are single-letter abbreviations for minutes and seconds — keep them as short as possible.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "15"
+      },
+      "seconds": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "prayerTimesLocation": "Prayer Times Location",
+  "@prayerTimesLocation": {
+    "description": "Title at the top of the bottom sheet where the user sees and changes the place used to calculate prayer times."
+  },
+  "reDetect": "Re-detect",
+  "@reDetect": {
+    "description": "Button in the location bottom sheet that discards the stored place and locates the device again. One short word or phrase."
+  },
+  "searchCityHint": "Search city or country...",
+  "@searchCityHint": {
+    "description": "Placeholder text inside the search field of the location bottom sheet, where the user types a city or country to use for prayer times."
+  },
+  "cityNotFound": "City not found. Try a different spelling.",
+  "@cityNotFound": {
+    "description": "Error shown under the search field in the location bottom sheet when the typed city or country could not be matched to a place."
+  },
+  "calculationMethod": "Calculation Method",
+  "@calculationMethod": {
+    "description": "Tiny all-caps heading above the list of prayer time calculation methods (different scholarly conventions for computing the times) in the location bottom sheet. The app uppercases it."
+  },
+  "continueReading": "Continue Reading",
+  "@continueReading": {
+    "description": "Tiny all-caps heading above the card that reopens whatever the user was last reading — used both for the Quran chapter card and for the Islamic book card on the home screen. The app uppercases it."
+  },
+  "quotedText": "“{text}”",
+  "@quotedText": {
+    "description": "Wraps the translated verse on the verse-of-the-day card in quotation marks. Replace the marks with the pair conventional in the target language (for example « » or „ “) and leave {text} untouched.",
+    "placeholders": {
+      "text": {
+        "type": "String",
+        "example": "And He is with you wherever you are."
+      }
+    }
+  },
+  "popularSurahs": "Popular Surahs",
+  "@popularSurahs": {
+    "description": "Tiny all-caps heading above a grid of four frequently read Quran chapters on the home screen. 'Surah' is a chapter of the Quran. The app uppercases it."
+  },
+  "quickQibla": "Qibla",
+  "@quickQibla": {
+    "description": "Title on a small square shortcut tile on the home screen that opens a compass pointing towards Mecca. 'Qibla' is the direction of prayer — transliterate rather than translate. Only about 10 characters fit."
+  },
+  "quickQiblaSubtitle": "Find direction",
+  "@quickQiblaSubtitle": {
+    "description": "Second line on the Qibla shortcut tile on the home screen, explaining that the tile opens a compass showing the direction of prayer. One line of about 16 characters; it is truncated if longer."
+  },
+  "quickDuas": "Duas",
+  "@quickDuas": {
+    "description": "Title on a small square shortcut tile on the home screen that opens a collection of supplications. 'Dua' is a prayer of supplication — transliterate rather than translate. Only about 10 characters fit."
+  },
+  "quickDuasSubtitle": "Daily supplications",
+  "@quickDuasSubtitle": {
+    "description": "Second line on the Duas shortcut tile on the home screen, describing the collection of everyday supplications it opens. One short line; it is truncated if too long."
+  },
+  "quickHifz": "Hifz",
+  "@quickHifz": {
+    "description": "Title on a small square shortcut tile on the home screen that opens memorisation tools. 'Hifz' is the memorisation of the Quran — transliterate rather than translate. Only about 10 characters fit."
+  },
+  "quickHifzSubtitle": "Memorize Surahs",
+  "@quickHifzSubtitle": {
+    "description": "Second line on the Hifz shortcut tile on the home screen, saying the tile helps the user memorise chapters of the Quran. One short line; it is truncated if too long."
+  },
+  "quickNinetyNineNames": "99 Names",
+  "@quickNinetyNineNames": {
+    "description": "Title on a small square shortcut tile on the home screen that opens the 99 names of God. Only about 10 characters fit."
+  },
+  "quickNinetyNineNamesSubtitle": "Asma ul Husna",
+  "@quickNinetyNineNamesSubtitle": {
+    "description": "Second line on the 99 Names shortcut tile on the home screen. 'Asma ul Husna' is the Arabic term for the beautiful names of God — transliterate it into the target script rather than translating its meaning."
+  },
+  "quickHasanat": "Hasanat",
+  "@quickHasanat": {
+    "description": "Title on a small square shortcut tile on the home screen that opens a calculator of rewards earned for reciting. 'Hasanat' means good deeds or rewards — transliterate rather than translate. Only about 10 characters fit."
+  },
+  "quickHasanatSubtitle": "Rewards calculator",
+  "@quickHasanatSubtitle": {
+    "description": "Second line on the Hasanat shortcut tile on the home screen, describing the calculator of rewards for recitation. One short line; it is truncated if too long."
+  },
+  "quickSalah": "Salah",
+  "@quickSalah": {
+    "description": "Title on a small square shortcut tile on the home screen for a not-yet-released guide to performing the prayer. 'Salah' is the ritual prayer — transliterate rather than translate. The tile is greyed out. Only about 10 characters fit."
+  },
+  "quickSalahSubtitle": "Perform prayer",
+  "@quickSalahSubtitle": {
+    "description": "Second line on the Salah shortcut tile on the home screen, saying the tile will teach the user how to perform the ritual prayer. Currently replaced by comingSoon, as the feature is not released yet."
+  },
+  "comingSoon": "Coming soon",
+  "@comingSoon": {
+    "description": "Replaces the subtitle on a home screen shortcut tile whose feature is not available yet. Very small text, about 16 characters."
+  },
+  "salahComingSoon": "Perform Salah — coming soon",
+  "@salahComingSoon": {
+    "description": "Message in the brief toast shown when the user taps the greyed-out Salah tile on the home screen, telling them the guide to performing the ritual prayer is not available yet."
+  },
+  "yourProgress": "Your Progress",
+  "@yourProgress": {
+    "description": "Tiny all-caps heading above the three reading statistics at the bottom of the home screen. The app uppercases it."
+  },
+  "statDayStreak": "Day Streak",
+  "@statDayStreak": {
+    "description": "Caption under the number of consecutive days the user has opened the app to read, in the statistics row at the bottom of the home screen. Very small text in a narrow column — keep it to one or two short words."
+  },
+  "statSurahs": "Surahs",
+  "@statSurahs": {
+    "description": "Caption under the count of Quran chapters the user has read, in the statistics row at the bottom of the home screen. A bare noun with no number, so use the plural form. Narrow column — keep it short."
+  },
+  "statVerses": "Verses",
+  "@statVerses": {
+    "description": "Caption under the count of Quran verses the user has read, in the statistics row at the bottom of the home screen. A bare noun with no number, so use the plural form. Narrow column — keep it short."
+  },
+  "seeAll": "See all",
+  "@seeAll": {
+    "description": "Link at the right end of the Islamic Books heading on the home screen; opens the full list of books. Two short words."
+  },
+  "filterAll": "All",
+  "@filterAll": {
+    "description": "First of three filter chips above the book carousel on the home screen; shows books of every kind. One short word."
+  },
+  "filterHadith": "Hadith",
+  "@filterHadith": {
+    "description": "Filter chip above the book carousel on the home screen; narrows the list to collections of hadith (recorded sayings of the Prophet). Transliterate rather than translate. One short word."
+  },
+  "filterSeerah": "Seerah",
+  "@filterSeerah": {
+    "description": "Filter chip above the book carousel on the home screen; narrows the list to books on the Seerah (the biography of the Prophet). Transliterate rather than translate. One short word."
+  },
+  "bookDownloadToRead": "Download to read",
+  "@bookDownloadToRead": {
+    "description": "Badge across the bottom of a book cover in the home screen carousel when the book has not been downloaded yet; tapping the cover starts the download. Fits about 16 characters on one line before being truncated."
+  },
+  "bookDownloadingPercent": "Downloading {percent}%",
+  "@bookDownloadingPercent": {
+    "description": "Badge across the bottom of a book cover in the home screen carousel while the book is downloading, e.g. 'Downloading 42%'. Very narrow — abbreviate the verb if the target language needs more room.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "bookStartReading": "Start reading",
+  "@bookStartReading": {
+    "description": "Badge across the bottom of a downloaded book's cover in the home screen carousel when the user has not opened it yet. Fits about 16 characters on one line."
+  },
+  "bookTapToRetry": "Tap to retry",
+  "@bookTapToRetry": {
+    "description": "Badge across the bottom of a book cover in the home screen carousel after its download failed; tapping the cover tries again. Fits about 16 characters on one line."
+  },
+  "bookPositionHadith": "Book {book} · Hadith {hadith}",
+  "@bookPositionHadith": {
+    "description": "Second line on the home screen card that reopens the Islamic book the user was last reading, giving how far they got in a hadith collection, e.g. 'Book 4 · Hadith 112'. Here 'Book' is a numbered section within the collection. Keep the · separator.",
+    "placeholders": {
+      "book": {
+        "type": "String",
+        "example": "4"
+      },
+      "hadith": {
+        "type": "String",
+        "example": "112"
+      }
+    }
+  },
+  "bookPositionChapter": "Chapter {chapter}",
+  "@bookPositionChapter": {
+    "description": "Second line on the home screen card that reopens the Islamic book the user was last reading, giving how far they got in a non-hadith book, e.g. 'Chapter 7'.",
+    "placeholders": {
+      "chapter": {
+        "type": "String",
+        "example": "7"
+      }
+    }
+  },
+  "nowPlayingSubtitle": "{reciter} · Verse {verse}/{total}",
+  "@nowPlayingSubtitle": {
+    "description": "Second line of the mini audio player docked above the navigation bar, naming who is reciting and which verse is playing, e.g. 'Mishary Alafasy · Verse 3/286'. {reciter} is a person's name and is not translated. Keep the · separator and the slash. One line in a 9px font, so stay terse.",
+    "placeholders": {
+      "reciter": {
+        "type": "String",
+        "example": "Mishary Alafasy"
+      },
+      "verse": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "286"
+      }
+    }
   }
 }
