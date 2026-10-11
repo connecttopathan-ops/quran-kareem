@@ -6,11 +6,6 @@
     "description": "The app's name. Left untranslated in most locales — it is a brand name, not a phrase."
   },
 
-  "settings": "Settings",
-  "@settings": {
-    "description": "Title of the settings screen."
-  },
-
   "about": "About",
   "@about": {
     "description": "Section heading above the app name and version in settings."
@@ -174,6 +169,120 @@
       }
     }
   },
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": { "description": "Title bar of the settings screen." },
+
+  "sectionAppearance": "Appearance",
+  "@sectionAppearance": { "description": "Settings section grouping theme and display options." },
+
+  "sectionLanguage": "Language",
+  "@sectionLanguage": { "description": "Settings section grouping the app language and Quran translation language controls." },
+
+  "sectionReading": "Reading",
+  "@sectionReading": { "description": "Settings section grouping font sizes and reading display options." },
+
+  "sectionIslamicBooks": "Islamic Books",
+  "@sectionIslamicBooks": { "description": "Settings section for the hadith and Islamic book collections." },
+
+  "sectionQuranAudio": "Quran Audio",
+  "@sectionQuranAudio": { "description": "Settings section for recitation audio options." },
+
+  "sectionNotifications": "Notifications",
+  "@sectionNotifications": { "description": "Settings section for prayer alerts and daily reminders." },
+
+  "darkMode": "Dark Mode",
+  "@darkMode": { "description": "Toggle between the light and dark colour theme." },
+
+  "darkModeSubtitle": "Switch between light and dark theme",
+  "@darkModeSubtitle": { "description": "Explains the Dark Mode toggle." },
+
+  "arabicFontSize": "Arabic Font Size",
+  "@arabicFontSize": { "description": "Slider controlling how large the Arabic Quran text is rendered." },
+
+  "showTransliteration": "Show Transliteration",
+  "@showTransliteration": { "description": "Toggle for the Roman-letter phonetic rendering of the Arabic." },
+
+  "showTransliterationSubtitle": "Display Roman transliteration",
+  "@showTransliterationSubtitle": { "description": "Explains the transliteration toggle. 'Roman' means the Latin alphabet, not the city." },
+
+  "showTranslation": "Show Translation",
+  "@showTranslation": { "description": "Toggle for the translated meaning shown under each verse." },
+
+  "showTranslationSubtitle": "Display translation below Arabic",
+  "@showTranslationSubtitle": { "description": "Explains the translation toggle." },
+
+  "aboutAppName": "Quran Kareem",
+  "@aboutAppName": { "description": "The app's name as shown in the About section. A proper name — leave untranslated." },
+
+  "textSettings": "Text Settings",
+  "@textSettings": { "description": "Row opening the text and reading display settings screen." },
+
+  "textSettingsSubtitle": "Reading mode, font size, swipe navigation",
+  "@textSettingsSubtitle": { "description": "Lists what the Text Settings screen contains." },
+
+  "prayerNotifications": "Prayer Notifications",
+  "@prayerNotifications": { "description": "Row opening the prayer-time alert settings." },
+
+  "prayerNotificationsSubtitle": "Adhan, vibration, or silent alerts",
+  "@prayerNotificationsSubtitle": { "description": "Lists the prayer alert styles available. 'Adhan' is the Islamic call to prayer — keep the term, transliterated as that language conventionally writes it." },
+
+  "dailyRemindersTitle": "Daily Reminders",
+  "@dailyRemindersTitle": { "description": "Row opening the daily Quran reading reminder settings." },
+
+  "dailyRemindersSubtitle": "Quran reading & Ayah of the Day",
+  "@dailyRemindersSubtitle": { "description": "Lists what the Daily Reminders screen covers. 'Ayah' means a verse of the Quran — keep the term." },
+
+  "readingLanguage": "Reading language",
+  "@readingLanguage": { "description": "Which language the Islamic book collections are read in." },
+
+  "noBooksDownloaded": "No books downloaded",
+  "@noBooksDownloaded": { "description": "Shown on the books row when nothing has been downloaded yet." },
+
+  "manageDownloads": "Manage downloads",
+  "@manageDownloads": { "description": "Link to the screen for removing downloaded books." },
+
+  "manageDownloadsTitle": "Manage Downloads",
+  "@manageDownloadsTitle": { "description": "Title of the screen listing downloaded books so they can be deleted." },
+
+  "noBooksDownloadedYet": "No books downloaded yet.",
+  "@noBooksDownloadedYet": { "description": "Empty state on the Manage Downloads screen. A full sentence, unlike noBooksDownloaded which is a row subtitle." },
+
+  "delete": "Delete",
+  "@delete": { "description": "Button that removes a downloaded book." },
+
+  "translationSource": "Translation Source",
+  "@translationSource": { "description": "Which scholar's translation to use for the currently selected language." },
+
+  "rateApp": "Rate Get Quran",
+  "@rateApp": { "description": "Row inviting the user to leave a store review. 'Get Quran' is the app's name — leave it untranslated." },
+
+  "rateAppSubtitle": "Share your feedback on the Play Store",
+  "@rateAppSubtitle": { "description": "Explains the rate row. 'Play Store' is a product name — leave untranslated." },
+
+  "audioLanguage": "Audio Language",
+  "@audioLanguage": { "description": "Which language the recitation audio is in." },
+
+  "audioLanguageSubtitle": "Language for Quran recitation",
+  "@audioLanguageSubtitle": { "description": "Explains the Audio Language row." },
+
+  "reciter": "Reciter",
+  "@reciter": { "description": "The person reciting the Quran in the audio. A noun for the reader, not the recitation itself." },
+
+  "languageArabic": "Arabic",
+  "@languageArabic": { "description": "Language name, shown in a picker. Translate into the display language, e.g. 'Arabe' in French." },
+
+  "languageEnglish": "English",
+  "@languageEnglish": { "description": "Language name, shown in a picker. Translate into the display language." },
+
+  "languageUrdu": "Urdu",
+  "@languageUrdu": { "description": "Language name, shown in a picker. Translate into the display language." },
+
+  "languageFrench": "French",
+  "@languageFrench": { "description": "Language name, shown in a picker. Translate into the display language." },
+
+  "languagePersian": "Persian",
+  "@languagePersian": { "description": "Language name, shown in a picker. Translate into the display language. Also known as Farsi." },
 
   "meaningInLanguage": "Meaning in {language}",
   "@meaningInLanguage": {

@@ -35,7 +35,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Text('Settings',
+                      Text(L.of(context).settingsTitle,
                           style: TextStyle(
                               fontFamily: 'serif',
                               fontSize: 20,
@@ -49,10 +49,10 @@ class SettingsScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     children: [
-                      _SectionHeader('Appearance'),
+                      _SectionHeader(L.of(context).sectionAppearance),
                       _SettingTile(
-                        title: 'Dark Mode',
-                        subtitle: 'Switch between light and dark theme',
+                        title: L.of(context).darkMode,
+                        subtitle: L.of(context).darkModeSubtitle,
                         trailing: Switch(
                           value: state.isDarkMode,
                           onChanged: (_) => state.toggleDarkMode(),
@@ -62,14 +62,14 @@ class SettingsScreen extends StatelessWidget {
                       // Both language settings sit together so the difference
                       // between them is legible at a glance — they are the one
                       // pair in this app users are most likely to confuse.
-                      _SectionHeader('Language'),
+                      _SectionHeader(L.of(context).sectionLanguage),
                       _AppLanguageSelector(state: state),
                       _LanguageSelector(state: state),
                       _TranslationSourceTile(),
-                      _SectionHeader('Reading'),
+                      _SectionHeader(L.of(context).sectionReading),
                       _TextSettingsTile(),
                       _SettingTile(
-                        title: 'Arabic Font Size',
+                        title: L.of(context).arabicFontSize,
                         subtitle: L
                             .of(context)
                             .fontSizePx(state.arabicFontSize.toInt()),
@@ -91,8 +91,8 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                       _SettingTile(
-                        title: 'Show Transliteration',
-                        subtitle: 'Display Roman transliteration',
+                        title: L.of(context).showTransliteration,
+                        subtitle: L.of(context).showTransliterationSubtitle,
                         trailing: Switch(
                           value: state.showTranslit,
                           onChanged: (_) => state.toggleTranslit(),
@@ -100,25 +100,25 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                       _SettingTile(
-                        title: 'Show Translation',
-                        subtitle: 'Display translation below Arabic',
+                        title: L.of(context).showTranslation,
+                        subtitle: L.of(context).showTranslationSubtitle,
                         trailing: Switch(
                           value: state.showTranslation,
                           onChanged: (_) => state.toggleTranslation(),
                           activeColor: AppColors.gold,
                         ),
                       ),
-                      _SectionHeader('Islamic Books'),
+                      _SectionHeader(L.of(context).sectionIslamicBooks),
                       _IslamicBooksLanguageTile(),
                       _ManageDownloadsTile(),
-                      _SectionHeader('Quran Audio'),
+                      _SectionHeader(L.of(context).sectionQuranAudio),
                       _AudioLanguageTile(),
-                      _SectionHeader('Notifications'),
+                      _SectionHeader(L.of(context).sectionNotifications),
                       _NotificationTile(),
                       _DailyRemindersTile(),
-                      _SectionHeader('About'),
+                      _SectionHeader(L.of(context).about),
                       _SettingTile(
-                        title: 'Quran Kareem',
+                        title: L.of(context).aboutAppName,
                         subtitle: L.of(context).version('1.1.0'),
                         trailing: null,
                       ),
@@ -248,10 +248,10 @@ class _TextSettingsTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Text Settings',
+                Text(L.of(context).textSettings,
                     style: TextStyle(fontSize: 14, color: context.text)),
                 const SizedBox(height: 2),
-                Text('Reading mode, font size, swipe navigation',
+                Text(L.of(context).textSettingsSubtitle,
                     style: TextStyle(
                         fontSize: 11,
                         color: context.textDim,
@@ -288,10 +288,10 @@ class _NotificationTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Prayer Notifications',
+                  Text(L.of(context).prayerNotifications,
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
-                  Text('Adhan, vibration, or silent alerts',
+                  Text(L.of(context).prayerNotificationsSubtitle,
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
@@ -329,10 +329,10 @@ class _DailyRemindersTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Daily Reminders',
+                  Text(L.of(context).dailyRemindersTitle,
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
-                  Text('Quran reading & Ayah of the Day',
+                  Text(L.of(context).dailyRemindersSubtitle,
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
@@ -429,8 +429,13 @@ class _LanguageSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Translation Language',
+          Text(L.of(context).translationLanguage,
               style: TextStyle(fontSize: 14, color: context.text)),
+          const SizedBox(height: 2),
+          // Mirrors the subtitle on the App Language row above. Without both,
+          // the two rows read as near-duplicates.
+          Text(L.of(context).translationLanguageSubtitle,
+              style: TextStyle(fontSize: 11, color: context.textDim)),
           const SizedBox(height: 8),
           DropdownButton<String>(
             value: state.langCode,
@@ -462,10 +467,10 @@ class _IslamicBooksLanguageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BookDownloadService>(builder: (context, svc, _) {
       final langName = svc.language == 'ar'
-          ? 'Arabic'
+          ? L.of(context).languageArabic
           : svc.language == 'ur'
-              ? 'Urdu'
-              : 'English';
+              ? L.of(context).languageUrdu
+              : L.of(context).languageEnglish;
       return GestureDetector(
         onTap: () => Navigator.push(
           context,
@@ -486,7 +491,7 @@ class _IslamicBooksLanguageTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Reading language',
+                  Text(L.of(context).readingLanguage,
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
                   Text(langName,
@@ -520,7 +525,7 @@ class _ManageDownloadsTile extends StatelessWidget {
     return Consumer<BookDownloadService>(builder: (context, svc, _) {
       final downloaded = svc.downloadedBooks;
       final subtitle = downloaded.isEmpty
-          ? 'No books downloaded'
+          ? L.of(context).noBooksDownloaded
           : '${downloaded.length} book${downloaded.length == 1 ? '' : 's'} downloaded';
       return GestureDetector(
         onTap: () => _showManageSheet(context),
@@ -537,7 +542,7 @@ class _ManageDownloadsTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Manage downloads',
+                  Text(L.of(context).manageDownloads,
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
                   Text(subtitle,
@@ -587,12 +592,12 @@ class _ManageDownloadsSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Manage Downloads',
+          Text(L.of(context).manageDownloadsTitle,
               style: TextStyle(
                   fontFamily: 'serif', fontSize: 18, color: context.text)),
           const SizedBox(height: 16),
           if (svc.downloadedBooks.isEmpty)
-            Text('No books downloaded yet.',
+            Text(L.of(context).noBooksDownloadedYet,
                 style: TextStyle(
                     fontSize: 13,
                     fontFamily: 'sans-serif',
@@ -643,7 +648,7 @@ class _ManageDownloadsSheet extends StatelessWidget {
                         await svc.deleteBook(book.id);
                         if (context.mounted) Navigator.pop(context);
                       },
-                      child: Text('Delete',
+                      child: Text(L.of(context).delete,
                           style: TextStyle(
                               fontSize: 12,
                               color: Colors.red.shade400,
@@ -696,7 +701,7 @@ class _TranslationSourceTile extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Text('Translation Source',
+            child: Text(L.of(context).translationSource,
                 style: TextStyle(fontSize: 14, color: context.text)),
           ),
           for (final (id, name) in sources)
@@ -754,10 +759,10 @@ class _RateAppTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Rate Get Quran',
+                  Text(L.of(context).rateApp,
                       style: TextStyle(fontSize: 14, color: context.text)),
                   const SizedBox(height: 2),
-                  Text('Share your feedback on the Play Store',
+                  Text(L.of(context).rateAppSubtitle,
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
@@ -778,13 +783,17 @@ class _RateAppTile extends StatelessWidget {
 class _AudioLanguageTile extends StatelessWidget {
   const _AudioLanguageTile();
 
-  static const Map<String, String> _langNames = {
-    'ar': 'Arabic',
-    'en': 'English',
-    'ur': 'Urdu',
-    'fr': 'French',
-    'fa': 'Persian',
-  };
+  /// Recitation language names, keyed by the code `AudioService` stores.
+  ///
+  /// A method taking a context rather than a const map: the names are
+  /// localised now, and resolving them needs a context at call time.
+  static Map<String, String> _langNames(BuildContext context) => {
+        'ar': L.of(context).languageArabic,
+        'en': L.of(context).languageEnglish,
+        'ur': L.of(context).languageUrdu,
+        'fr': L.of(context).languageFrench,
+        'fa': L.of(context).languagePersian,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -808,10 +817,10 @@ class _AudioLanguageTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Audio Language',
+                      Text(L.of(context).audioLanguage,
                           style: TextStyle(fontSize: 14, color: context.text)),
                       const SizedBox(height: 2),
-                      Text('Language for Quran recitation',
+                      Text(L.of(context).audioLanguageSubtitle,
                           style: TextStyle(
                               fontSize: 11,
                               color: context.textDim,
@@ -825,7 +834,7 @@ class _AudioLanguageTile extends StatelessWidget {
                   underline: const SizedBox(),
                   style: TextStyle(
                       fontSize: 13, color: context.text, fontFamily: 'serif'),
-                  items: _langNames.entries
+                  items: _langNames(context).entries
                       .map((e) => DropdownMenuItem(
                             value: e.key,
                             child: Text(e.value),
@@ -841,7 +850,7 @@ class _AudioLanguageTile extends StatelessWidget {
             // Other languages: only one reciter available — show nothing extra
             if (currentLang == 'ar') ...[
               const Divider(height: 20),
-              Text('Reciter',
+              Text(L.of(context).reciter,
                   style: TextStyle(
                       fontSize: 12,
                       color: context.textDim,
