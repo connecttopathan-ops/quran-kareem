@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/book_download_service.dart';
 
@@ -21,33 +22,38 @@ class _BookLanguageScreenState extends State<BookLanguageScreen> {
     if (mounted) Navigator.pop(context);
   }
 
-  static const _langs = [
-    (
-      code: 'en',
-      name: 'English',
-      desc: 'Read in English',
-      sample: 'Narrated by Abu Hurairah: The Prophet said, "Actions are judged by intentions..."',
-      rtl: false,
-    ),
-    (
-      code: 'ar',
-      name: 'العربية',
-      desc: 'اللغة العربية',
-      sample: 'حَدَّثَنَا عُمَرُ بْنُ الْخَطَّابِ، قَالَ: سَمِعْتُ رَسُولَ اللَّهِ ﷺ يَقُولُ...',
-      rtl: true,
-    ),
-    (
-      code: 'ur',
-      name: 'اردو',
-      desc: 'اردو میں پڑھیں',
-      sample: 'ابوہریرہ رضی اللہ عنہ سے روایت ہے: نبی کریم ﷺ نے فرمایا، اعمال کا دارومدار نیتوں پر ہے...',
-      rtl: true,
-    ),
-  ];
+  // Not `static const`: the name/desc of each card are localised, so they need
+  // a BuildContext and cannot live in a const list.
+  static List<
+          ({String code, String name, String desc, String sample, bool rtl})>
+      _langsFor(BuildContext context) => [
+            (
+              code: 'en',
+              name: L.of(context).languageEnglish,
+              desc: L.of(context).booksLangDescEnglish,
+              sample: 'Narrated by Abu Hurairah: The Prophet said, "Actions are judged by intentions..."',
+              rtl: false,
+            ),
+            (
+              code: 'ar',
+              name: 'العربية',
+              desc: 'اللغة العربية',
+              sample: 'حَدَّثَنَا عُمَرُ بْنُ الْخَطَّابِ، قَالَ: سَمِعْتُ رَسُولَ اللَّهِ ﷺ يَقُولُ...',
+              rtl: true,
+            ),
+            (
+              code: 'ur',
+              name: 'اردو',
+              desc: 'اردو میں پڑھیں',
+              sample: 'ابوہریرہ رضی اللہ عنہ سے روایت ہے: نبی کریم ﷺ نے فرمایا، اعمال کا دارومدار نیتوں پر ہے...',
+              rtl: true,
+            ),
+          ];
 
   @override
   Widget build(BuildContext context) {
-    final langLabel = _langs.firstWhere((l) => l.code == _selected).name;
+    final langs = _langsFor(context);
+    final langLabel = langs.firstWhere((l) => l.code == _selected).name;
 
     return Scaffold(
       backgroundColor: context.bg,
@@ -70,7 +76,7 @@ class _BookLanguageScreenState extends State<BookLanguageScreen> {
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(width: 8),
-                  Text('Islamic Books',
+                  Text(L.of(context).sectionIslamicBooks,
                       style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 20,
@@ -84,22 +90,21 @@ class _BookLanguageScreenState extends State<BookLanguageScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Choose your reading language',
+                    Text(L.of(context).booksChooseLanguageTitle,
                         style: TextStyle(
                             fontFamily: 'serif',
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
                             color: context.text)),
                     const SizedBox(height: 8),
-                    Text(
-                        'Which language would you like to read in? You can change this anytime.',
+                    Text(L.of(context).booksChooseLanguageBody,
                         style: TextStyle(
                             fontSize: 13,
                             fontFamily: 'sans-serif',
                             color: context.textDim)),
                     const SizedBox(height: 24),
                     // Language cards
-                    ...(_langs.map((lang) {
+                    ...(langs.map((lang) {
                       final selected = _selected == lang.code;
                       return GestureDetector(
                         onTap: () => setState(() => _selected = lang.code),
@@ -182,7 +187,7 @@ class _BookLanguageScreenState extends State<BookLanguageScreen> {
                     })),
                     const Spacer(),
                     Text(
-                      'You can change this anytime in Settings › Islamic Books',
+                      L.of(context).booksChangeLanguageHint,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 11,
@@ -200,7 +205,7 @@ class _BookLanguageScreenState extends State<BookLanguageScreen> {
                             borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: Text('Continue in $langLabel',
+                      child: Text(L.of(context).booksContinueInLanguage(langLabel),
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w600)),
                     ),

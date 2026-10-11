@@ -7,6 +7,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import '../l10n/app_localizations.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
@@ -243,7 +244,7 @@ class _QiblaScreenState extends State<QiblaScreen>
           icon: QIcon.back(size: 22, color: context.textDim),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Qibla Direction',
+        title: Text(L.of(context).qiblaTitle,
             style: TextStyle(
                 color: context.text,
                 fontSize: 16,
@@ -301,7 +302,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                                   size: 14, color: Colors.orange),
                               const SizedBox(width: 8),
                               Text(
-                                'Hold phone flat for accurate reading',
+                                L.of(context).qiblaHoldPhoneFlat,
                                 style: TextStyle(
                                     color: Colors.orange,
                                     fontSize: 12,
@@ -329,7 +330,16 @@ class _QiblaScreenState extends State<QiblaScreen>
                                       CustomPaint(
                                         size: const Size(260, 260),
                                         painter: _RosePainter(
-                                            isDark: context.isDark),
+                                          isDark: context.isDark,
+                                          northLabel:
+                                              L.of(context).qiblaCompassNorth,
+                                          eastLabel:
+                                              L.of(context).qiblaCompassEast,
+                                          southLabel:
+                                              L.of(context).qiblaCompassSouth,
+                                          westLabel:
+                                              L.of(context).qiblaCompassWest,
+                                        ),
                                       ),
                                       // Rotating needle
                                       Transform.rotate(
@@ -357,7 +367,8 @@ class _QiblaScreenState extends State<QiblaScreen>
 
                                 // Bearing
                                 Text(
-                                  '${qibla.toStringAsFixed(1)}° to Qibla',
+                                  L.of(context).qiblaBearingDegrees(
+                                      qibla.toStringAsFixed(1)),
                                   style: TextStyle(
                                     color: AppColors.gold,
                                     fontSize: 18,
@@ -369,7 +380,13 @@ class _QiblaScreenState extends State<QiblaScreen>
 
                                 // Distance
                                 Text(
-                                  '${NumberFormat('#,###').format(distKm.round())} km from Mecca',
+                                  L.of(context).qiblaDistanceFromMecca(
+                                    NumberFormat(
+                                            '#,###',
+                                            Localizations.localeOf(context)
+                                                .toString())
+                                        .format(distKm.round()),
+                                  ),
                                   style: TextStyle(
                                     color: context.textDim,
                                     fontSize: 13,
@@ -402,8 +419,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                                       const SizedBox(width: 8),
                                       Text(
                                         onTarget
-                                            ? 'Facing Qibla'
-                                            : 'Face the direction of the arrow',
+                                            ? L.of(context).qiblaFacingQibla
+                                            : L
+                                                .of(context)
+                                                .qiblaFaceArrowDirection,
                                         style: TextStyle(
                                           color: onTarget
                                               ? Colors.green
@@ -421,7 +440,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                                 TextButton.icon(
                                   onPressed: _showCalibrationOverlay,
                                   icon: const Icon(Icons.explore, size: 14),
-                                  label: const Text('Recalibrate'),
+                                  label: Text(L.of(context).qiblaRecalibrate),
                                   style: TextButton.styleFrom(
                                     foregroundColor: context.textDim,
                                     textStyle: const TextStyle(
@@ -433,7 +452,11 @@ class _QiblaScreenState extends State<QiblaScreen>
                                 const SizedBox(height: 8),
                                 // Location footer
                                 Text(
-                                  '${pt.cityName} (${pt.lat.toStringAsFixed(4)}°N, ${pt.lng.toStringAsFixed(4)}°E)',
+                                  L.of(context).qiblaLocationFooter(
+                                    pt.cityName,
+                                    pt.lat.toStringAsFixed(4),
+                                    pt.lng.toStringAsFixed(4),
+                                  ),
                                   style: TextStyle(
                                     color: context.textDim,
                                     fontSize: 10,
@@ -487,10 +510,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                           },
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'Move your phone in a\nfigure-8 motion to\ncalibrate the compass',
+                        Text(
+                          L.of(context).qiblaCalibrationInstruction,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.gold,
                             fontSize: 16,
                             fontFamily: 'serif',
@@ -499,7 +522,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Tap to dismiss',
+                          L.of(context).qiblaTapToDismiss,
                           style: TextStyle(
                             color: Colors.white54,
                             fontSize: 12,
@@ -536,7 +559,7 @@ class _NoLocation extends StatelessWidget {
                 size: 48, color: context.textDim),
             const SizedBox(height: 16),
             Text(
-              'Location required for Qibla direction',
+              L.of(context).qiblaLocationRequired,
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: context.textDim,
@@ -552,7 +575,7 @@ class _NoLocation extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () => loc.fetchLocation(),
-              child: const Text('Detect Location'),
+              child: Text(L.of(context).qiblaDetectLocation),
             ),
           ],
         ),
@@ -570,10 +593,14 @@ class _AccuracyIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, icon, color) = level == 2
-        ? ('Accuracy: High', Icons.check_circle, Colors.green)
+        ? (L.of(context).qiblaAccuracyHigh, Icons.check_circle, Colors.green)
         : level == 1
-            ? ('Accuracy: Medium', Icons.warning_amber, Colors.orange)
-            : ('Accuracy: Low', Icons.cancel, Colors.red);
+            ? (
+                L.of(context).qiblaAccuracyMedium,
+                Icons.warning_amber,
+                Colors.orange
+              )
+            : (L.of(context).qiblaAccuracyLow, Icons.cancel, Colors.red);
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Row(
@@ -597,7 +624,17 @@ class _AccuracyIndicator extends StatelessWidget {
 
 class _RosePainter extends CustomPainter {
   final bool isDark;
-  const _RosePainter({required this.isDark});
+  final String northLabel;
+  final String eastLabel;
+  final String southLabel;
+  final String westLabel;
+  const _RosePainter({
+    required this.isDark,
+    required this.northLabel,
+    required this.eastLabel,
+    required this.southLabel,
+    required this.westLabel,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -631,13 +668,18 @@ class _RosePainter extends CustomPainter {
     }
 
     // N / S / E / W labels
-    final dirs = [('N', 0.0), ('E', pi / 2), ('S', pi), ('W', 3 * pi / 2)];
-    for (final (label, angle) in dirs) {
+    final dirs = [
+      (northLabel, 0.0, true),
+      (eastLabel, pi / 2, false),
+      (southLabel, pi, false),
+      (westLabel, 3 * pi / 2, false),
+    ];
+    for (final (label, angle, isNorth) in dirs) {
       final tp = TextPainter(
         text: TextSpan(
             text: label,
             style: TextStyle(
-                color: label == 'N' ? gold : dim,
+                color: isNorth ? gold : dim,
                 fontSize: 11,
                 fontWeight: FontWeight.w700)),
         textDirection: ui.TextDirection.ltr,
@@ -653,7 +695,12 @@ class _RosePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RosePainter o) => o.isDark != isDark;
+  bool shouldRepaint(_RosePainter o) =>
+      o.isDark != isDark ||
+      o.northLabel != northLabel ||
+      o.eastLabel != eastLabel ||
+      o.southLabel != southLabel ||
+      o.westLabel != westLabel;
 }
 
 class _NeedlePainter extends CustomPainter {

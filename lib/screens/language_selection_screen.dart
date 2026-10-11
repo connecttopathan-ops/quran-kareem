@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
 import '../theme/app_theme.dart';
@@ -158,9 +159,9 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       border: Border.all(
                           color: AppColors.gold.withOpacity(0.35)),
                     ),
-                    child: const Text(
-                      'POPULAR',
-                      style: TextStyle(
+                    child: Text(
+                      L.of(context).langSelectPopularBadge,
+                      style: const TextStyle(
                         fontSize: 8,
                         color: AppColors.gold,
                         fontFamily: 'sans-serif',
@@ -208,7 +209,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
             const SizedBox(height: 4),
             // ── Transliteration ──────────────────────────────────────────
             Text(
-              'Bismillaahir Rahmaanir Raheem',
+              L.of(context).langSelectBismillahTransliteration,
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 11,
@@ -280,7 +281,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Choose your language',
+                    L.of(context).langSelectTitle,
                     style: TextStyle(
                       color: context.text,
                       fontSize: 22,
@@ -290,7 +291,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Select the language for Quran translations',
+                    L.of(context).langSelectSubtitle,
                     style: TextStyle(
                       color: context.textDim,
                       fontSize: 13,
@@ -303,7 +304,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     controller: _searchCtrl,
                     style: TextStyle(color: context.text, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Search language...',
+                      hintText: L.of(context).readerSearchLanguageHint,
                       hintStyle:
                           TextStyle(color: context.textDim, fontSize: 13),
                       prefixIcon: Padding(
@@ -364,7 +365,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      'ALL LANGUAGES',
+                      L.of(context).langSelectAllLanguages,
                       style: TextStyle(
                         color: context.textDim,
                         fontSize: 9,
@@ -384,7 +385,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               child: items.isEmpty
                   ? Center(
                       child: Text(
-                        'No languages found',
+                        L.of(context).readerNoLanguagesFound,
                         style: TextStyle(
                             color: context.textDim,
                             fontFamily: 'sans-serif'),
@@ -432,10 +433,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Continue',
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: Text(
+                  L.of(context).continueLabel,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

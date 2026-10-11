@@ -3,6 +3,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
@@ -184,31 +185,29 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
       _isDark ? Colors.white.withOpacity(0.65) : const Color(0xFF5A4A2A);
 
   /// Manufacturer-specific extra step shown inside the battery card.
-  String? get _batteryTip {
+  /// Resolved during build(), so the localised menu paths follow the app locale.
+  String? _batteryTip(BuildContext context) {
     final m = widget.manufacturer;
+    final l = L.of(context);
+    final appName = l.appTitle;
     if (m.contains('samsung')) {
-      return 'Samsung extra step: Settings → Battery → Never sleeping apps'
-          ' → tap + and add Get Quran';
+      return l.permBatteryTipSamsung(appName);
     }
     if (m.contains('xiaomi') ||
         m.contains('redmi') ||
         m.contains('poco')) {
-      return 'Xiaomi extra step: Settings → Apps → Manage apps → Get Quran'
-          ' → AutoStart → turn On';
+      return l.permBatteryTipXiaomi(appName);
     }
     if (m.contains('huawei') || m.contains('honor')) {
-      return 'Huawei extra step: Settings → Battery → App launch → Get Quran'
-          ' → Manage manually → enable all toggles';
+      return l.permBatteryTipHuawei(appName);
     }
     if (m.contains('oppo') ||
         m.contains('realme') ||
         m.contains('oneplus')) {
-      return 'Extra step: Settings → Battery → Battery optimization'
-          ' → Get Quran → Don\'t optimize';
+      return l.permBatteryTipOppo(appName);
     }
     if (m.contains('vivo')) {
-      return 'Vivo extra step: Settings → Battery → High background power'
-          ' consumption → add Get Quran';
+      return l.permBatteryTipVivo(appName);
     }
     return null;
   }
@@ -265,12 +264,12 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Setup Notifications',
+                  Text(L.of(context).permSheetTitle,
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: _titleColor)),
-                  Text('Never miss a prayer time',
+                  Text(L.of(context).permSheetSubtitle,
                       style: TextStyle(
                           fontSize: 13, color: _subtitleColor)),
                 ],
@@ -284,8 +283,8 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
           // 1. Notifications
           _PermRow(
             icon: Icons.notifications_outlined,
-            title: 'Allow Notifications',
-            description: 'Required to receive prayer time alerts',
+            title: L.of(context).permAllowNotifications,
+            description: L.of(context).permNotificationsDescription,
             granted: _notifGranted,
             isDark: _isDark,
             onGrant: _requestNotifications,
@@ -295,9 +294,8 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
           if (_showExactRow)
             _PermRow(
               icon: Icons.alarm_outlined,
-              title: 'Precise Timing',
-              description:
-                  'Ensures notifications arrive exactly at prayer time, not minutes late',
+              title: L.of(context).permPreciseTimingTitle,
+              description: L.of(context).permPreciseTimingDescription,
               granted: _exactGranted,
               isDark: _isDark,
               onGrant: () async {
@@ -311,11 +309,10 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
           if (widget.showBatteryRow)
             _PermRow(
               icon: Icons.battery_saver_outlined,
-              title: 'Always Run in Background',
-              description:
-                  'Prevents your phone from blocking prayer alerts when the screen is off',
+              title: L.of(context).permBatteryTitle,
+              description: L.of(context).permBatteryDescription,
               granted: _batteryExempt,
-              tip: _batteryTip,
+              tip: _batteryTip(context),
               isDark: _isDark,
               onGrant: () async {
                 await Permission.ignoreBatteryOptimizations.request();
@@ -349,7 +346,9 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
                 elevation: 0,
               ),
               child: Text(
-                _allCriticalGranted ? 'All Set — Continue' : 'Allow Notifications',
+                _allCriticalGranted
+                    ? L.of(context).permAllSetContinue
+                    : L.of(context).permAllowNotifications,
                 style: const TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w600),
               ),
@@ -363,7 +362,7 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Maybe later',
+                  L.of(context).maybeLater,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -375,7 +374,7 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
               child: TextButton(
                 onPressed: openAppSettings,
                 child: Text(
-                  'Open app settings',
+                  L.of(context).openAppSettings,
                   style: TextStyle(fontSize: 12, color: _subtitleColor),
                 ),
               ),
@@ -485,8 +484,8 @@ class _PermRow extends StatelessWidget {
                       border: Border.all(color: AppColors.gold),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('Allow',
-                        style: TextStyle(
+                    child: Text(L.of(context).permAllowButton,
+                        style: const TextStyle(
                             color: AppColors.gold,
                             fontSize: 13,
                             fontWeight: FontWeight.w600)),

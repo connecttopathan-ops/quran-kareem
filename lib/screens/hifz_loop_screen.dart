@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 
@@ -419,9 +420,9 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
         Uri.parse(_audioUrl(_currentVerse)),
         tag: MediaItem(
           id: 'hifz_${_surahNumber}_$_currentVerse',
-          title: '$_surahName – Verse $_currentVerse',
+          title: L.of(context).hifzLoopMediaTitle(_surahName, _currentVerse),
           artist: 'Mishary Rashid Alafasy',
-          album: 'Hifz',
+          album: L.of(context).hifzLoopMediaAlbum,
         ),
       );
       await _player.setAudioSource(source);
@@ -520,7 +521,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
               ),
             ),
             Text(
-              '${_memorized.length} / $_totalVerses memorized',
+              L.of(context)
+                  .hifzLoopMemorizedOfTotal(_memorized.length, _totalVerses),
               style: TextStyle(
                 color: context.textDim,
                 fontSize: 11,
@@ -595,18 +597,21 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                       ),
                     ),
                   ),
-                  Text('How Hifz works',
+                  Text(L.of(context).hifzLoopWalkthroughTitle,
                     style: TextStyle(
                       fontFamily: 'serif', fontSize: 17, fontWeight: FontWeight.w700,
                       color: context.text,
                     ),
                   ),
                   const SizedBox(height: 14),
-                  _walkthroughTip(Icons.star_border_rounded,    'Tap ★ once you\'ve memorized a verse'),
+                  _walkthroughTip(Icons.star_border_rounded,
+                      L.of(context).hifzLoopTipMark),
                   const SizedBox(height: 8),
-                  _walkthroughTip(Icons.repeat_one_rounded,     'Each verse loops automatically — 3× by default'),
+                  _walkthroughTip(Icons.repeat_one_rounded,
+                      L.of(context).hifzLoopTipAutoLoop),
                   const SizedBox(height: 8),
-                  _walkthroughTip(Icons.tune_rounded,           'Tap ⚙ to change repeats, speed, or auto-advance'),
+                  _walkthroughTip(Icons.tune_rounded,
+                      L.of(context).hifzLoopTipTune),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -630,14 +635,14 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                                     color: context.textDim, strokeWidth: 2),
                                 ),
                                 const SizedBox(width: 10),
-                                Text('Loading verse…',
+                                Text(L.of(context).hifzLoopLoadingVerse,
                                   style: TextStyle(fontSize: 14, color: context.textDim,
                                     fontFamily: 'sans-serif'),
                                 ),
                               ],
                             )
-                          : const Text('Start Memorizing',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
+                          : Text(L.of(context).hifzLoopStartMemorizing,
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600,
                                 fontFamily: 'sans-serif')),
                     ),
                   ),
@@ -691,18 +696,18 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('Tap ★ to mark this verse memorized',
+                        Text(L.of(context).hifzLoopTooltipMark,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 12,
+                          style: const TextStyle(color: Colors.white, fontSize: 12,
                             fontWeight: FontWeight.w600, fontFamily: 'sans-serif', height: 1.4),
                         ),
-                        SizedBox(height: 4),
-                        Text('Tap anywhere to continue',
-                          style: TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
+                        const SizedBox(height: 4),
+                        Text(L.of(context).hifzLoopTapToContinue,
+                          style: const TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
                         ),
                       ],
                     ),
@@ -746,18 +751,18 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('Tap ⚙ to adjust repeats per verse',
+                        Text(L.of(context).hifzLoopTooltipRepeats,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 12,
+                          style: const TextStyle(color: Colors.white, fontSize: 12,
                             fontWeight: FontWeight.w600, fontFamily: 'sans-serif', height: 1.4),
                         ),
-                        SizedBox(height: 4),
-                        Text('Tap anywhere to dismiss',
-                          style: TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
+                        const SizedBox(height: 4),
+                        Text(L.of(context).hifzLoopTapToDismiss,
+                          style: const TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'sans-serif'),
                         ),
                       ],
                     ),
@@ -854,7 +859,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Masha Allah!',
+                      L.of(context).hifzLoopMashaAllah,
                       style: TextStyle(
                         color: context.text,
                         fontSize: 20,
@@ -866,7 +871,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
                     // Surah name
                     Text(
-                      'You have memorized',
+                      L.of(context).hifzLoopYouHaveMemorized,
                       style: TextStyle(color: context.textDim, fontSize: 13),
                     ),
                     const SizedBox(height: 4),
@@ -897,7 +902,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        '"And We have certainly made the Quran easy to remember."\n— Quran 54:17',
+                        L.of(context).hifzLoopQuranQuote,
                         style: TextStyle(
                           color: context.textDim,
                           fontSize: 12,
@@ -911,7 +916,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
 
                     // Stats
                     Text(
-                      '${_memorized.length} of $_totalVerses verses memorized',
+                      L.of(context).hifzLoopVersesMemorizedOfTotal(
+                          _memorized.length, _totalVerses),
                       style: TextStyle(color: context.textDim, fontSize: 11),
                     ),
                     const SizedBox(height: 20),
@@ -927,9 +933,9 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                           color: AppColors.gold,
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: const Text(
-                          'Alhamdulillah  ✓',
-                          style: TextStyle(
+                        child: Text(
+                          L.of(context).hifzLoopAlhamdulillah,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -964,7 +970,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.repeat_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text('Repeats per verse',
+                    Text(L.of(context).hifzLoopRepeatsPerVerse,
                         style:
                             TextStyle(color: context.text, fontSize: 13)),
                     const Spacer(),
@@ -979,7 +985,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                         SizedBox(
                           width: 32,
                           child: Text(
-                            '$_loopsPerVerse×',
+                            L.of(context)
+                                .hifzLoopRepeatsValue(_loopsPerVerse),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: AppColors.gold,
@@ -1005,7 +1012,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.skip_next_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text('Auto-advance',
+                    Text(L.of(context).hifzLoopAutoAdvance,
                         style:
                             TextStyle(color: context.text, fontSize: 13)),
                     const Spacer(),
@@ -1026,7 +1033,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.speed_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text('Speed',
+                    Text(L.of(context).hifzLoopSpeed,
                         style:
                             TextStyle(color: context.text, fontSize: 13)),
                     const Spacer(),
@@ -1054,7 +1061,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                                             : context.border),
                                   ),
                                   child: Text(
-                                    '${s}×',
+                                    L.of(context)
+                                        .hifzLoopSpeedValue(s.toString()),
                                     style: TextStyle(
                                       color: _speed == s
                                           ? Colors.white
@@ -1158,7 +1166,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                   border: Border.all(color: context.border),
                 ),
                 child: Text(
-                  'Verse $_currentVerse of $_totalVerses',
+                  L.of(context)
+                      .readerVerseOfTotal(_currentVerse, _totalVerses),
                   style: TextStyle(
                     color: context.textDim,
                     fontSize: 12,
@@ -1255,7 +1264,7 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                 Icon(Icons.star_rounded, color: AppColors.gold, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  'Memorized',
+                  L.of(context).hifzLoopMemorized,
                   style: TextStyle(
                     color: AppColors.gold,
                     fontSize: 12,
@@ -1411,7 +1420,9 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isMemorized ? 'Mem.' : 'Mark',
+                      isMemorized
+                          ? L.of(context).hifzLoopMemorizedShort
+                          : L.of(context).hifzLoopMarkShort,
                       style: TextStyle(
                         color: isMemorized
                             ? AppColors.gold
@@ -1466,7 +1477,8 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            '$memorizedCount of $_totalVerses verses memorized in $_surahName',
+            L.of(context).hifzLoopProgressInSurah(
+                memorizedCount, _totalVerses, _surahName),
             style: TextStyle(color: context.textDim, fontSize: 10),
           ),
         ],

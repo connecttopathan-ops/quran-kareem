@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
@@ -21,11 +22,13 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
   late Animation<double> _bounceAnim;
   final ScrollController _scrollCtrl = ScrollController();
 
-  static const _modeNames = [
-    'Translation only',
-    'Arabic + Translation',
-    'Arabic + Transliteration',
-  ];
+  // Display strings need a BuildContext, so this is a method and not a const
+  // list: the labels must follow the active locale.
+  static List<String> _modeNames(BuildContext context) => [
+        L.of(context).modePickerModeTranslationOnly,
+        L.of(context).modePickerModeArabicTranslation,
+        L.of(context).modePickerModeArabicTransliteration,
+      ];
 
   @override
   void initState() {
@@ -76,7 +79,7 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
         ),
         title: Column(children: [
           Text(
-            'Al-Fatihah',
+            L.of(context).modePickerPreviewSurahName,
             style: TextStyle(
               color: context.text,
               fontSize: 16,
@@ -98,7 +101,7 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 child: Text(
-                  'Choose how you want to read',
+                  L.of(context).modePickerSubtitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: context.textDim,
@@ -156,7 +159,7 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'scroll to compare',
+                        L.of(context).modePickerScrollHint,
                         style: TextStyle(
                           color: context.textDim,
                           fontSize: 10,
@@ -189,7 +192,7 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'You can always change this in Settings › Text Settings',
+                    L.of(context).modePickerChangeLaterHint,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: context.textDim,
@@ -211,7 +214,8 @@ class _ReadingModePickerScreenState extends State<ReadingModePickerScreen>
                       ),
                       onPressed: _confirm,
                       child: Text(
-                        'Start Reading — ${_modeNames[_selectedMode - 1]}',
+                        L.of(context).modePickerStartReading(
+                            _modeNames(context)[_selectedMode - 1]),
                         style: const TextStyle(
                           fontSize: 15,
                           fontFamily: 'sans-serif',
@@ -243,26 +247,28 @@ class _ModePickerCard extends StatelessWidget {
     'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
     'الرَّحْمَٰنِ الرَّحِيمِ',
   ];
-  static const _previewTranslit = [
-    'Bismillaahir Rahmaanir Raheem',
-    "Alhamdu lillaahi Rabbil 'aalameen",
-    'Ar-Rahmaanir Raheem',
-  ];
-  static const _previewTranslation = [
-    'In the name of Allah, the Entirely Merciful, the Especially Merciful',
-    'All praise is due to Allah, Lord of all the worlds',
-    'The Entirely Merciful, the Especially Merciful',
-  ];
-  static const _modeNames = [
-    'Translation only',
-    'Arabic + Translation',
-    'Arabic + Transliteration',
-  ];
-  static const _modeDescs = [
-    'Just the meaning — clean and focused',
-    'Arabic text with meaning below each verse',
-    'Arabic, Roman phonetics, and translation',
-  ];
+  // The preview text, mode names and descriptions all come from the active
+  // locale, so they are methods taking a BuildContext rather than const lists.
+  static List<String> _previewTranslit(BuildContext context) => [
+        L.of(context).modePickerPreviewTranslit1,
+        L.of(context).modePickerPreviewTranslit2,
+        L.of(context).modePickerPreviewTranslit3,
+      ];
+  static List<String> _previewTranslation(BuildContext context) => [
+        L.of(context).modePickerPreviewTranslation1,
+        L.of(context).modePickerPreviewTranslation2,
+        L.of(context).modePickerPreviewTranslation3,
+      ];
+  static List<String> _modeNames(BuildContext context) => [
+        L.of(context).modePickerModeTranslationOnly,
+        L.of(context).modePickerModeArabicTranslation,
+        L.of(context).modePickerModeArabicTransliteration,
+      ];
+  static List<String> _modeDescs(BuildContext context) => [
+        L.of(context).modePickerModeTranslationOnlyDesc,
+        L.of(context).modePickerModeArabicTranslationDesc,
+        L.of(context).modePickerModeArabicTransliterationDesc,
+      ];
   static const _modeIcons = [
     Icons.text_fields,
     Icons.auto_stories,
@@ -320,7 +326,7 @@ class _ModePickerCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _modeNames[mode - 1],
+                        _modeNames(context)[mode - 1],
                         style: TextStyle(
                           fontSize: 14,
                           color: context.text,
@@ -330,7 +336,7 @@ class _ModePickerCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _modeDescs[mode - 1],
+                        _modeDescs(context)[mode - 1],
                         style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
@@ -419,7 +425,7 @@ class _ModePickerCard extends StatelessWidget {
           // Transliteration (mode 3 only)
           if (mode >= 3) ...[
             Text(
-              _previewTranslit[i],
+              _previewTranslit(context)[i],
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: 11,
@@ -432,7 +438,7 @@ class _ModePickerCard extends StatelessWidget {
 
           // Translation (all modes)
           Text(
-            _previewTranslation[i],
+            _previewTranslation(context)[i],
             style: TextStyle(
               fontFamily: 'serif',
               fontSize: 11,

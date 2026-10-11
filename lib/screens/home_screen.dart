@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
+import '../l10n/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../widgets/emphasised_text.dart';
@@ -842,7 +843,8 @@ class _PrayerSection extends StatelessWidget {
                       QIcon.locationPin(size: 13, color: context.textDim),
                       const SizedBox(width: 8),
                       Expanded(child: Text(
-                          loc.error ?? l.tapToSetLocation,
+                          _locationErrorText(l, loc.error) ??
+                              l.tapToSetLocation,
                           style: TextStyle(fontSize: 11, color: context.textDim,
                               fontFamily: 'sans-serif'))),
                       Text(l.setLabel, style: TextStyle(fontSize: 11, color: AppColors.gold,
@@ -901,24 +903,27 @@ const _kRakahTotal = {
 };
 
 /// Localised label for one of the English prayer identifiers used by the
-/// prayer-time logic. Unknown values fall through unchanged.
-String _prayerDisplayName(BuildContext context, String prayer) {
-  final l = L.of(context);
-  switch (prayer) {
-    case 'Fajr':
-      return l.prayerFajr;
-    case 'Dhuhr':
-      return l.prayerDhuhr;
-    case 'Jumu\'ah':
-      return l.prayerJumuah;
-    case 'Asr':
-      return l.prayerAsr;
-    case 'Maghrib':
-      return l.prayerMaghrib;
-    case 'Isha':
-      return l.prayerIsha;
-    default:
-      return prayer;
+/// prayer-time logic.
+///
+/// Delegates to the shared helper so this screen and the notification
+/// scheduler cannot drift apart on how a prayer is named.
+String _prayerDisplayName(BuildContext context, String prayer) =>
+    prayerDisplayName(L.of(context), prayer);
+
+/// Turns a location failure into copy, or null when there was no failure.
+///
+/// LocationService deliberately reports a kind rather than a sentence, so the
+/// wording is chosen here at render time and follows a language change.
+String? _locationErrorText(L l, LocationErrorKind? kind) {
+  switch (kind) {
+    case LocationErrorKind.servicesDisabled:
+      return l.locationErrorServicesDisabled;
+    case LocationErrorKind.permissionDenied:
+      return l.locationErrorPermissionDenied;
+    case LocationErrorKind.unavailable:
+      return l.locationErrorUnavailable;
+    case null:
+      return null;
   }
 }
 
@@ -1535,7 +1540,7 @@ class _LocationSheetState extends State<_LocationSheet> {
                         ),
                         child: Row(
                           children: [
-                            Expanded(child: Text(m.name,
+                            Expanded(child: Text(calcMethodName(l, m.id),
                                 style: TextStyle(fontSize: 12,
                                     color: sel ? AppColors.gold : context.text))),
                             if (sel) QIcon.check(size: 14, color: AppColors.gold),

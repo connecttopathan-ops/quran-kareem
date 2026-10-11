@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_strings.dart';
+
 class Location {
   final double latitude;
   final double longitude;
@@ -55,14 +57,28 @@ Future<(String, String)> _reverseGeocode(double lat, double lng) async {
             address['town'] as String? ??
             address['village'] as String? ??
             address['county'] as String? ??
-            'My Location';
+            (await loadAppStrings()).myLocation;
         final countryCode =
             (address['country_code'] as String? ?? '').toLowerCase();
         return (city, countryCode);
       }
     }
   } catch (_) {}
-  return ('My Location', '');
+  return ((await loadAppStrings()).myLocation, '');
+}
+
+/// Why a location lookup failed.
+///
+/// Deliberately a kind and not a message — see [LocationService.error].
+enum LocationErrorKind {
+  /// The device's location services are switched off entirely.
+  servicesDisabled,
+
+  /// The user refused this app location access.
+  permissionDenied,
+
+  /// Anything else: no signal, a timeout, a provider error.
+  unavailable,
 }
 
 class PrayerTimes {
@@ -83,32 +99,47 @@ class PrayerTimes {
   });
 }
 
+/// A prayer-time calculation method, identified by the id persisted in
+/// SharedPreferences and handed to the adhan library.
+///
+/// Carries no display name on purpose: these are shown to users, so the label
+/// belongs in the ARB. Use `calcMethodName(l, method.id)` from
+/// `l10n/app_strings.dart` to render one. Keeping an English `name` here would
+/// be a standing invitation to display it and quietly ship English into every
+/// other language.
 class CalcMethod {
-  final String id, name;
-  const CalcMethod({required this.id, required this.name});
+  final String id;
+  const CalcMethod({required this.id});
   static const List<CalcMethod> all = [
-    CalcMethod(id: 'MWL',       name: 'Muslim World League'),
-    CalcMethod(id: 'ISNA',      name: 'ISNA (North America)'),
-    CalcMethod(id: 'Egyptian',  name: 'Egyptian Authority'),
-    CalcMethod(id: 'Karachi',   name: 'Karachi (Hanafi)'),
-    CalcMethod(id: 'UmmAlQura', name: 'Umm Al-Qura (Mecca)'),
-    CalcMethod(id: 'Dubai',     name: 'Dubai / UAE'),
-    CalcMethod(id: 'Kuwait',    name: 'Kuwait'),
-    CalcMethod(id: 'Qatar',     name: 'Qatar'),
-    CalcMethod(id: 'Singapore', name: 'Singapore'),
-    CalcMethod(id: 'Tehran',    name: 'Tehran Institute'),
+    CalcMethod(id: 'MWL'),
+    CalcMethod(id: 'ISNA'),
+    CalcMethod(id: 'Egyptian'),
+    CalcMethod(id: 'Karachi'),
+    CalcMethod(id: 'UmmAlQura'),
+    CalcMethod(id: 'Dubai'),
+    CalcMethod(id: 'Kuwait'),
+    CalcMethod(id: 'Qatar'),
+    CalcMethod(id: 'Singapore'),
+    CalcMethod(id: 'Tehran'),
   ];
 }
 
 class LocationService extends ChangeNotifier {
   PrayerTimes? _prayerTimes;
   bool _loading = false;
-  String? _error;
+  LocationErrorKind? _error;
   String _calcMethodId = 'MWL';
 
   PrayerTimes? get prayerTimes => _prayerTimes;
   bool get loading => _loading;
-  String? get error => _error;
+
+  /// Why the last location lookup failed, or null if it did not.
+  ///
+  /// A kind rather than a message: this service has no BuildContext, and a
+  /// sentence built here would freeze in whatever language was active when
+  /// the lookup ran. The UI turns it into copy at render time instead, so it
+  /// follows a language change like everything else on screen.
+  LocationErrorKind? get error => _error;
   String get calcMethodId => _calcMethodId;
 
   LocationService() { _loadPrefs(); }
@@ -143,7 +174,7 @@ class LocationService extends ChangeNotifier {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _error = 'Location services disabled. Please enable GPS.';
+        _error = LocationErrorKind.servicesDisabled;
         _loading = false;
         notifyListeners();
         return;
@@ -156,7 +187,7 @@ class LocationService extends ChangeNotifier {
 
       if (permission == LocationPermission.deniedForever ||
           permission == LocationPermission.denied) {
-        _error = 'Location permission denied. Please set city manually.';
+        _error = LocationErrorKind.permissionDenied;
         _loading = false;
         notifyListeners();
         return;
@@ -182,7 +213,7 @@ class LocationService extends ChangeNotifier {
 
       await setManualLocation(position.latitude, position.longitude, cityName);
     } catch (e) {
-      _error = 'Could not get location. Please set city manually.';
+      _error = LocationErrorKind.unavailable;
       _loading = false;
       notifyListeners();
     }

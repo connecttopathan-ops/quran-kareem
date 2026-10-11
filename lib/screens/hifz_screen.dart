@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
@@ -156,7 +157,7 @@ class _HifzScreenState extends State<HifzScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Hifz',
+          L.of(context).quickHifz,
           style: TextStyle(
             color: context.text,
             fontSize: 16,
@@ -219,7 +220,7 @@ class _HifzScreenState extends State<HifzScreen> {
           controller: _searchCtrl,
           style: TextStyle(color: context.text, fontSize: 14),
           decoration: InputDecoration(
-            hintText: 'Search surah name or number…',
+            hintText: L.of(context).hifzSearchHint,
             hintStyle: TextStyle(color: context.textDim, fontSize: 14),
             prefixIcon:
                 Icon(Icons.search_rounded, color: context.textDim, size: 20),
@@ -254,7 +255,7 @@ class _HifzScreenState extends State<HifzScreen> {
                 child: _MetricCard(
                   icon: Icons.menu_book_rounded,
                   value: _surahsMemorized.toString(),
-                  label: 'Surahs',
+                  label: L.of(context).statSurahs,
                 ),
               ),
               const SizedBox(width: 8),
@@ -262,7 +263,7 @@ class _HifzScreenState extends State<HifzScreen> {
                 child: _MetricCard(
                   icon: Icons.star_rounded,
                   value: _totalMemorized.toString(),
-                  label: 'Ayahs',
+                  label: L.of(context).hifzMetricAyahs,
                 ),
               ),
               const SizedBox(width: 8),
@@ -270,7 +271,7 @@ class _HifzScreenState extends State<HifzScreen> {
                 child: _MetricCard(
                   icon: Icons.repeat_rounded,
                   value: _todayReps.toString(),
-                  label: "Today's Reps",
+                  label: L.of(context).hifzMetricTodayReps,
                 ),
               ),
             ],
@@ -290,7 +291,7 @@ class _HifzScreenState extends State<HifzScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Quran Progress',
+                      L.of(context).hifzQuranProgress,
                       style: TextStyle(
                         color: context.text,
                         fontSize: 13,
@@ -298,7 +299,8 @@ class _HifzScreenState extends State<HifzScreen> {
                       ),
                     ),
                     Text(
-                      '${(pct * 100).toStringAsFixed(1)}%',
+                      L.of(context)
+                          .hifzProgressPercent((pct * 100).toStringAsFixed(1)),
                       style: TextStyle(
                         color: AppColors.gold,
                         fontSize: 13,
@@ -320,7 +322,8 @@ class _HifzScreenState extends State<HifzScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '$_totalMemorized of $_totalAyahs ayahs',
+                  L.of(context)
+                      .hifzAyahsOfTotal(_totalMemorized, _totalAyahs),
                   style: TextStyle(
                     color: context.textDim,
                     fontSize: 11,
@@ -360,7 +363,7 @@ class _HifzScreenState extends State<HifzScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No surahs found',
+            L.of(context).surahListNoResults,
             style: TextStyle(
               fontSize: 15,
               fontFamily: 'serif',
@@ -370,7 +373,7 @@ class _HifzScreenState extends State<HifzScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Try a different name or number',
+            L.of(context).hifzSearchEmptyHint,
             style: TextStyle(
               fontSize: 12,
               fontFamily: 'sans-serif',
@@ -397,7 +400,7 @@ class _HifzScreenState extends State<HifzScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Begin Your Hifz Journey',
+            L.of(context).hifzGetStartedTitle,
             style: TextStyle(
               fontSize: 16,
               fontFamily: 'serif',
@@ -407,7 +410,7 @@ class _HifzScreenState extends State<HifzScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap any surah below to start memorizing.\nMark each ayah with ★ as you learn it.',
+            L.of(context).hifzGetStartedBody,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -425,7 +428,7 @@ class _HifzScreenState extends State<HifzScreen> {
               border: Border.all(color: AppColors.gold.withOpacity(0.25)),
             ),
             child: Text(
-              '"And We have certainly made the Quran easy to remember" — 54:17',
+              L.of(context).hifzGetStartedQuote,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 10,
@@ -446,25 +449,25 @@ class _HifzScreenState extends State<HifzScreen> {
       child: Row(
         children: [
           Text(
-            'Sort by:',
+            L.of(context).hifzSortBy,
             style:
                 TextStyle(color: context.textDim, fontSize: 12),
           ),
           const SizedBox(width: 8),
           _SortChip(
-            label: 'Surah',
+            label: L.of(context).hifzSortSurah,
             selected: _sort == _HifzSort.surahOrder,
             onTap: () => setState(() => _sort = _HifzSort.surahOrder),
           ),
           const SizedBox(width: 6),
           _SortChip(
-            label: 'Progress',
+            label: L.of(context).hifzSortProgress,
             selected: _sort == _HifzSort.progress,
             onTap: () => setState(() => _sort = _HifzSort.progress),
           ),
           const SizedBox(width: 6),
           _SortChip(
-            label: 'Shortest',
+            label: L.of(context).hifzSortShortest,
             selected: _sort == _HifzSort.fewestVerses,
             onTap: () => setState(() => _sort = _HifzSort.fewestVerses),
           ),
@@ -671,7 +674,8 @@ class _SurahProgressTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$memorizedCount / ${surah.verses} verses',
+                    L.of(context).hifzTileVerseProgress(
+                        memorizedCount, surah.verses as int),
                     style: TextStyle(
                       color: context.textDim,
                       fontSize: 10,

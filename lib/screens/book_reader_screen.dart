@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
@@ -99,9 +100,7 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
             'lang': 'en',
             'narrator':
                 'Narrated by Abu Hurairah (رضي الله عنه)',
-            'body':
-                'Download content is not yet available. Please ensure you have downloaded '
-                    'the book and have a valid API key configured for sunnah.com.',
+            'body': L.of(context).booksStubHadithBody,
           }
         ],
       },
@@ -109,13 +108,13 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
   }
 
   List<Map<String, dynamic>> _stubSeerahChapter(int chapterNum) {
+    final assetPath =
+        'assets/books/sealed_nectar_${context.read<BookDownloadService>().language}.json';
     return [
       {
         'type': 'seerah',
         'paragraphs': [
-          'Chapter $chapterNum content will appear here once the book asset '
-              '(assets/books/sealed_nectar_${context.read<BookDownloadService>().language}.json)'
-              ' is bundled with the app.',
+          L.of(context).booksStubSeerahBody(chapterNum, assetPath),
         ],
       }
     ];
@@ -277,8 +276,11 @@ class _BookReaderScreenState extends State<BookReaderScreen> {
                   const Spacer(),
                   // Position label
                   Text(
-                    '${widget.book.category == BookCategory.hadith ? 'Book' : 'Chapter'}'
-                    ' $_currentChapter of ${widget.totalChapters}',
+                    widget.book.category == BookCategory.hadith
+                        ? L.of(context).booksReaderBookPosition(
+                            _currentChapter, widget.totalChapters)
+                        : L.of(context).booksReaderChapterPosition(
+                            _currentChapter, widget.totalChapters),
                     style: TextStyle(
                         fontSize: 11,
                         fontFamily: 'sans-serif',
@@ -362,7 +364,7 @@ class _HadithEntry extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(color: AppColors.goldDim.withOpacity(0.3)),
                 ),
-                child: Text('Hadith $hadithNumber',
+                child: Text(L.of(context).booksHadithNumber(hadithNumber),
                     style: const TextStyle(
                         fontSize: 9,
                         fontFamily: 'sans-serif',

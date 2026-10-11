@@ -16,6 +16,8 @@ import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../data/curated_ayahs.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/app_strings.dart';
 
 enum PrayerNotificationMode { adhan, vibration, singleVibration, off }
 
@@ -37,7 +39,6 @@ class NotificationService {
   static const String _adhanMadinahChannelId = 'prayer_times_adhan_madinah';
   static const String _adhanFajrChannelId = 'prayer_times_adhan_fajr';
   static const String _vibrationChannelId = 'prayer_times_vibration';
-  static const String _vibrationChannelName = 'Prayer Times (Vibration)';
 
   static const String _reminderChannelId = 'daily_reminders';
   static const String _ayahChannelId = 'ayah_of_the_day';
@@ -152,59 +153,71 @@ class NotificationService {
       await androidPlugin?.deleteNotificationChannel(_reminderChannelId);
       await androidPlugin?.deleteNotificationChannel(_ayahChannelId);
 
+      // Channel names and descriptions appear in Android's own notification
+      // settings, so they are localised like any other user-facing copy.
+      //
+      // One caveat worth knowing: Android fixes a channel's name when the
+      // channel is created and ignores later changes. Switching the app's
+      // language therefore does NOT rename existing channels in system
+      // settings — only bumping _channelVersion, which deletes and recreates
+      // them, will. That is a deliberate trade: recreating channels on every
+      // language change would also discard any per-channel sound or
+      // importance the user had customised.
+      final l = await loadAppStrings();
+
       // One channel per sound — Android locks sound at channel creation time.
-      const AndroidNotificationChannel adhanMakkahChannel =
+      final AndroidNotificationChannel adhanMakkahChannel =
           AndroidNotificationChannel(
         _adhanMakkahChannelId,
-        'Prayer Times (Makkah Adhan)',
-        description: 'Makkah adhan at prayer times',
+        l.channelPrayerMakkah,
+        description: l.channelPrayerMakkahDesc,
         importance: Importance.max,
         playSound: true,
-        sound: RawResourceAndroidNotificationSound('adhan_makkah'),
+        sound: const RawResourceAndroidNotificationSound('adhan_makkah'),
         enableVibration: true,
       );
-      const AndroidNotificationChannel adhanMadinahChannel =
+      final AndroidNotificationChannel adhanMadinahChannel =
           AndroidNotificationChannel(
         _adhanMadinahChannelId,
-        'Prayer Times (Madinah Adhan)',
-        description: 'Madinah adhan at prayer times',
+        l.channelPrayerMadinah,
+        description: l.channelPrayerMadinahDesc,
         importance: Importance.max,
         playSound: true,
-        sound: RawResourceAndroidNotificationSound('adhan_madinah'),
+        sound: const RawResourceAndroidNotificationSound('adhan_madinah'),
         enableVibration: true,
       );
-      const AndroidNotificationChannel adhanFajrChannel =
+      final AndroidNotificationChannel adhanFajrChannel =
           AndroidNotificationChannel(
         _adhanFajrChannelId,
-        'Prayer Times (Fajr Adhan)',
-        description: 'Fajr adhan at prayer times',
+        l.channelPrayerFajr,
+        description: l.channelPrayerFajrDesc,
         importance: Importance.max,
         playSound: true,
-        sound: RawResourceAndroidNotificationSound('adhan_makkah_fajr'),
+        sound: const RawResourceAndroidNotificationSound('adhan_makkah_fajr'),
         enableVibration: true,
       );
-      const AndroidNotificationChannel vibrationChannel =
+      final AndroidNotificationChannel vibrationChannel =
           AndroidNotificationChannel(
         _vibrationChannelId,
-        _vibrationChannelName,
-        description: 'Vibration alert at prayer times',
+        l.channelPrayerVibration,
+        description: l.channelPrayerVibrationDesc,
         importance: Importance.high,
         playSound: false,
         enableVibration: true,
       );
-      const AndroidNotificationChannel reminderChannel =
+      final AndroidNotificationChannel reminderChannel =
           AndroidNotificationChannel(
         _reminderChannelId,
-        'Daily Reminders',
-        description: 'Daily Quran reading reminders',
+        l.dailyRemindersTitle,
+        description: l.channelDailyRemindersDesc,
         importance: Importance.high,
         playSound: true,
         enableVibration: true,
       );
-      const AndroidNotificationChannel ayahChannel = AndroidNotificationChannel(
+      final AndroidNotificationChannel ayahChannel = AndroidNotificationChannel(
         _ayahChannelId,
-        'Ayah of the Day',
-        description: 'Daily ayah notification',
+        l.ayahOfTheDay,
+        description: l.channelAyahDesc,
         importance: Importance.high,
         playSound: true,
         enableVibration: true,
@@ -329,6 +342,7 @@ class NotificationService {
 
     if (mode == PrayerNotificationMode.off) return;
 
+    final l = await loadAppStrings();
     final scheduleMode = await _resolveScheduleMode();
     final now = tz.TZDateTime.now(tz.local);
 
@@ -355,8 +369,14 @@ class NotificationService {
       final isFriday = date.weekday == DateTime.friday;
 
       for (int p = 0; p < _prayerNames.length; p++) {
-        // Dhuhr becomes Jumu'ah on Fridays
-        final displayName = (p == 1 && isFriday) ? 'Jumu\'ah' : _prayerNames[p];
+        // Dhuhr becomes Jumu'ah on Fridays.
+        //
+        // Two names, deliberately: prayerId stays English because
+        // _buildNotificationDetails matches it against 'Fajr' to pick the
+        // Fajr adhan channel, and a translated name would silently fall
+        // through to the wrong sound. Only displayName is ever shown.
+        final prayerId = (p == 1 && isFriday) ? 'Jumu\'ah' : _prayerNames[p];
+        final displayName = prayerDisplayName(l, prayerId);
 
         // Use custom Jumu'ah time if the user has set one
         final rawDT = prayerDateTimes[p];
@@ -370,12 +390,13 @@ class NotificationService {
           continue; // skip prayers that have already passed
         }
 
-        final details = _buildNotificationDetails(displayName, mode, adhanType);
+        final details =
+            _buildNotificationDetails(l, prayerId, mode, adhanType);
 
         await _safeZonedSchedule(
           id: slotId,
-          title: 'Prayer Time 🕌',
-          body: "It's time for $displayName",
+          title: '${l.notifPrayerTitle} 🕌',
+          body: l.notifPrayerBody(displayName),
           scheduledDate: scheduledDate,
           details: details,
           scheduleMode: scheduleMode,
@@ -421,8 +442,13 @@ class NotificationService {
         : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
+  /// Builds the platform details for one prayer notification.
+  ///
+  /// [prayerId] is the untranslated identifier, not a display name — the Fajr
+  /// branch below depends on matching it exactly.
   NotificationDetails _buildNotificationDetails(
-    String prayerName,
+    L l,
+    String prayerId,
     PrayerNotificationMode mode,
     AdhanType adhanType,
   ) {
@@ -435,17 +461,17 @@ class NotificationService {
         final String channelId;
         final String channelName;
         final String soundFile;
-        if (prayerName == 'Fajr') {
+        if (prayerId == 'Fajr') {
           channelId = _adhanFajrChannelId;
-          channelName = 'Prayer Times (Fajr Adhan)';
+          channelName = l.channelPrayerFajr;
           soundFile = 'adhan_makkah_fajr';
         } else if (adhanType == AdhanType.makkah) {
           channelId = _adhanMakkahChannelId;
-          channelName = 'Prayer Times (Makkah Adhan)';
+          channelName = l.channelPrayerMakkah;
           soundFile = 'adhan_makkah';
         } else {
           channelId = _adhanMadinahChannelId;
-          channelName = 'Prayer Times (Madinah Adhan)';
+          channelName = l.channelPrayerMadinah;
           soundFile = 'adhan_madinah';
         }
         androidDetails = AndroidNotificationDetails(
@@ -461,7 +487,7 @@ class NotificationService {
       case PrayerNotificationMode.vibration:
         androidDetails = AndroidNotificationDetails(
           _vibrationChannelId,
-          _vibrationChannelName,
+          l.channelPrayerVibration,
           importance: Importance.high,
           priority: Priority.high,
           playSound: false,
@@ -472,7 +498,7 @@ class NotificationService {
       case PrayerNotificationMode.singleVibration:
         androidDetails = AndroidNotificationDetails(
           _vibrationChannelId,
-          _vibrationChannelName,
+          l.channelPrayerVibration,
           importance: Importance.high,
           priority: Priority.high,
           playSound: false,
@@ -481,16 +507,16 @@ class NotificationService {
         );
 
       case PrayerNotificationMode.off:
-        androidDetails = const AndroidNotificationDetails(
+        androidDetails = AndroidNotificationDetails(
           _adhanMakkahChannelId,
-          'Prayer Times (Makkah Adhan)',
+          l.channelPrayerMakkah,
         );
     }
 
     // iOS notification details — use short .caf clips (<30s) bundled in the app
     String? iOSSound;
     if (mode == PrayerNotificationMode.adhan) {
-      iOSSound = prayerName == 'Fajr'
+      iOSSound = prayerId == 'Fajr'
           ? 'adhan_makkah_fajr_notification.caf'
           : (adhanType == AdhanType.makkah
               ? 'adhan_makkah_notification.caf'
@@ -525,10 +551,11 @@ class NotificationService {
     await _plugin.cancel(_morningReminderId);
     await _plugin.cancel(_eveningReminderId);
 
-    const details = NotificationDetails(
+    final l = await loadAppStrings();
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
         _reminderChannelId,
-        'Daily Reminders',
+        l.dailyRemindersTitle,
         importance: Importance.high,
         priority: Priority.high,
         playSound: true,
@@ -545,8 +572,8 @@ class NotificationService {
       if (morning.isBefore(now)) morning = morning.add(const Duration(days: 1));
       await _safeZonedSchedule(
         id: _morningReminderId,
-        title: 'Time to Read Quran 📖',
-        body: 'Start your morning with the words of Allah',
+        title: '${l.notifMorningTitle} 📖',
+        body: l.notifMorningBody,
         scheduledDate: morning,
         details: details,
         scheduleMode: scheduleMode,
@@ -561,8 +588,8 @@ class NotificationService {
       if (evening.isBefore(now)) evening = evening.add(const Duration(days: 1));
       await _safeZonedSchedule(
         id: _eveningReminderId,
-        title: 'Evening Quran Reminder 🌙',
-        body: 'End your day with the words of Allah',
+        title: '${l.notifEveningTitle} 🌙',
+        body: l.notifEveningBody,
         scheduledDate: evening,
         details: details,
         scheduleMode: scheduleMode,
@@ -650,6 +677,7 @@ class NotificationService {
     }
     if (!enabled) return;
 
+    final l = await loadAppStrings();
     final scheduleMode = await _resolveScheduleMode();
     final now = tz.TZDateTime.now(tz.local);
     // Starting ayah index: based on day-of-year so it advances daily
@@ -665,13 +693,14 @@ class NotificationService {
 
       await _safeZonedSchedule(
         id: _ayahBaseId + i,
-        title: '✨ Ayah of the Day — ${ayah.surahName} ${ayah.surah}:${ayah.ayah}',
+        title: '✨ ${l.ayahOfTheDay} — '
+            '${l.ayahReference(ayah.surahName, ayah.surah, ayah.ayah)}',
         body: '${ayah.translation}\n\n${ayah.message}',
         scheduledDate: scheduled,
         details: NotificationDetails(
           android: AndroidNotificationDetails(
             _ayahChannelId,
-            'Ayah of the Day',
+            l.ayahOfTheDay,
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
@@ -704,11 +733,12 @@ class NotificationService {
     PrayerNotificationMode mode,
     AdhanType adhanType,
   ) async {
-    final details = _buildNotificationDetails('Dhuhr', mode, adhanType);
+    final l = await loadAppStrings();
+    final details = _buildNotificationDetails(l, 'Dhuhr', mode, adhanType);
     await _plugin.show(
       0,
-      'Prayer Time 🕌',
-      'Test — notification is working ✓',
+      '${l.notifPrayerTitle} 🕌',
+      '${l.notifTestBody} ✓',
       details,
     );
   }

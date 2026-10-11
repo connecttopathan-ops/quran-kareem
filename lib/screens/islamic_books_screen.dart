@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
@@ -40,8 +41,11 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
   Widget build(BuildContext context) {
     return Consumer<BookDownloadService>(
       builder: (context, svc, _) {
-        final langLabel =
-            svc.language == 'ar' ? 'AR' : svc.language == 'ur' ? 'UR' : 'EN';
+        final langLabel = svc.language == 'ar'
+            ? L.of(context).booksLangShortArabic
+            : svc.language == 'ur'
+                ? L.of(context).booksLangShortUrdu
+                : L.of(context).booksLangShortEnglish;
 
         return Scaffold(
           backgroundColor: context.bg,
@@ -65,7 +69,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text('Islamic Books',
+                        child: Text(L.of(context).sectionIslamicBooks,
                             style: TextStyle(
                                 fontFamily: 'serif',
                                 fontSize: 20,
@@ -105,7 +109,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
                         horizontal: 12, vertical: 8),
                     children: [
                       _BookSection(
-                        label: 'Hadith',
+                        label: L.of(context).booksSectionHadith,
                         books: kIslamicBooks
                             .where((b) => b.category == BookCategory.hadith)
                             .toList(),
@@ -113,7 +117,7 @@ class _IslamicBooksScreenState extends State<IslamicBooksScreen> {
                       ),
                       const SizedBox(height: 8),
                       _BookSection(
-                        label: 'Seerah',
+                        label: L.of(context).booksSectionSeerah,
                         books: kIslamicBooks
                             .where((b) => b.category == BookCategory.seerah)
                             .toList(),
@@ -213,16 +217,15 @@ class _BookCardState extends State<_BookCard> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Re-download?'),
-        content: Text(
-            'This will delete the saved copy of "${widget.book.title}" and download it fresh.'),
+        title: Text(L.of(ctx).booksRedownloadTitle),
+        content: Text(L.of(ctx).booksRedownloadBody(widget.book.title)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(L.of(ctx).cancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Re-download')),
+              child: Text(L.of(ctx).booksRedownloadConfirm)),
         ],
       ),
     );
@@ -380,12 +383,12 @@ class _StateButton extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (state) {
       case BookDownloadState.failed:
-        final errMsg = svc.errorFor(book.id) ?? 'Unknown error';
+        final errMsg = svc.errorFor(book.id) ?? L.of(context).booksUnknownError;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Download failed. Tap to retry.',
+              L.of(context).booksDownloadFailed,
               style: TextStyle(
                   fontSize: 10,
                   fontFamily: 'sans-serif',
@@ -404,7 +407,7 @@ class _StateButton extends StatelessWidget {
             const SizedBox(height: 6),
             _outlinedBtn(
               context,
-              label: 'Retry download',
+              label: L.of(context).booksRetryDownload,
               icon: Icons.refresh,
               onTap: () => svc.startDownload(book),
             ),
@@ -414,7 +417,7 @@ class _StateButton extends StatelessWidget {
       case BookDownloadState.notDownloaded:
         return _outlinedBtn(
           context,
-          label: 'Download to read',
+          label: L.of(context).booksDownloadToRead,
           icon: Icons.download_outlined,
           onTap: () async {
             final shown = await svc.wasPromptShown(book.id);
@@ -448,9 +451,10 @@ class _StateButton extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-                'Downloading ${(dlProgress * 100).toStringAsFixed(0)}%'
-                ' · ${(book.fileSizeMb * dlProgress).toStringAsFixed(1)} /'
-                ' ${book.fileSizeMb.toStringAsFixed(1)} MB',
+                L.of(context).booksDownloadingProgress(
+                    (dlProgress * 100).round(),
+                    (book.fileSizeMb * dlProgress).toStringAsFixed(1),
+                    book.fileSizeMb.toStringAsFixed(1)),
                 style: TextStyle(
                     fontSize: 10,
                     fontFamily: 'sans-serif',
@@ -461,7 +465,9 @@ class _StateButton extends StatelessWidget {
       case BookDownloadState.downloaded:
         return _goldBtn(
           context,
-          label: hasReadingProgress ? 'Continue reading →' : 'Start reading',
+          label: hasReadingProgress
+              ? L.of(context).booksContinueReading
+              : L.of(context).booksStartReading,
           onTap: onNavigate,
         );
     }
@@ -526,10 +532,10 @@ class BookDownloadSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final langName = svc.language == 'ar'
-        ? 'Arabic'
+        ? L.of(context).languageArabic
         : svc.language == 'ur'
-            ? 'Urdu'
-            : 'English';
+            ? L.of(context).languageUrdu
+            : L.of(context).languageEnglish;
 
     return Container(
       decoration: BoxDecoration(
@@ -562,16 +568,17 @@ class BookDownloadSheet extends StatelessWidget {
                   fontSize: 18,
                   color: context.text)),
           const SizedBox(height: 8),
-          Text(
-              'This book will be saved on your device for offline reading.'
-              ' You\'ll only be asked once.',
+          Text(L.of(context).booksDownloadSheetBody,
               style: TextStyle(
                   fontSize: 13,
                   fontFamily: 'sans-serif',
                   color: context.textDim)),
           const SizedBox(height: 14),
           Row(children: [
-            _InfoChip(label: '${book.fileSizeMb.toStringAsFixed(1)} MB'),
+            _InfoChip(
+                label: L
+                    .of(context)
+                    .booksFileSizeMb(book.fileSizeMb.toStringAsFixed(1))),
             const SizedBox(width: 8),
             _InfoChip(label: langName),
             const SizedBox(width: 8),
@@ -589,7 +596,7 @@ class BookDownloadSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10)),
                   minimumSize: const Size(0, 44),
                 ),
-                child: const Text('Not now'),
+                child: Text(L.of(context).booksSheetNotNow),
               ),
             ),
             const SizedBox(width: 10),
@@ -607,7 +614,7 @@ class BookDownloadSheet extends StatelessWidget {
                   minimumSize: const Size(0, 44),
                   elevation: 0,
                 ),
-                child: const Text('Download'),
+                child: Text(L.of(context).booksDownloadAction),
               ),
             ),
           ]),

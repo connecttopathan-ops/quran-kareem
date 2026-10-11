@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/asma_ul_husna.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 
@@ -82,7 +83,7 @@ class _AsmaScreenState extends State<AsmaScreen> {
                               ),
                             ),
                             Text(
-                              'The 99 Names of Allah',
+                              L.of(context).asmaSubtitle,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontFamily: 'sans-serif',
@@ -119,7 +120,7 @@ class _AsmaScreenState extends State<AsmaScreen> {
                     controller: _ctrl,
                     style: TextStyle(color: context.text, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Search by name or meaning...',
+                      hintText: L.of(context).asmaSearchHint,
                       hintStyle:
                           TextStyle(color: context.textDim, fontSize: 13),
                       prefixIcon: Padding(
@@ -216,7 +217,7 @@ class _AsmaScreenState extends State<AsmaScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No names found',
+              L.of(context).asmaNoResults,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -225,7 +226,7 @@ class _AsmaScreenState extends State<AsmaScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Try searching by transliteration or meaning',
+              L.of(context).asmaNoResultsHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -520,7 +521,7 @@ class _AsmaDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Glorified and Exalted be He',
+            L.of(context).asmaGlorifiedTranslation,
             style: TextStyle(
               fontFamily: 'sans-serif',
               fontSize: 11,

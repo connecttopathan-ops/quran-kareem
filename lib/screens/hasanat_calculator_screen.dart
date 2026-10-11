@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 import '../data/hasanat_promises.dart';
@@ -71,7 +72,7 @@ class _HasanatCalculatorScreenState extends State<HasanatCalculatorScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Hasanat Calculator',
+              L.of(context).hasanatCalculatorTitle,
               style: TextStyle(
                 color: context.text,
                 fontSize: 16,
@@ -81,7 +82,7 @@ class _HasanatCalculatorScreenState extends State<HasanatCalculatorScreen>
             ),
             const SizedBox(height: 2),
             Text(
-              'Rewards promised in the Quran & Hadeeth',
+              L.of(context).hasanatCalculatorSubtitle,
               style: TextStyle(
                 color: context.textDim,
                 fontSize: 10,
@@ -114,9 +115,9 @@ class _HasanatCalculatorScreenState extends State<HasanatCalculatorScreen>
                     fontSize: 13,
                     fontFamily: 'sans-serif',
                     fontWeight: FontWeight.w600),
-                tabs: const [
-                  Tab(text: 'One Time'),
-                  Tab(text: 'Recurring'),
+                tabs: [
+                  Tab(text: L.of(context).hasanatTabOneTime),
+                  Tab(text: L.of(context).hasanatTabRecurring),
                 ],
               ),
               Container(height: 1, color: context.border),
@@ -194,7 +195,7 @@ class _OneTimeTabState extends State<_OneTimeTab>
       children: [
         const _NiyyahBanner(),
         const SizedBox(height: AppSpacing.md),
-        _SectionLabel('Amount'),
+        _SectionLabel(L.of(context).hasanatSectionAmount),
         const SizedBox(height: AppSpacing.sm),
         _AmountRow(
           controller: _amountCtrl,
@@ -204,7 +205,7 @@ class _OneTimeTabState extends State<_OneTimeTab>
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpacing.lg),
-        _SectionLabel('Type of Deed'),
+        _SectionLabel(L.of(context).hasanatSectionTypeOfDeed),
         const SizedBox(height: AppSpacing.sm),
         _ChipsRow(
           options: sadaqahCategories
@@ -220,28 +221,26 @@ class _OneTimeTabState extends State<_OneTimeTab>
             )),
         if (cat.minMultiplier != null && _amount > 0) ...[
           _FootnoteNumber(
-            label: 'Minimum (per ${cat.minSource})',
+            label: L.of(context).hasanatMinimumPerSource(cat.minSource ?? ''),
             value:
                 widget.numberFormat.format(_amount.round() * cat.minMultiplier!),
-            unit: 'hasanat',
+            unit: L.of(context).hasanatUnit,
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
         if (cat.maxMultiplier != null && _amount > 0) ...[
           _FootnoteNumber(
-            label: 'Up to (per ${cat.maxSource})',
+            label: L.of(context).hasanatUpToPerSource(cat.maxSource ?? ''),
             value:
                 widget.numberFormat.format(_amount.round() * cat.maxMultiplier!),
-            unit: 'hasanat',
+            unit: L.of(context).hasanatUnit,
           ),
           const SizedBox(height: AppSpacing.lg),
         ] else
           const SizedBox(height: AppSpacing.md),
         _ConditionsCard(conditions: cat.conditions),
         const SizedBox(height: AppSpacing.md),
-        const _Disclaimer(
-            text:
-                'The figures above are read directly from the cited verses — they are Allah\'s promise, not our calculation. Only Allah knows true acceptance.'),
+        _Disclaimer(text: L.of(context).hasanatDisclaimer),
       ],
     );
   }
@@ -289,13 +288,14 @@ class _RecurringTabState extends State<_RecurringTab>
       double.tryParse(_amountCtrl.text.replaceAll(',', '').trim()) ?? 0;
   double get _totalAmount => _monthlyAmount * _months;
 
-  String _formatDuration(double m) {
+  // Composed here rather than stored, so the wording follows the active locale.
+  String _formatDuration(BuildContext context, double m) {
     final months = m.round();
-    if (months < 12) return '$months month${months == 1 ? '' : 's'}';
+    if (months < 12) return L.of(context).hasanatDurationMonths(months);
     final years = months ~/ 12;
     final rem = months % 12;
-    if (rem == 0) return '$years year${years == 1 ? '' : 's'}';
-    return '$years yr ${rem}m';
+    if (rem == 0) return L.of(context).hasanatDurationYears(years);
+    return L.of(context).hasanatDurationYearsMonthsShort(years, rem);
   }
 
   @override
@@ -307,7 +307,7 @@ class _RecurringTabState extends State<_RecurringTab>
       children: [
         const _NiyyahBanner(),
         const SizedBox(height: AppSpacing.md),
-        _SectionLabel('Monthly Amount'),
+        _SectionLabel(L.of(context).hasanatSectionMonthlyAmount),
         const SizedBox(height: AppSpacing.sm),
         _AmountRow(
           controller: _amountCtrl,
@@ -317,10 +317,10 @@ class _RecurringTabState extends State<_RecurringTab>
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpacing.lg),
-        _SectionLabel('Duration'),
+        _SectionLabel(L.of(context).hasanatSectionDuration),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          _formatDuration(_months),
+          _formatDuration(context, _months),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -349,12 +349,12 @@ class _RecurringTabState extends State<_RecurringTab>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('1 month',
+              Text(L.of(context).hasanatDurationMonths(1),
                   style: TextStyle(
                       fontSize: 11,
                       color: context.textDim,
                       fontFamily: 'sans-serif')),
-              Text('30 years',
+              Text(L.of(context).hasanatDurationYears(30),
                   style: TextStyle(
                       fontSize: 11,
                       color: context.textDim,
@@ -363,7 +363,7 @@ class _RecurringTabState extends State<_RecurringTab>
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        _SectionLabel('Type of Deed'),
+        _SectionLabel(L.of(context).hasanatSectionTypeOfDeed),
         const SizedBox(height: AppSpacing.sm),
         _ChipsRow(
           options: sadaqahCategories
@@ -380,46 +380,46 @@ class _RecurringTabState extends State<_RecurringTab>
         _SummaryCard(
           rows: [
             (
-              label: 'Monthly contribution',
-              value:
-                  '${widget.currencySymbol}${widget.numberFormat.format(_monthlyAmount.round())}'
+              label: L.of(context).hasanatRowMonthlyContribution,
+              value: L.of(context).hasanatCurrencyAmount(
+                  widget.currencySymbol,
+                  widget.numberFormat.format(_monthlyAmount.round()))
             ),
             (
-              label: 'Duration',
-              value: _formatDuration(_months),
+              label: L.of(context).hasanatSectionDuration,
+              value: _formatDuration(context, _months),
             ),
             (
-              label: 'Total given',
-              value:
-                  '${widget.currencySymbol}${widget.numberFormat.format(_totalAmount.round())}'
+              label: L.of(context).hasanatRowTotalGiven,
+              value: L.of(context).hasanatCurrencyAmount(
+                  widget.currencySymbol,
+                  widget.numberFormat.format(_totalAmount.round()))
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
         if (cat.minMultiplier != null && _totalAmount > 0) ...[
           _FootnoteNumber(
-            label: 'Minimum (per ${cat.minSource})',
+            label: L.of(context).hasanatMinimumPerSource(cat.minSource ?? ''),
             value: widget.numberFormat
                 .format(_totalAmount.round() * cat.minMultiplier!),
-            unit: 'hasanat',
+            unit: L.of(context).hasanatUnit,
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
         if (cat.maxMultiplier != null && _totalAmount > 0) ...[
           _FootnoteNumber(
-            label: 'Up to (per ${cat.maxSource})',
+            label: L.of(context).hasanatUpToPerSource(cat.maxSource ?? ''),
             value: widget.numberFormat
                 .format(_totalAmount.round() * cat.maxMultiplier!),
-            unit: 'hasanat',
+            unit: L.of(context).hasanatUnit,
           ),
           const SizedBox(height: AppSpacing.lg),
         ] else
           const SizedBox(height: AppSpacing.md),
         _ConditionsCard(conditions: cat.conditions),
         const SizedBox(height: AppSpacing.md),
-        const _Disclaimer(
-            text:
-                'The figures above are read directly from the cited verses — they are Allah\'s promise, not our calculation. Only Allah knows true acceptance.'),
+        _Disclaimer(text: L.of(context).hasanatDisclaimer),
       ],
     );
   }
@@ -473,7 +473,7 @@ class _NiyyahBanner extends StatelessWidget {
                   color: context.isDark ? AppColors.gold : AppColors.goldDark),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'Renew your niyyah',
+                L.of(context).hasanatNiyyahTitle,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -485,7 +485,7 @@ class _NiyyahBanner extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'All deeds are by intention. Only Allah knows what He accepts.',
+            L.of(context).hasanatNiyyahBody,
             style: TextStyle(
               fontSize: 12,
               height: 1.45,
@@ -624,7 +624,7 @@ class _AmountRow extends StatelessWidget {
             Padding(
               padding:
                   const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text('Select Currency',
+              child: Text(L.of(ctx).hasanatSelectCurrency,
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -739,7 +739,9 @@ class _PromiseCard extends StatelessWidget {
                       : AppColors.goldDark),
               const SizedBox(width: 6),
               Text(
-                isQuran ? 'Allah\'s Promise' : 'Prophet ﷺ said',
+                isQuran
+                    ? L.of(context).hasanatPromiseHeadingQuran
+                    : L.of(context).hasanatPromiseHeadingHadeeth,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -759,7 +761,9 @@ class _PromiseCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  isQuran ? 'QURAN' : 'HADEETH',
+                  isQuran
+                      ? L.of(context).hasanatBadgeQuran
+                      : L.of(context).hasanatBadgeHadeeth,
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
@@ -795,7 +799,7 @@ class _PromiseCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '— ${promise.source}',
+            L.of(context).hasanatSourceAttribution(promise.source),
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -934,7 +938,7 @@ class _SummaryCard extends StatelessWidget {
                         ? AppColors.gold
                         : AppColors.goldDark),
                 const SizedBox(width: 6),
-                Text('YOUR GIVING PLAN',
+                Text(L.of(context).hasanatYourGivingPlan,
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1012,7 +1016,7 @@ class _ConditionsCard extends StatelessWidget {
                       ? AppColors.gold
                       : AppColors.goldDark),
               const SizedBox(width: 6),
-              Text('Conditions for Reward',
+              Text(L.of(context).hasanatConditionsTitle,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,

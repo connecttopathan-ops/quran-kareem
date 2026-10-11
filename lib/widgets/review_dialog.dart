@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../services/review_service.dart';
 import '../theme/app_theme.dart';
 
@@ -73,7 +74,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         _GoldCircleIcon(icon: Icons.auto_awesome_rounded),
         const SizedBox(height: 14),
         Text(
-          '${widget.streak}-Day Streak! ✨',
+          L.of(context).reviewStreakTitle(widget.streak),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Scheherazade',
@@ -84,7 +85,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Are you enjoying Get Quran?',
+          L.of(context).reviewEnjoyingTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 17,
@@ -94,18 +95,18 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Your feedback helps Muslims around the world discover this app.',
+          L.of(context).reviewEnjoyingBody,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, height: 1.5, color: _subtitleColor),
         ),
         const SizedBox(height: 22),
         _PrimaryButton(
-          label: '⭐  Yes, I love it!',
+          label: L.of(context).reviewLoveIt,
           onTap: _onLoveIt,
         ),
         const SizedBox(height: 10),
         _SecondaryButton(
-          label: '💬  Not really…',
+          label: L.of(context).reviewNotReally,
           onTap: () => setState(() => _step = _Step.feedback),
           color: _subtitleColor,
         ),
@@ -113,7 +114,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         TextButton(
           onPressed: _onLater,
           child: Text(
-            'Remind me later',
+            L.of(context).reviewRemindLater,
             style: TextStyle(fontSize: 13, color: _dimColor),
           ),
         ),
@@ -142,7 +143,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         _GoldCircleIcon(icon: Icons.mail_outline_rounded),
         const SizedBox(height: 14),
         Text(
-          "We're listening 💌",
+          L.of(context).reviewFeedbackTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 17,
@@ -152,7 +153,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         ),
         const SizedBox(height: 6),
         Text(
-          'What could be better? (optional)',
+          L.of(context).reviewFeedbackPrompt,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, color: _subtitleColor),
         ),
@@ -164,7 +165,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
           autofocus: true,
           style: TextStyle(fontSize: 14, color: _titleColor),
           decoration: InputDecoration(
-            hintText: 'Type your feedback here…',
+            hintText: L.of(context).reviewFeedbackHint,
             hintStyle: TextStyle(color: _dimColor, fontSize: 14),
             filled: true,
             fillColor: _isDark
@@ -198,20 +199,22 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         if (_submitFailed) ...[
           const SizedBox(height: 6),
           Text(
-            'Could not send — check your connection.',
+            L.of(context).reviewSendFailed,
             style: TextStyle(color: Colors.red.shade400, fontSize: 12),
           ),
         ],
         const SizedBox(height: 16),
         _PrimaryButton(
-          label: _submitting ? 'Sending…' : 'Send Feedback',
+          label: _submitting
+              ? L.of(context).reviewSending
+              : L.of(context).reviewSendFeedback,
           onTap: _submitting ? null : _onSend,
         ),
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'No thanks',
+            L.of(context).reviewNoThanks,
             style: TextStyle(fontSize: 13, color: _dimColor),
           ),
         ),
@@ -249,7 +252,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         _GoldCircleIcon(icon: Icons.check_rounded),
         const SizedBox(height: 16),
         Text(
-          'JazakAllah Khair 🤍',
+          L.of(context).reviewThanksTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 17,
@@ -259,7 +262,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Your feedback helps us improve the app for the entire community.',
+          L.of(context).reviewThanksBody,
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, height: 1.5, color: _subtitleColor),
         ),

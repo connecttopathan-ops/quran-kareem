@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/widgets.dart';
 
 /// The languages the app's own interface is translated into.
@@ -58,9 +60,12 @@ bool isSupportedUiLocale(String code) =>
 /// Anything we do not translate falls back to English rather than to the
 /// nearest neighbour — a half-familiar language is more disorienting than a
 /// lingua franca.
+/// Reads `PlatformDispatcher.instance` rather than
+/// `WidgetsBinding.instance.platformDispatcher`: the former needs no binding,
+/// so this is also safe to call from services that run before — or outside —
+/// the widget tree.
 String detectUiLocale() {
-  final deviceLocale = WidgetsBinding.instance.platformDispatcher.locale;
-  return resolveUiLocale(deviceLocale.languageCode);
+  return resolveUiLocale(PlatformDispatcher.instance.locale.languageCode);
 }
 
 /// The [detectUiLocale] mapping, split out so it can be unit tested without a

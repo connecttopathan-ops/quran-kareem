@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 
@@ -728,7 +729,7 @@ class _DuasScreenState extends State<DuasScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Duas',
+          L.of(context).quickDuas,
           style: TextStyle(
             color: context.text,
             fontSize: 16,
@@ -785,7 +786,7 @@ class _DuasScreenState extends State<DuasScreen> {
                 ? SliverFillRemaining(
                     child: Center(
                       child: Text(
-                        'No duas found',
+                        L.of(context).duasNoResults,
                         style: TextStyle(
                           color: context.textDim,
                           fontSize: 14,
@@ -872,7 +873,7 @@ class _SearchBar extends StatelessWidget {
           onChanged: onChanged,
           style: TextStyle(fontSize: 14, color: context.text),
           decoration: InputDecoration(
-            hintText: 'Search duas in any language…',
+            hintText: L.of(context).duasSearchHint,
             hintStyle: TextStyle(fontSize: 13, color: context.textDim),
             prefixIcon:
                 Icon(Icons.search, size: 20, color: context.textDim),
@@ -1003,7 +1004,7 @@ class _CategoryCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  '$count Duas',
+                                  L.of(context).duasCount(count),
                                   style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -1269,7 +1270,7 @@ class _ProphetSectionState extends State<_ProphetSection>
                           ),
                         ),
                         Text(
-                          '$count ${count == 1 ? 'Dua' : 'Duas'}',
+                          L.of(context).duasCount(count),
                           style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.gold,
@@ -1377,12 +1378,13 @@ class _ExpandableDuaCardState extends State<_ExpandableDuaCard>
 
   void _copy(BuildContext context) {
     final d = widget.dua;
+    final sourceLine = L.of(context).duasCopySourceLine(d['source'] as String);
     final text =
-        '${d['arabic']}\n\n${d['transliteration']}\n\n${d['english']}\n\n${d['romanUrdu']}\n\nSource: ${d['source']}';
+        '${d['arabic']}\n\n${d['transliteration']}\n\n${d['english']}\n\n${d['romanUrdu']}\n\n$sourceLine';
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Dua copied to clipboard'),
+        content: Text(L.of(context).duasCopiedToClipboard),
         backgroundColor: AppColors.goldDark,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1536,7 +1538,7 @@ class _ExpandableDuaCardState extends State<_ExpandableDuaCard>
                       ),
                       const SizedBox(height: 10),
                       // 3. English translation
-                      _SectionLabel(label: 'English'),
+                      _SectionLabel(label: L.of(context).languageEnglish),
                       const SizedBox(height: 4),
                       Text(
                         d['english'] as String,
@@ -1548,7 +1550,7 @@ class _ExpandableDuaCardState extends State<_ExpandableDuaCard>
                       ),
                       const SizedBox(height: 10),
                       // 4. Roman Urdu translation
-                      _SectionLabel(label: 'Roman Urdu'),
+                      _SectionLabel(label: L.of(context).duasRomanUrduLabel),
                       const SizedBox(height: 4),
                       Text(
                         d['romanUrdu'] as String,
@@ -1587,13 +1589,13 @@ class _ExpandableDuaCardState extends State<_ExpandableDuaCard>
                                 ),
                               ),
                               child: Row(
-                                children: const [
-                                  Icon(Icons.copy_outlined,
+                                children: [
+                                  const Icon(Icons.copy_outlined,
                                       size: 12, color: AppColors.gold),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Copy',
-                                    style: TextStyle(
+                                    L.of(context).duasCopy,
+                                    style: const TextStyle(
                                       fontSize: 11,
                                       color: AppColors.gold,
                                       fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../models/language.dart';
 import '../theme/app_theme.dart';
@@ -56,7 +57,7 @@ class TextSettingsSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 12, 14, 4),
             child: Row(children: [
               Text(
-                'Text Settings',
+                L.of(context).textSettings,
                 style: TextStyle(
                   color: context.text,
                   fontSize: 17,
@@ -90,43 +91,46 @@ class TextSettingsSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Reading mode ──────────────────────────────────────────
-                  _SheetLabel('READING MODE'),
+                  _SheetLabel(L.of(context).readerSectionReadingMode),
                   const SizedBox(height: 8),
                   _ReadingModeChips(state: state),
                   const SizedBox(height: 16),
 
                   // ── Live preview ──────────────────────────────────────────
-                  _SheetLabel('LIVE PREVIEW'),
+                  _SheetLabel(L.of(context).textSettingsSectionLivePreview),
                   const SizedBox(height: 8),
                   _LivePreview(state: state),
                   const SizedBox(height: 16),
 
                   // ── Swipe navigation ──────────────────────────────────────
-                  _SheetLabel('SWIPE NAVIGATION'),
+                  _SheetLabel(L.of(context).textSettingsSectionSwipeNavigation),
                   const SizedBox(height: 8),
                   _ToggleRow(
-                    title: 'Swipe between surahs',
-                    subtitle: 'Swipe left or right to navigate',
+                    title: L.of(context).textSettingsSwipeBetweenSurahs,
+                    subtitle:
+                        L.of(context).textSettingsSwipeBetweenSurahsSubtitle,
                     value: state.swipeEnabled,
                     onChanged: (_) => state.toggleSwipeEnabled(),
                   ),
                   const SizedBox(height: 8),
                   _ToggleRow(
-                    title: 'Show surah name strip',
-                    subtitle: 'Display navigation bar below reader toolbar',
+                    title: L.of(context).textSettingsShowSurahNameStrip,
+                    subtitle:
+                        L.of(context).textSettingsShowSurahNameStripSubtitle,
                     value: state.showSurahHints,
                     onChanged: (_) => state.toggleShowSurahHints(),
                   ),
                   const SizedBox(height: 16),
 
                   // ── Font size ─────────────────────────────────────────────
-                  _SheetLabel('FONT SIZE'),
+                  _SheetLabel(L.of(context).textSettingsSectionFontSize),
                   const SizedBox(height: 8),
                   _FontSizeRow(state: state),
                   const SizedBox(height: 16),
 
                   // ── Translation language ──────────────────────────────────
-                  _SheetLabel('TRANSLATION LANGUAGE'),
+                  _SheetLabel(
+                      L.of(context).textSettingsSectionTranslationLanguage),
                   const SizedBox(height: 8),
                   _TranslationLanguageRow(state: state),
                 ],
@@ -147,10 +151,11 @@ class _ReadingModeChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const chips = [
-      (1, 'Translation'),
-      (2, 'Arabic+'),
-      (3, '+Roman'),
+    // Not const: the labels are resolved from the active locale.
+    final chips = [
+      (1, L.of(context).readerModeTranslation),
+      (2, L.of(context).readerModeArabicPlus),
+      (3, L.of(context).readerModeRoman),
     ];
     return Row(
       children: chips.map((chip) {
@@ -198,10 +203,13 @@ class _LivePreview extends StatelessWidget {
 
   static const _sampleArabic =
       'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ';
-  static const _sampleTranslit =
-      "Alhamdu lillaahi Rabbil 'aalameen";
-  static const _sampleTranslation =
-      'All praise is due to Allah, Lord of all the worlds';
+
+  // The transliteration and translation samples are localised, so they are
+  // resolved per-build rather than held in static consts.
+  static String _sampleTranslit(BuildContext context) =>
+      L.of(context).textSettingsPreviewTransliteration;
+  static String _sampleTranslation(BuildContext context) =>
+      L.of(context).textSettingsPreviewTranslation;
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +270,7 @@ class _LivePreview extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Text(
-              _sampleTranslit,
+              _sampleTranslit(context),
               style: TextStyle(
                 fontFamily: 'serif',
                 fontSize: state.translitFontSize,
@@ -275,7 +283,7 @@ class _LivePreview extends StatelessWidget {
 
         // Translation
         Text(
-          _sampleTranslation,
+          _sampleTranslation(context),
           style: TextStyle(
             fontFamily: 'serif',
             fontSize: state.readingFontSize,
@@ -317,7 +325,7 @@ class _FontSizeRow extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                'A−',
+                L.of(context).textSettingsFontSizeDecrease,
                 style: TextStyle(
                   fontSize: 13,
                   color: context.text,
@@ -355,7 +363,7 @@ class _FontSizeRow extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                'A+',
+                L.of(context).textSettingsFontSizeIncrease,
                 style: TextStyle(
                   fontSize: 13,
                   color: context.text,
@@ -462,7 +470,7 @@ class _LanguagePickerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Translation Language',
+            L.of(context).translationLanguage,
             style: TextStyle(
               color: context.text,
               fontSize: 17,

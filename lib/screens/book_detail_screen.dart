@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../models/islamic_book.dart';
 import '../services/book_download_service.dart';
@@ -52,8 +53,14 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     }
     if (chapter.containsKey('name')) return chapter['name'].toString();
     if (chapter.containsKey('title')) return chapter['title'].toString();
-    return '${widget.book.category == BookCategory.hadith ? 'Book' : 'Chapter'} ${fallbackIndex + 1}';
+    return _numberedSectionName(fallbackIndex + 1);
   }
+
+  /// 'Book 4' for hadith collections, 'Chapter 4' for everything else.
+  String _numberedSectionName(int number) =>
+      widget.book.category == BookCategory.hadith
+          ? L.of(context).booksSectionBookNumber(number)
+          : L.of(context).booksSectionChapterNumber(number);
 
   int _chapterNumber(Map<String, dynamic> chapter, int fallbackIndex) {
     if (chapter.containsKey('bookNumber')) {
@@ -98,8 +105,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               'book': [
                 {
                   'lang': 'en',
-                  'name':
-                      '${widget.book.category == BookCategory.hadith ? 'Book' : 'Chapter'} ${i + 1}'
+                  'name': _numberedSectionName(i + 1),
                 }
               ],
             });
@@ -108,8 +114,10 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final chapters = _effectiveChapters;
-    final label =
-        widget.book.category == BookCategory.hadith ? 'books' : 'chapters';
+    final sectionCountLabel =
+        widget.book.category == BookCategory.hadith
+            ? L.of(context).booksBookCount(chapters.length)
+            : L.of(context).booksChapterCount(chapters.length);
 
     return Scaffold(
       backgroundColor: context.bg,
@@ -141,7 +149,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                                 fontFamily: 'serif',
                                 fontSize: 18,
                                 color: context.text)),
-                        Text('${chapters.length} $label',
+                        Text(sectionCountLabel,
                             style: TextStyle(
                                 fontSize: 10,
                                 fontFamily: 'sans-serif',
@@ -242,7 +250,14 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                                               color: context.text)),
                                       if (count > 0)
                                         Text(
-                                            '$count ${widget.book.category == BookCategory.hadith ? 'hadiths' : 'passages'}',
+                                            widget.book.category ==
+                                                    BookCategory.hadith
+                                                ? L
+                                                    .of(context)
+                                                    .booksHadithCount(count)
+                                                : L
+                                                    .of(context)
+                                                    .booksPassageCount(count),
                                             style: TextStyle(
                                                 fontSize: 10,
                                                 fontFamily: 'sans-serif',
@@ -337,7 +352,7 @@ class _ChapterSearchDelegate extends SearchDelegate<void> {
       itemCount: filtered.length,
       itemBuilder: (ctx, i) {
         final ch = filtered[i];
-        String title = 'Chapter';
+        String title = L.of(context).booksChapterFallbackTitle;
         int num = i + 1;
         if (ch.containsKey('book') && ch['book'] is List) {
           final books = ch['book'] as List;

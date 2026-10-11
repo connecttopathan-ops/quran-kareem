@@ -1177,5 +1177,1259 @@
         "example": "286"
       }
     }
+  },
+  "channelPrayerMakkah": "Prayer Times (Makkah Adhan)",
+  "@channelPrayerMakkah": {
+    "description": "Shown in the Android system notification settings, where users turn individual alert types on and off. Keep it short — Android truncates. This channel plays the Makkah adhan. \"Adhan\" is the Islamic call to prayer — transliterate conventionally, do not translate its meaning."
+  },
+  "channelPrayerMakkahDesc": "Makkah adhan at prayer times",
+  "@channelPrayerMakkahDesc": {
+    "description": "One-line explanation under channelPrayerMakkah in Android settings."
+  },
+  "channelPrayerMadinah": "Prayer Times (Madinah Adhan)",
+  "@channelPrayerMadinah": {
+    "description": "Shown in the Android system notification settings, where users turn individual alert types on and off. Keep it short — Android truncates. This channel plays the Madinah adhan."
+  },
+  "channelPrayerMadinahDesc": "Madinah adhan at prayer times",
+  "@channelPrayerMadinahDesc": {
+    "description": "One-line explanation under channelPrayerMadinah in Android settings."
+  },
+  "channelPrayerFajr": "Prayer Times (Fajr Adhan)",
+  "@channelPrayerFajr": {
+    "description": "Shown in the Android system notification settings, where users turn individual alert types on and off. Keep it short — Android truncates. Fajr is the dawn prayer, which uses its own adhan. Transliterate the name."
+  },
+  "channelPrayerFajrDesc": "Fajr adhan at prayer times",
+  "@channelPrayerFajrDesc": {
+    "description": "One-line explanation under channelPrayerFajr in Android settings."
+  },
+  "channelPrayerVibration": "Prayer Times (Vibration)",
+  "@channelPrayerVibration": {
+    "description": "Shown in the Android system notification settings, where users turn individual alert types on and off. Keep it short — Android truncates. This channel vibrates silently instead of playing the adhan."
+  },
+  "channelPrayerVibrationDesc": "Vibration alert at prayer times",
+  "@channelPrayerVibrationDesc": {
+    "description": "One-line explanation under channelPrayerVibration in Android settings."
+  },
+  "channelDailyRemindersDesc": "Daily Quran reading reminders",
+  "@channelDailyRemindersDesc": {
+    "description": "One-line explanation under the Daily Reminders channel in Android settings."
+  },
+  "channelAyahDesc": "Daily ayah notification",
+  "@channelAyahDesc": {
+    "description": "One-line explanation under the Ayah of the Day channel in Android settings. \"Ayah\" means a verse of the Quran — keep the term."
+  },
+  "notifPrayerTitle": "Prayer Time",
+  "@notifPrayerTitle": {
+    "description": "Title of the notification that fires at a prayer time. Appears on the lock screen, so keep it short."
+  },
+  "notifPrayerBody": "It's time for {prayer}",
+  "@notifPrayerBody": {
+    "description": "Body of the prayer-time notification, e.g. \"It's time for Maghrib\". {prayer} is an already-translated prayer name.",
+    "placeholders": {
+      "prayer": {
+        "type": "String",
+        "example": "Maghrib"
+      }
+    }
+  },
+  "notifMorningTitle": "Time to Read Quran",
+  "@notifMorningTitle": {
+    "description": "Title of the morning reading reminder notification."
+  },
+  "notifMorningBody": "Start your morning with the words of Allah",
+  "@notifMorningBody": {
+    "description": "Body of the morning reading reminder."
+  },
+  "notifEveningTitle": "Evening Quran Reminder",
+  "@notifEveningTitle": {
+    "description": "Title of the evening reading reminder notification."
+  },
+  "notifEveningBody": "End your day with the words of Allah",
+  "@notifEveningBody": {
+    "description": "Body of the evening reading reminder."
+  },
+  "notifTestBody": "Test — notification is working",
+  "@notifTestBody": {
+    "description": "Body of the test notification sent when the user taps \"Send Test\" in prayer notification settings. Confirms alerts are working."
+  },
+  "myLocation": "My Location",
+  "@myLocation": {
+    "description": "Fallback label for the user's location when reverse geocoding cannot name the place."
+  },
+  "locationErrorServicesDisabled": "Location services are off. Turn on GPS to get prayer times.",
+  "@locationErrorServicesDisabled": {
+    "description": "Shown on the home screen when the device's location services are switched off entirely."
+  },
+  "locationErrorPermissionDenied": "Location permission denied. Set your city manually instead.",
+  "@locationErrorPermissionDenied": {
+    "description": "Shown on the home screen when the user has refused location access. Should read as a way forward, not a scolding."
+  },
+  "locationErrorUnavailable": "Could not find your location. Set your city manually instead.",
+  "@locationErrorUnavailable": {
+    "description": "Shown on the home screen when a location lookup fails for any other reason — no signal, timeout."
+  },
+  "calcMethodMwl": "Muslim World League",
+  "@calcMethodMwl": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodIsna": "ISNA (North America)",
+  "@calcMethodIsna": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. ISNA is an acronym (Islamic Society of North America) — keep the letters, translate only the region."
+  },
+  "calcMethodEgyptian": "Egyptian Authority",
+  "@calcMethodEgyptian": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodKarachi": "Karachi (Hanafi)",
+  "@calcMethodKarachi": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. Karachi is a city; Hanafi is one of the four Sunni schools of jurisprudence — transliterate it, do not translate."
+  },
+  "calcMethodUmmAlQura": "Umm Al-Qura (Mecca)",
+  "@calcMethodUmmAlQura": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. Umm Al-Qura is a university in Mecca — transliterate."
+  },
+  "calcMethodDubai": "Dubai / UAE",
+  "@calcMethodDubai": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodKuwait": "Kuwait",
+  "@calcMethodKuwait": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodQatar": "Qatar",
+  "@calcMethodQatar": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodSingapore": "Singapore",
+  "@calcMethodSingapore": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "calcMethodTehran": "Tehran Institute",
+  "@calcMethodTehran": {
+    "description": "Name of an Islamic authority whose method is used to calculate prayer times. Use the organisation's established name in your language if it has one; otherwise keep this form rather than translating it word by word. "
+  },
+  "booksLangShortArabic": "AR",
+  "@booksLangShortArabic": {
+    "description": "Two-letter code inside a tiny gold pill in the top-right corner of the Islamic Books screen, showing that the book collections are currently being read in Arabic. Tapping the pill opens the reading-language picker. Use the two- or three-letter abbreviation your language conventionally uses for Arabic (capitals if natural); only about 3 characters fit."
+  },
+  "booksLangShortUrdu": "UR",
+  "@booksLangShortUrdu": {
+    "description": "Two-letter code inside a tiny gold pill in the top-right corner of the Islamic Books screen, showing that the book collections are currently being read in Urdu. Tapping the pill opens the reading-language picker. Use the two- or three-letter abbreviation your language conventionally uses for Urdu (capitals if natural); only about 3 characters fit."
+  },
+  "booksLangShortEnglish": "EN",
+  "@booksLangShortEnglish": {
+    "description": "Two-letter code inside a tiny gold pill in the top-right corner of the Islamic Books screen, showing that the book collections are currently being read in English. Tapping the pill opens the reading-language picker. Use the two- or three-letter abbreviation your language conventionally uses for English (capitals if natural); only about 3 characters fit."
+  },
+  "booksSectionHadith": "Hadith",
+  "@booksSectionHadith": {
+    "description": "Heading above the group of hadith collections (such as Sahih al-Bukhari and Sahih Muslim) on the Islamic Books list screen. 'Hadith' is a genre of Islamic literature — the recorded sayings and deeds of the Prophet — so keep the conventional transliteration used in your language rather than translating it into a native word. The app renders it in capital letters with wide letter spacing, so keep it to one short word."
+  },
+  "booksSectionSeerah": "Seerah",
+  "@booksSectionSeerah": {
+    "description": "Heading above the group of Seerah books on the Islamic Books list screen. 'Seerah' is a genre of Islamic literature — the biography of the Prophet — so keep the conventional transliteration used in your language rather than translating it into a native word. The app renders it in capital letters with wide letter spacing, so keep it to one short word."
+  },
+  "booksRedownloadTitle": "Re-download?",
+  "@booksRedownloadTitle": {
+    "description": "Title of the confirmation dialog that appears when the user long-presses an already downloaded book on the Islamic Books list, offering to fetch a fresh copy. Phrase it as a short question."
+  },
+  "booksRedownloadBody": "This will delete the saved copy of \"{bookTitle}\" and download it fresh.",
+  "@booksRedownloadBody": {
+    "description": "Body of the re-download confirmation dialog on the Islamic Books list, warning that the copy stored on the device will be erased first. {bookTitle} is the book's own title, such as 'Sahih al-Bukhari' — it is a proper name and is never translated. Keep it inside quotation marks, replacing them with the pair conventional in your language.",
+    "placeholders": {
+      "bookTitle": {
+        "type": "String",
+        "example": "Sahih al-Bukhari"
+      }
+    }
+  },
+  "booksRedownloadConfirm": "Re-download",
+  "@booksRedownloadConfirm": {
+    "description": "Label on the confirm button of the re-download dialog on the Islamic Books list. Tapping it deletes the stored copy of the book and starts the download again. Keep it short enough for a dialog button."
+  },
+  "booksUnknownError": "Unknown error",
+  "@booksUnknownError": {
+    "description": "Stand-in shown on a book card on the Islamic Books list when its download failed but the system reported no reason. It appears in the small grey line of technical detail under the red 'download failed' message."
+  },
+  "booksDownloadFailed": "Download failed. Tap to retry.",
+  "@booksDownloadFailed": {
+    "description": "Red message on a book card on the Islamic Books list after that book's download failed, telling the user that tapping the card starts the download again. Very small text (10px) over two short sentences."
+  },
+  "booksRetryDownload": "Retry download",
+  "@booksRetryDownload": {
+    "description": "Label on the small outlined button with a refresh icon on a book card on the Islamic Books list whose download failed. Tapping it attempts the download again. Narrow button — about 16 characters fit."
+  },
+  "booksDownloadToRead": "Download to read",
+  "@booksDownloadToRead": {
+    "description": "Label on the small outlined button with a download icon on a book card on the Islamic Books list when that book is not yet stored on the device. Tapping it starts the download. Narrow button — about 16 characters fit."
+  },
+  "booksDownloadingProgress": "Downloading {percent}% · {downloaded} / {total} MB",
+  "@booksDownloadingProgress": {
+    "description": "Line under the progress bar on a book card on the Islamic Books list while the book is being downloaded, e.g. 'Downloading 42% · 1.3 / 3.1 MB'. {downloaded} and {total} are already-formatted decimal numbers of megabytes; 'MB' is the unit symbol for megabytes and the middle dot (·) is a separator. The text sits on one line in a 10px font, so abbreviate the verb if your language needs more room.",
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "example": "42"
+      },
+      "downloaded": {
+        "type": "String",
+        "example": "1.3"
+      },
+      "total": {
+        "type": "String",
+        "example": "3.1"
+      }
+    }
+  },
+  "booksContinueReading": "Continue reading →",
+  "@booksContinueReading": {
+    "description": "Label on the solid gold button on a book card on the Islamic Books list when the user has already started that book; tapping it reopens it where they left off. Keep the trailing arrow (→) at the end, or move it to the start and flip it to ← if your language is written right-to-left. About 18 characters fit."
+  },
+  "booksStartReading": "Start reading",
+  "@booksStartReading": {
+    "description": "Label on the solid gold button on a book card on the Islamic Books list when the book is downloaded but has not been opened yet. About 18 characters fit."
+  },
+  "booksDownloadSheetBody": "This book will be saved on your device for offline reading. You'll only be asked once.",
+  "@booksDownloadSheetBody": {
+    "description": "Explanatory paragraph in the panel that slides up from the bottom of the Islamic Books screen the first time the user chooses to download a particular book. It says the book is stored locally so it can be read without a network connection, and that this confirmation will not be shown again for this book."
+  },
+  "booksFileSizeMb": "{size} MB",
+  "@booksFileSizeMb": {
+    "description": "Small chip in the download confirmation panel giving the download's size, e.g. '3.1 MB'. {size} is an already-formatted decimal number; 'MB' is the unit symbol for megabytes — translate it only if your language genuinely uses a different symbol.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "3.1"
+      }
+    }
+  },
+  "booksSheetNotNow": "Not now",
+  "@booksSheetNotNow": {
+    "description": "Label on the left, outlined button of the download confirmation panel on the Islamic Books screen; it closes the panel without downloading. Should read as 'maybe later', not as a refusal. Two short words at most."
+  },
+  "booksDownloadAction": "Download",
+  "@booksDownloadAction": {
+    "description": "Label on the right, solid gold button of the download confirmation panel on the Islamic Books screen; tapping it starts saving the book to the device. One short word."
+  },
+  "booksLangDescEnglish": "Read in English",
+  "@booksLangDescEnglish": {
+    "description": "Small caption under the word 'English' on the English card of the reading-language chooser for the Islamic book collections, saying that the books will be shown in English. The Arabic and Urdu cards have their own fixed captions written in those languages, so this one only ever concerns English. One short line."
+  },
+  "booksChooseLanguageTitle": "Choose your reading language",
+  "@booksChooseLanguageTitle": {
+    "description": "Large heading on the screen where the user picks which language the Islamic book collections should be read in. Shown the first time the Islamic Books section is opened, and again whenever the language pill is tapped."
+  },
+  "booksChooseLanguageBody": "Which language would you like to read in? You can change this anytime.",
+  "@booksChooseLanguageBody": {
+    "description": "Subtitle under the 'Choose your reading language' heading, reassuring the user that the choice is not final and can be changed later."
+  },
+  "booksChangeLanguageHint": "You can change this anytime in Settings › Islamic Books",
+  "@booksChangeLanguageHint": {
+    "description": "Small centred note just above the confirm button on the reading-language chooser, naming the path through the app's own menus where the setting can be changed later: the Settings screen, then its Islamic Books section. Translate both menu names exactly as they appear elsewhere in this app (the keys settingsTitle and sectionIslamicBooks) and keep the '›' as the separator between them."
+  },
+  "booksContinueInLanguage": "Continue in {language}",
+  "@booksContinueInLanguage": {
+    "description": "Label on the wide confirm button at the bottom of the reading-language chooser, e.g. 'Continue in English'. {language} arrives already written in its own language and script (the Arabic and Urdu options supply their own names, 'العربية' and 'اردو'), so do not translate it here and leave room for a non-Latin script.",
+    "placeholders": {
+      "language": {
+        "type": "String",
+        "example": "English"
+      }
+    }
+  },
+  "booksStubHadithBody": "Download content is not yet available. Please ensure you have downloaded the book and have a valid API key configured for sunnah.com.",
+  "@booksStubHadithBody": {
+    "description": "Placeholder text shown in the body of each entry on the book reading screen when the hadith collection's own content could not be loaded, asking the user to check that the book was downloaded and that the app is configured to reach the hadith service. 'API key' is a technical term for an access credential and 'sunnah.com' is the name of the website the hadith texts come from — leave the website name as-is."
+  },
+  "booksStubSeerahBody": "Chapter {chapter} content will appear here once the book asset ({assetPath}) is bundled with the app.",
+  "@booksStubSeerahBody": {
+    "description": "Placeholder paragraph shown on the book reading screen when a Seerah (Prophet's biography) chapter's text file is missing from the app, naming the file that is expected. {assetPath} is a file path inside the app and must not be translated or altered; keep it inside the parentheses.",
+    "placeholders": {
+      "chapter": {
+        "type": "int",
+        "example": "7"
+      },
+      "assetPath": {
+        "type": "String",
+        "example": "assets/books/sealed_nectar_en.json"
+      }
+    }
+  },
+  "booksReaderBookPosition": "Book {current} of {total}",
+  "@booksReaderBookPosition": {
+    "description": "Position indicator centred in the bar at the bottom of the reading screen for a hadith collection, between the back and forward arrows, e.g. 'Book 4 of 97'. Here 'Book' means one numbered section of the collection, not the whole volume. One line in an 11px font, so keep it terse.",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "4"
+      },
+      "total": {
+        "type": "int",
+        "example": "97"
+      }
+    }
+  },
+  "booksReaderChapterPosition": "Chapter {current} of {total}",
+  "@booksReaderChapterPosition": {
+    "description": "Position indicator centred in the bar at the bottom of the reading screen for a non-hadith book such as a Seerah biography, between the back and forward arrows, e.g. 'Chapter 7 of 24'. One line in an 11px font, so keep it terse.",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "7"
+      },
+      "total": {
+        "type": "int",
+        "example": "24"
+      }
+    }
+  },
+  "booksHadithNumber": "Hadith {number}",
+  "@booksHadithNumber": {
+    "description": "Tiny gold badge at the top of each entry on the reading screen, citing which hadith is shown, e.g. 'Hadith 4:112'. {number} is the collection's own reference, usually section:item — it is a citation and its digits, colon and order must be left exactly as supplied. 'Hadith' is a recorded saying of the Prophet: keep the conventional transliteration rather than translating it. Very small (9px), all in capitals in English — about 14 characters fit.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "4:112"
+      }
+    }
+  },
+  "booksSectionBookNumber": "Book {number}",
+  "@booksSectionBookNumber": {
+    "description": "Name given to one numbered section of a hadith collection in the chapter list of a book, used when the downloaded content supplies no title of its own, e.g. 'Book 4'. Here 'Book' means a numbered section within the collection, not the whole volume.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "booksSectionChapterNumber": "Chapter {number}",
+  "@booksSectionChapterNumber": {
+    "description": "Name given to one chapter of a non-hadith book, such as a Seerah biography, in the book's chapter list, used when the content supplies no title of its own, e.g. 'Chapter 7'.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "booksBookCount": "{count, plural, =1{{count} book} other{{count} books}}",
+  "@booksBookCount": {
+    "description": "Second line under a hadith collection's title at the top of its chapter list, saying how many numbered sections it contains, e.g. '97 books'. Here 'book' means one numbered section within the collection, not a whole volume. Shown in a 10px font; add whichever plural categories your language needs.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "97"
+      }
+    }
+  },
+  "booksChapterCount": "{count, plural, =1{{count} chapter} other{{count} chapters}}",
+  "@booksChapterCount": {
+    "description": "Second line under a non-hadith book's title at the top of its chapter list, saying how many chapters it contains, e.g. '24 chapters'. Shown in a 10px font; add whichever plural categories your language needs.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "24"
+      }
+    }
+  },
+  "booksHadithCount": "{count, plural, =1{{count} hadith} other{{count} hadiths}}",
+  "@booksHadithCount": {
+    "description": "Small caption under a section's title in a hadith collection's chapter list, saying how many hadiths that section holds, e.g. '112 hadiths'. 'Hadith' is a recorded saying of the Prophet: keep the conventional transliteration rather than translating it, and use your language's own plural of that transliterated word. Add whichever plural categories your language needs.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "112"
+      }
+    }
+  },
+  "booksPassageCount": "{count, plural, =1{{count} passage} other{{count} passages}}",
+  "@booksPassageCount": {
+    "description": "Small caption under a chapter's title in a non-hadith book's chapter list, saying how many passages of prose that chapter holds, e.g. '12 passages'. Add whichever plural categories your language needs.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "booksChapterFallbackTitle": "Chapter",
+  "@booksChapterFallbackTitle": {
+    "description": "Stand-in title for a row in the search results of a book's chapter list when that chapter carries no readable name. A bare noun with no number after it. One short word."
+  },
+  "permSheetTitle": "Setup Notifications",
+  "@permSheetTitle": {
+    "description": "Heading at the top of the bottom sheet that appears on launch asking the user to grant notification-related permissions. 'Setup' is a verb phrase meaning 'get your notifications ready'. Keep it to two or three words — it sits on one line next to a bell icon."
+  },
+  "permSheetSubtitle": "Never miss a prayer time",
+  "@permSheetSubtitle": {
+    "description": "One-line promise under the heading of the notification permissions sheet, explaining why the permissions are worth granting. Keep it short; it sits on one line under the heading."
+  },
+  "permAllowNotifications": "Allow Notifications",
+  "@permAllowNotifications": {
+    "description": "Used twice on the notification permissions sheet, so it must read well in both places: as the title of the first permission row, and as the label of the wide button at the bottom that triggers the system notification-permission dialog. An imperative phrase asking the user to permit notifications."
+  },
+  "permNotificationsDescription": "Required to receive prayer time alerts",
+  "@permNotificationsDescription": {
+    "description": "Small explanatory line under the 'Allow Notifications' row title on the notification permissions sheet, saying what the permission is needed for. Two lines of small text at most."
+  },
+  "permPreciseTimingTitle": "Precise Timing",
+  "@permPreciseTimingTitle": {
+    "description": "Title of the permission row on the notification permissions sheet for the Android 'Alarms & reminders' permission, which lets alerts fire at an exact minute. Shown only on Android 12 and newer when the permission has not been granted. Keep it short — one line next to an alarm icon."
+  },
+  "permPreciseTimingDescription": "Ensures notifications arrive exactly at prayer time, not minutes late",
+  "@permPreciseTimingDescription": {
+    "description": "Small explanatory line under the 'Precise Timing' row title on the notification permissions sheet, saying why exact-alarm permission matters."
+  },
+  "permBatteryTitle": "Always Run in Background",
+  "@permBatteryTitle": {
+    "description": "Title of the permission row on the notification permissions sheet for exempting the app from Android battery optimisation, so the system does not stop it from delivering alerts. Keep it short — one line next to a battery icon."
+  },
+  "permBatteryDescription": "Prevents your phone from blocking prayer alerts when the screen is off",
+  "@permBatteryDescription": {
+    "description": "Small explanatory line under the 'Always Run in Background' row title on the notification permissions sheet, saying why the battery exemption matters."
+  },
+  "permAllowButton": "Allow",
+  "@permAllowButton": {
+    "description": "Label on the small outlined button at the right edge of each permission row on the notification permissions sheet; tapping it starts granting that one permission. Very narrow — one short word."
+  },
+  "permAllSetContinue": "All Set — Continue",
+  "@permAllSetContinue": {
+    "description": "Label the wide button at the bottom of the notification permissions sheet switches to once notifications have been granted; tapping it closes the sheet. 'All Set' means everything needed is done. Keep the em dash (—) or replace it with the equivalent separator used in your language."
+  },
+  "permBatteryTipSamsung": "Samsung extra step: Settings → Battery → Never sleeping apps → tap + and add {appName}",
+  "@permBatteryTipSamsung": {
+    "description": "Extra instruction shown in a small bordered note inside the 'Always Run in Background' row on the notification permissions sheet, displayed only on Samsung phones. The words after 'Samsung extra step:' are the literal names of menu items in Samsung's own Android settings, which the phone shows in the user's language: if you know Samsung's official wording for these menus in your locale, use exactly that; otherwise leave the English menu names untranslated, because a guessed translation leaves the user unable to find the menu. Translate only the surrounding words ('extra step', 'tap', 'and add'). Keep the → arrows as separators. {appName} is this app's name and is never translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "permBatteryTipXiaomi": "Xiaomi extra step: Settings → Apps → Manage apps → {appName} → AutoStart → turn On",
+  "@permBatteryTipXiaomi": {
+    "description": "Extra instruction shown in a small bordered note inside the 'Always Run in Background' row on the notification permissions sheet, displayed only on Xiaomi, Redmi and POCO phones. The words after 'Xiaomi extra step:' are the literal names of menu items in Xiaomi's own Android settings, which the phone shows in the user's language: if you know Xiaomi's official wording for these menus in your locale, use exactly that; otherwise leave the English menu names (including 'AutoStart' and 'On') untranslated, because a guessed translation leaves the user unable to find the menu. Translate only the surrounding words ('extra step', 'turn'). Keep the → arrows as separators. {appName} is this app's name and is never translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "permBatteryTipHuawei": "Huawei extra step: Settings → Battery → App launch → {appName} → Manage manually → enable all toggles",
+  "@permBatteryTipHuawei": {
+    "description": "Extra instruction shown in a small bordered note inside the 'Always Run in Background' row on the notification permissions sheet, displayed only on Huawei and Honor phones. The words after 'Huawei extra step:' are the literal names of menu items in Huawei's own Android settings, which the phone shows in the user's language: if you know Huawei's official wording for these menus in your locale, use exactly that; otherwise leave the English menu names untranslated, because a guessed translation leaves the user unable to find the menu. Translate only the surrounding words ('extra step', 'enable all toggles'). Keep the → arrows as separators. {appName} is this app's name and is never translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "permBatteryTipOppo": "Extra step: Settings → Battery → Battery optimization → {appName} → Don't optimize",
+  "@permBatteryTipOppo": {
+    "description": "Extra instruction shown in a small bordered note inside the 'Always Run in Background' row on the notification permissions sheet, displayed only on Oppo, Realme and OnePlus phones. Unlike the other manufacturer tips this one names no manufacturer, because it covers three brands — do not add one. The words after 'Extra step:' are the literal names of menu items in the phone's own Android settings, which it shows in the user's language: if you know that manufacturer's official wording for these menus in your locale, use exactly that; otherwise leave the English menu names (including \"Don't optimize\") untranslated, because a guessed translation leaves the user unable to find the menu. Translate only 'Extra step'. Keep the → arrows as separators. {appName} is this app's name and is never translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "permBatteryTipVivo": "Vivo extra step: Settings → Battery → High background power consumption → add {appName}",
+  "@permBatteryTipVivo": {
+    "description": "Extra instruction shown in a small bordered note inside the 'Always Run in Background' row on the notification permissions sheet, displayed only on Vivo phones. The words after 'Vivo extra step:' are the literal names of menu items in Vivo's own Android settings, which the phone shows in the user's language: if you know Vivo's official wording for these menus in your locale, use exactly that; otherwise leave the English menu names untranslated, because a guessed translation leaves the user unable to find the menu. Translate only the surrounding words ('extra step', 'add'). Keep the → arrows as separators. {appName} is this app's name and is never translated.",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "Get Quran"
+      }
+    }
+  },
+  "textSettingsSectionLivePreview": "LIVE PREVIEW",
+  "@textSettingsSectionLivePreview": {
+    "description": "Small all-capitals heading in the Text Settings bottom sheet, above a sample verse that updates as the user changes the reading options. Displayed in capitals with wide letter spacing in a 10px font, so keep it very short; use capital letters if that is natural for your language."
+  },
+  "textSettingsSectionSwipeNavigation": "SWIPE NAVIGATION",
+  "@textSettingsSectionSwipeNavigation": {
+    "description": "Small all-capitals heading in the Text Settings bottom sheet, above two switches that control moving between Quran chapters by swiping sideways. Displayed in capitals with wide letter spacing in a 10px font, so keep it very short."
+  },
+  "textSettingsSwipeBetweenSurahs": "Swipe between surahs",
+  "@textSettingsSwipeBetweenSurahs": {
+    "description": "Label of the switch in the Text Settings sheet that enables moving to the previous or next chapter of the Quran by swiping sideways on the reading page. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is."
+  },
+  "textSettingsSwipeBetweenSurahsSubtitle": "Swipe left or right to navigate",
+  "@textSettingsSwipeBetweenSurahsSubtitle": {
+    "description": "One-line explanation under the 'Swipe between surahs' switch in the Text Settings sheet, describing the gesture. Small 11px text on one line."
+  },
+  "textSettingsShowSurahNameStrip": "Show surah name strip",
+  "@textSettingsShowSurahNameStrip": {
+    "description": "Label of the switch in the Text Settings sheet that shows a thin horizontal bar of chapter names under the reader's toolbar, for jumping between chapters. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is; 'strip' means a narrow band across the screen."
+  },
+  "textSettingsShowSurahNameStripSubtitle": "Display navigation bar below reader toolbar",
+  "@textSettingsShowSurahNameStripSubtitle": {
+    "description": "One-line explanation under the 'Show surah name strip' switch in the Text Settings sheet, saying where that bar appears. 'Reader' is the screen on which the Quran is read. Small 11px text."
+  },
+  "textSettingsSectionFontSize": "FONT SIZE",
+  "@textSettingsSectionFontSize": {
+    "description": "Small all-capitals heading in the Text Settings bottom sheet, above a slider and two buttons that scale the translation text. Displayed in capitals with wide letter spacing in a 10px font, so keep it very short."
+  },
+  "textSettingsSectionTranslationLanguage": "TRANSLATION LANGUAGE",
+  "@textSettingsSectionTranslationLanguage": {
+    "description": "Small all-capitals heading in the Text Settings bottom sheet, above the row that opens the picker for which Quran translation to read. Displayed in capitals with wide letter spacing in a 10px font. This is the all-capitals heading form of the same idea as the 'Translation Language' settings row."
+  },
+  "textSettingsPreviewTransliteration": "Alhamdu lillaahi Rabbil 'aalameen",
+  "@textSettingsPreviewTransliteration": {
+    "description": "Sample phonetic line in the live preview card of the Text Settings sheet, shown in italics under the sample Arabic so the user can judge the text size. It spells the sounds of the Arabic verse 'al-hamdu li-llahi rabbi l-'alamin' (Quran 1:2) in Latin letters. Respell it the way your language conventionally transliterates Arabic; do not translate its meaning (the translation is the separate preview line below it)."
+  },
+  "textSettingsPreviewTranslation": "All praise is due to Allah, Lord of all the worlds",
+  "@textSettingsPreviewTranslation": {
+    "description": "Sample translated verse in the live preview card of the Text Settings sheet, shown so the user can judge the translation text size as they change it. It is the meaning of Quran 1:2 (Surah al-Fatihah). 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it. Use the wording your language's established Quran translations use. No full stop in the English."
+  },
+  "textSettingsFontSizeDecrease": "A−",
+  "@textSettingsFontSizeDecrease": {
+    "description": "Label on the small square button to the left of the font-size slider in the Text Settings sheet; tapping it makes the translation text one step smaller. The letter 'A' stands for the alphabet and the character after it is a minus sign (U+2212, not a hyphen). Keep it to two characters; if your script has a conventional letter for 'text size', use that letter in place of 'A' and keep the minus sign."
+  },
+  "textSettingsFontSizeIncrease": "A+",
+  "@textSettingsFontSizeIncrease": {
+    "description": "Label on the small square button to the right of the font-size slider in the Text Settings sheet; tapping it makes the translation text one step larger. The letter 'A' stands for the alphabet and '+' is a plus sign. Keep it to two characters; if your script has a conventional letter for 'text size', use that letter in place of 'A' and keep the plus sign."
+  },
+  "reviewStreakTitle": "{count, plural, =1{{count}-Day Streak! ✨} other{{count}-Day Streak! ✨}}",
+  "@reviewStreakTitle": {
+    "description": "Congratulatory heading at the top of the dialog that asks the user to rate the app, shown after they have opened it on several consecutive days, e.g. '7-Day Streak! ✨'. A 'streak' is an unbroken run of days. Plural because many languages inflect 'day' by number — add or remove plural categories as your language needs. Keep the sparkle emoji (✨) at the end and the exclamation mark if your language uses one.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "reviewEnjoyingTitle": "Are you enjoying Get Quran?",
+  "@reviewEnjoyingTitle": {
+    "description": "Question in the middle of the rate-the-app dialog; the user answers with one of the two buttons below it. 'Get Quran' is this app's name — leave it untranslated."
+  },
+  "reviewEnjoyingBody": "Your feedback helps Muslims around the world discover this app.",
+  "@reviewEnjoyingBody": {
+    "description": "Two-line sentence under the question in the rate-the-app dialog, giving the user a reason to answer. 'Feedback' here means their opinion or store review."
+  },
+  "reviewLoveIt": "⭐  Yes, I love it!",
+  "@reviewLoveIt": {
+    "description": "Label on the main (gold) button in the rate-the-app dialog; tapping it opens the app store review page. The user is answering 'Are you enjoying Get Quran?'. Keep the leading star emoji (⭐) and the two spaces after it, which separate it from the words. One line on a full-width button."
+  },
+  "reviewNotReally": "💬  Not really…",
+  "@reviewNotReally": {
+    "description": "Label on the secondary (outlined) button in the rate-the-app dialog; tapping it opens a private feedback form instead of the store. The user is answering 'Are you enjoying Get Quran?' in the negative, politely. Keep the leading speech-balloon emoji (💬), the two spaces after it, and the trailing ellipsis character (…)."
+  },
+  "reviewRemindLater": "Remind me later",
+  "@reviewRemindLater": {
+    "description": "Small text link at the bottom of the rate-the-app dialog that closes it and makes the app ask again after a while. Three short words."
+  },
+  "reviewFeedbackTitle": "We're listening 💌",
+  "@reviewFeedbackTitle": {
+    "description": "Heading of the second step of the rate-the-app dialog, the private feedback form shown to users who said they are not enjoying the app. It reassures them that their complaint will be read. Keep the love-letter emoji (💌) at the end."
+  },
+  "reviewFeedbackPrompt": "What could be better? (optional)",
+  "@reviewFeedbackPrompt": {
+    "description": "Question under the heading of the private feedback form in the rate-the-app dialog, above the text box. '(optional)' tells the user they may send the form empty — keep the parentheses."
+  },
+  "reviewFeedbackHint": "Type your feedback here…",
+  "@reviewFeedbackHint": {
+    "description": "Placeholder text inside the empty multi-line text box of the private feedback form in the rate-the-app dialog. Keep the trailing ellipsis character (…)."
+  },
+  "reviewSendFailed": "Could not send — check your connection.",
+  "@reviewSendFailed": {
+    "description": "Error line in red under the text box of the private feedback form in the rate-the-app dialog, shown when the feedback could not be uploaded, which is almost always a network problem. Keep the em dash (—) or replace it with the equivalent separator used in your language."
+  },
+  "reviewSending": "Sending…",
+  "@reviewSending": {
+    "description": "Label the 'Send Feedback' button of the private feedback form changes to while the feedback is being uploaded; the button is disabled meanwhile. Keep the trailing ellipsis character (…)."
+  },
+  "reviewSendFeedback": "Send Feedback",
+  "@reviewSendFeedback": {
+    "description": "Label on the main (gold) button of the private feedback form in the rate-the-app dialog; tapping it uploads what the user typed. One line on a full-width button."
+  },
+  "reviewNoThanks": "No thanks",
+  "@reviewNoThanks": {
+    "description": "Small text link at the bottom of the private feedback form in the rate-the-app dialog that closes it without sending anything. A polite refusal; two short words."
+  },
+  "reviewThanksTitle": "JazakAllah Khair 🤍",
+  "@reviewThanksTitle": {
+    "description": "Heading of the brief thank-you step shown after feedback has been sent; the dialog closes itself two seconds later. 'JazakAllah Khair' is an Arabic expression of thanks ('may Allah reward you with good'): transliterate it conventionally for your language rather than translating its meaning. Keep the white heart emoji (🤍)."
+  },
+  "reviewThanksBody": "Your feedback helps us improve the app for the entire community.",
+  "@reviewThanksBody": {
+    "description": "Two-line sentence under the thank-you heading in the rate-the-app dialog, after the user's feedback has been sent. 'Community' means the app's Muslim users as a whole."
+  },
+  "langSelectPopularBadge": "POPULAR",
+  "@langSelectPopularBadge": {
+    "description": "Tiny all-capitals badge on the single language card pinned above the rest of the list on the first-launch language chooser, marking it as the most-used choice. Only a few characters fit in the badge (8px font); use capital letters if that is natural for your language."
+  },
+  "langSelectTitle": "Choose your language",
+  "@langSelectTitle": {
+    "description": "Large heading at the top of the first-launch screen where the user picks which language the Quran translation should be in. An instruction to the user."
+  },
+  "langSelectSubtitle": "Select the language for Quran translations",
+  "@langSelectSubtitle": {
+    "description": "One-line explanation under the heading of the first-launch language chooser, making clear that the choice applies to the translated meaning of the Quran rather than to the app's own interface."
+  },
+  "langSelectAllLanguages": "ALL LANGUAGES",
+  "@langSelectAllLanguages": {
+    "description": "Tiny all-capitals label centred in a horizontal divider on the first-launch language chooser, separating the one pinned popular language above from the full list below. Displayed in capitals with wide letter spacing in a 9px font, so keep it very short."
+  },
+  "langSelectBismillahTransliteration": "Bismillaahir Rahmaanir Raheem",
+  "@langSelectBismillahTransliteration": {
+    "description": "Phonetic line shown in italics on every language card of the first-launch language chooser, between the Arabic script above and that language's translation below. It spells the sounds of 'bismillahi r-rahmani r-rahim' ('In the name of Allah, the Most Gracious, the Most Merciful') in Latin letters. Respell it the way your language conventionally transliterates Arabic; do not translate its meaning, which the line below already gives."
+  },
+  "asmaSubtitle": "The 99 Names of Allah",
+  "@asmaSubtitle": {
+    "description": "Small line under the Arabic title at the top of the screen listing the ninety-nine names of God, saying in the user's language what the screen contains. 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it. 11px text on one line."
+  },
+  "asmaSearchHint": "Search by name or meaning...",
+  "@asmaSearchHint": {
+    "description": "Placeholder text inside the search box at the top of the 99 Names of Allah screen. 'Name' means one of the ninety-nine names in its Latin-letter spelling and 'meaning' its English sense, either of which the user may type. Keep the three trailing full stops."
+  },
+  "asmaNoResults": "No names found",
+  "@asmaNoResults": {
+    "description": "Headline of the empty state on the 99 Names of Allah screen when the user's search text matches none of the names."
+  },
+  "asmaNoResultsHint": "Try searching by transliteration or meaning",
+  "@asmaNoResultsHint": {
+    "description": "Advice under the 'No names found' headline on the 99 Names of Allah screen, naming the two things the search box matches on: the name written in Latin letters, and its meaning."
+  },
+  "asmaGlorifiedTranslation": "Glorified and Exalted be He",
+  "@asmaGlorifiedTranslation": {
+    "description": "Small caption at the very bottom of the detail sheet for one of the 99 Names of Allah, giving the meaning of the Arabic phrase 'Subhanahu wa Ta'ala' printed directly above it — a formula of praise said after mentioning God. 'He' refers to God. 11px dim text on one line."
+  },
+  "duasSearchHint": "Search duas in any language…",
+  "@duasSearchHint": {
+    "description": "Placeholder text inside the search box at the top of the Duas screen. It tells the user they can type in any of the supported languages (Arabic, English, transliteration or Roman Urdu) to find a supplication. Keep it short enough to fit one line in a narrow phone-width text field."
+  },
+  "duasNoResults": "No duas found",
+  "@duasNoResults": {
+    "description": "Empty-state message shown centred in the Duas screen when the user's search text matches none of the supplications. 'Duas' are Islamic supplications/prayers."
+  },
+  "duasCount": "{count, plural, =1{{count} Dua} other{{count} Duas}}",
+  "@duasCount": {
+    "description": "Small badge showing how many supplications are in a group. Used in two places on the Duas screen: on each category card (e.g. '24 Duas') and under each collapsible prophet heading inside a category. 'Dua' is an Islamic supplication; keep the word untranslated if it is the usual loanword in the target language.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "24"
+      }
+    }
+  },
+  "duasRomanUrduLabel": "Roman Urdu",
+  "@duasRomanUrduLabel": {
+    "description": "Tiny all-caps section heading above the Roman Urdu rendering of a supplication, inside an expanded dua card. 'Roman Urdu' means the Urdu language written in Latin letters rather than the Urdu script. The app uppercases this string itself, so provide it in normal title case."
+  },
+  "duasCopy": "Copy",
+  "@duasCopy": {
+    "description": "Label of the small button at the bottom of an expanded dua card that copies the supplication's text to the device clipboard. Shown next to a copy icon, so it must stay very short (one word)."
+  },
+  "duasCopiedToClipboard": "Dua copied to clipboard",
+  "@duasCopiedToClipboard": {
+    "description": "Brief confirmation toast (snackbar) shown after the user taps the Copy button on a dua card and the supplication's text has been placed on the device clipboard."
+  },
+  "duasCopySourceLine": "Source: {source}",
+  "@duasCopySourceLine": {
+    "description": "Last line of the plain text that is copied to the clipboard when the user copies a dua. It credits the scripture or hadith collection the supplication is taken from. Translate only the word 'Source:'; the reference itself is inserted as-is and is not translated.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "Sahih Bukhari 6307"
+      }
+    }
+  },
+  "hasanatCalculatorTitle": "Hasanat Calculator",
+  "@hasanatCalculatorTitle": {
+    "description": "Title in the top bar of the rewards calculator screen, which works out how many rewards a charitable donation may earn. 'Hasanat' is the Arabic word for good deeds or rewards recorded for a believer: transliterate it conventionally rather than translating its meaning. Two words at 16px on one centred line."
+  },
+  "hasanatCalculatorSubtitle": "Rewards promised in the Quran & Hadeeth",
+  "@hasanatCalculatorSubtitle": {
+    "description": "Small italic second line under the 'Hasanat Calculator' title in the top bar, saying that the figures on this screen come from Islamic scripture rather than from the app's own arithmetic. 'Hadeeth' means the recorded sayings of the Prophet Muhammad: transliterate it conventionally rather than translating it. Very small text (10px) on one line — stay brief."
+  },
+  "hasanatTabOneTime": "One Time",
+  "@hasanatTabOneTime": {
+    "description": "Name of the first of two tabs on the rewards calculator screen. This tab calculates the reward for a single, one-off donation. Sits in a narrow tab, so keep it to one or two short words."
+  },
+  "hasanatTabRecurring": "Recurring",
+  "@hasanatTabRecurring": {
+    "description": "Name of the second of two tabs on the rewards calculator screen. This tab calculates the reward for a donation repeated every month over a chosen number of years. Sits in a narrow tab, so keep it to one or two short words."
+  },
+  "hasanatSectionAmount": "Amount",
+  "@hasanatSectionAmount": {
+    "description": "Tiny all-caps heading above the box where the user types the sum of money they intend to give, on the one-off donation tab of the rewards calculator. The app uppercases it; keep it to one short word."
+  },
+  "hasanatSectionMonthlyAmount": "Monthly Amount",
+  "@hasanatSectionMonthlyAmount": {
+    "description": "Tiny all-caps heading above the box where the user types how much they intend to give each month, on the recurring donation tab of the rewards calculator. The app uppercases it."
+  },
+  "hasanatSectionDuration": "Duration",
+  "@hasanatSectionDuration": {
+    "description": "Used twice on the recurring tab of the rewards calculator: as the tiny all-caps heading above the slider that sets how long the monthly giving continues, and as the label of the matching row in the summary card (where it is shown in normal case). The app uppercases it for the heading, so supply it in normal case. One short word."
+  },
+  "hasanatSectionTypeOfDeed": "Type of Deed",
+  "@hasanatSectionTypeOfDeed": {
+    "description": "Tiny all-caps heading above a row of chips where the user picks what kind of charitable act they are giving (ordinary charity, an endowment, feeding the poor, and so on). 'Deed' here means a good act, not a legal document. The app uppercases it."
+  },
+  "hasanatDurationMonths": "{count, plural, =1{{count} month} other{{count} months}}",
+  "@hasanatDurationMonths": {
+    "description": "A giving period shorter than a year on the recurring tab of the rewards calculator. Shown large under the duration slider, as the left end label of that slider (always '1 month' there), and in the summary card. Plural because many languages inflect the noun.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "hasanatDurationYears": "{count, plural, =1{{count} year} other{{count} years}}",
+  "@hasanatDurationYears": {
+    "description": "A giving period of a whole number of years on the recurring tab of the rewards calculator. Shown large under the duration slider, as the right end label of that slider (always '30 years' there), and in the summary card. Plural because many languages inflect the noun.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "hasanatDurationYearsMonthsShort": "{years} yr {months}m",
+  "@hasanatDurationYearsMonthsShort": {
+    "description": "A giving period of some years plus some leftover months on the recurring tab of the rewards calculator, e.g. '5 yr 7m'. 'yr' and 'm' are deliberate abbreviations of 'years' and 'months' — abbreviate in the target language too, since this must stay on one line in a narrow space. Only used when the number of months is not an exact multiple of twelve.",
+    "placeholders": {
+      "years": {
+        "type": "int",
+        "example": "5"
+      },
+      "months": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "hasanatCurrencyAmount": "{symbol}{amount}",
+  "@hasanatCurrencyAmount": {
+    "description": "A sum of money in the summary card of the recurring tab, e.g. '$1,500'. {symbol} is the currency sign the user picked and {amount} is the already-formatted number — leave both untouched, but move the symbol after the amount, or add a space, if that is how your language writes money.",
+    "placeholders": {
+      "symbol": {
+        "type": "String",
+        "example": "$"
+      },
+      "amount": {
+        "type": "String",
+        "example": "1,500"
+      }
+    }
+  },
+  "hasanatRowMonthlyContribution": "Monthly contribution",
+  "@hasanatRowMonthlyContribution": {
+    "description": "Label of the first row in the 'Your Giving Plan' summary card on the recurring tab, whose value on the right is the sum of money given each month."
+  },
+  "hasanatRowTotalGiven": "Total given",
+  "@hasanatRowTotalGiven": {
+    "description": "Label of the last row in the 'Your Giving Plan' summary card on the recurring tab, whose value on the right is the monthly sum multiplied by the number of months — the whole amount the user would give over the chosen period."
+  },
+  "hasanatYourGivingPlan": "YOUR GIVING PLAN",
+  "@hasanatYourGivingPlan": {
+    "description": "Small all-capitals heading at the top of the card that summarises the recurring donation the user has configured (monthly sum, duration, total). Supplied already in capitals; use capital letters if that is natural for your language."
+  },
+  "hasanatMinimumPerSource": "Minimum (per {source})",
+  "@hasanatMinimumPerSource": {
+    "description": "Label of a small highlighted row showing the lowest number of rewards the chosen donation may earn, with the scripture that states that multiplier given in brackets. {source} is a scripture citation such as 'Quran 6:160' supplied by the app: it is a scholarly reference, so leave its numerals and its chapter:verse format exactly as they arrive. Translate only the word 'Minimum' and the word 'per', which here means 'according to'.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "Quran 6:160"
+      }
+    }
+  },
+  "hasanatUpToPerSource": "Up to (per {source})",
+  "@hasanatUpToPerSource": {
+    "description": "Label of a small highlighted row showing the highest number of rewards the chosen donation may earn, with the scripture that states that multiplier given in brackets. {source} is a scripture citation such as 'Quran 2:261' supplied by the app: it is a scholarly reference, so leave its numerals and its chapter:verse format exactly as they arrive. 'Up to' means 'as much as'; 'per' here means 'according to'.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "Quran 2:261"
+      }
+    }
+  },
+  "hasanatUnit": "hasanat",
+  "@hasanatUnit": {
+    "description": "Unit written in small grey text immediately after the calculated reward figure, e.g. '7,000 hasanat'. 'Hasanat' is the Arabic plural for good deeds or rewards recorded for a believer: transliterate it conventionally rather than translating its meaning. It always follows a number greater than one, so use a plural form if your language has one. Lower case, very little room."
+  },
+  "hasanatNiyyahTitle": "Renew your niyyah",
+  "@hasanatNiyyahTitle": {
+    "description": "Heading of the small reminder banner at the top of both tabs of the rewards calculator, next to a heart icon, urging the user to refresh their inner intention before giving. 'Niyyah' is the Arabic term for the sincere intention behind a religious act: transliterate it conventionally rather than translating it. One short line."
+  },
+  "hasanatNiyyahBody": "All deeds are by intention. Only Allah knows what He accepts.",
+  "@hasanatNiyyahBody": {
+    "description": "Two short sentences in the reminder banner under 'Renew your niyyah', paraphrasing a well-known hadith that the worth of an act depends on the intention behind it, and cautioning that acceptance rests with God alone. 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it."
+  },
+  "hasanatSelectCurrency": "Select Currency",
+  "@hasanatSelectCurrency": {
+    "description": "Heading at the top of the sheet that slides up from the bottom of the rewards calculator listing currency codes (USD, GBP, EUR and so on) for the user to pick from."
+  },
+  "hasanatPromiseHeadingQuran": "Allah's Promise",
+  "@hasanatPromiseHeadingQuran": {
+    "description": "Small all-capitals caption at the top of a quotation card when the quotation comes from the Quran, marking the words as God's own pledge of reward. Shown in capitals with wide letter spacing, so keep it short. 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it."
+  },
+  "hasanatPromiseHeadingHadeeth": "Prophet ﷺ said",
+  "@hasanatPromiseHeadingHadeeth": {
+    "description": "Small all-capitals caption at the top of a quotation card when the quotation is a hadith, that is, a reported saying of the Prophet Muhammad. Shown in capitals with wide letter spacing, so keep it short. 'ﷺ' is the Arabic honorific glyph for 'peace be upon him': keep it exactly as it is, in the same position relative to the word for 'Prophet'."
+  },
+  "hasanatBadgeQuran": "QURAN",
+  "@hasanatBadgeQuran": {
+    "description": "Text on a tiny gold pill badge in the top right corner of a quotation card, marking that quotation as coming from the Quran. Supplied already in capitals; only about six characters fit."
+  },
+  "hasanatBadgeHadeeth": "HADEETH",
+  "@hasanatBadgeHadeeth": {
+    "description": "Text on a tiny gold pill badge in the top right corner of a quotation card, marking that quotation as a hadith — a recorded saying of the Prophet Muhammad. Transliterate the term conventionally rather than translating it. Supplied already in capitals; only about eight characters fit."
+  },
+  "hasanatSourceAttribution": "— {source}",
+  "@hasanatSourceAttribution": {
+    "description": "Citation line under a Quran or hadith quotation, naming where the quotation is from, e.g. '— Sahih al-Bukhari 450'. {source} is a scholarly reference supplied by the app and is never translated here: leave its numerals, punctuation and reference format untouched. The leading em dash (—) is the attribution mark; keep it, or replace it with the mark your language uses for a quotation's source.",
+    "placeholders": {
+      "source": {
+        "type": "String",
+        "example": "Surah Al-Baqarah 2:261"
+      }
+    }
+  },
+  "hasanatConditionsTitle": "Conditions for Reward",
+  "@hasanatConditionsTitle": {
+    "description": "Heading of the card listing what must be true for a charitable act to earn the promised reward (sincere intention, lawfully earned wealth, and so on). Shown in small bold capitals-ish letters with wide spacing next to a tick icon; keep it to about three words."
+  },
+  "hasanatDisclaimer": "The figures above are read directly from the cited verses — they are Allah's promise, not our calculation. Only Allah knows true acceptance.",
+  "@hasanatDisclaimer": {
+    "description": "Small grey note at the very bottom of both tabs of the rewards calculator, next to an information icon. It makes clear that the multipliers shown come from the quoted scripture rather than from the app, and that whether a deed is accepted is known only to God. 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it. Keep the em dash (—) or replace it with the equivalent separator in your language."
+  },
+  "qiblaTitle": "Qibla Direction",
+  "@qiblaTitle": {
+    "description": "Title in the top bar of the compass screen that points towards Mecca. 'Qibla' is the direction Muslims face in prayer: transliterate it conventionally rather than translating its meaning. One centred line at 16px."
+  },
+  "qiblaHoldPhoneFlat": "Hold phone flat for accurate reading",
+  "@qiblaHoldPhoneFlat": {
+    "description": "Warning on an orange strip across the top of the compass screen, shown while the phone is tilted more than thirty degrees from horizontal, which makes the compass unreliable. One line of small text."
+  },
+  "qiblaBearingDegrees": "{degrees}° to Qibla",
+  "@qiblaBearingDegrees": {
+    "description": "The compass bearing of Mecca from where the user is standing, shown prominently under the compass dial, e.g. '58.3° to Qibla'. {degrees} arrives already formatted to one decimal place. The degree sign (°) belongs with the number; keep it next to {degrees}. 'Qibla' is the direction Muslims face in prayer: transliterate rather than translate.",
+    "placeholders": {
+      "degrees": {
+        "type": "String",
+        "example": "58.3"
+      }
+    }
+  },
+  "qiblaDistanceFromMecca": "{distance} km from Mecca",
+  "@qiblaDistanceFromMecca": {
+    "description": "How far the user is from Mecca in a straight line, shown under the compass bearing, e.g. '4,312 km from Mecca'. {distance} is a whole number of kilometres, already grouped for the user's locale. 'km' is the international abbreviation for kilometres — keep it unless your language genuinely writes it differently. 'Mecca' is the city in Saudi Arabia; use the name customary in your language.",
+    "placeholders": {
+      "distance": {
+        "type": "String",
+        "example": "4,312"
+      }
+    }
+  },
+  "qiblaFacingQibla": "Facing Qibla",
+  "@qiblaFacingQibla": {
+    "description": "Confirmation shown in a green pill under the compass once the phone is pointing within two degrees of Mecca, meaning the user is now correctly oriented for prayer. 'Qibla' is the direction Muslims face in prayer: transliterate rather than translate. Two short words."
+  },
+  "qiblaFaceArrowDirection": "Face the direction of the arrow",
+  "@qiblaFaceArrowDirection": {
+    "description": "Instruction shown in a pill under the compass while the phone is not yet pointing at Mecca, telling the user to turn until they are facing the way the compass needle points. 'Face' is a verb here, meaning 'turn to look towards'. One line of small text."
+  },
+  "qiblaRecalibrate": "Recalibrate",
+  "@qiblaRecalibrate": {
+    "description": "Label on a small flat button under the compass that reopens the instructions for waving the phone about to re-calibrate its magnetic sensor. One short word."
+  },
+  "qiblaLocationFooter": "{city} ({lat}°N, {lon}°E)",
+  "@qiblaLocationFooter": {
+    "description": "Tiny grey footer at the bottom of the compass screen stating the place the bearing was computed for, e.g. 'London (51.5074°N, -0.1278°E)'. {city} is a place name supplied by the device and is not translated. {lat} and {lon} arrive already formatted to four decimal places. 'N' and 'E' abbreviate north and east — use your language's one-letter abbreviations if it has them, and keep each next to its own number. The values may be negative, in which case they denote south and west; this is accepted as-is.",
+    "placeholders": {
+      "city": {
+        "type": "String",
+        "example": "London"
+      },
+      "lat": {
+        "type": "String",
+        "example": "51.5074"
+      },
+      "lon": {
+        "type": "String",
+        "example": "-0.1278"
+      }
+    }
+  },
+  "qiblaCalibrationInstruction": "Move your phone in a\nfigure-8 motion to\ncalibrate the compass",
+  "@qiblaCalibrationInstruction": {
+    "description": "Instruction on the dark overlay that covers the compass screen for three seconds, telling the user to wave the phone through the air along a path shaped like the numeral 8 so its magnetic sensor re-calibrates. The three \\n characters are deliberate line breaks for the centred layout — keep roughly three short lines and put the breaks where your wording divides naturally. 'figure-8' describes the shape of the movement, not a quantity."
+  },
+  "qiblaTapToDismiss": "Tap to dismiss",
+  "@qiblaTapToDismiss": {
+    "description": "Faint hint at the bottom of the compass calibration overlay, telling the user they can touch anywhere on the screen to close it rather than waiting. Two or three short words."
+  },
+  "qiblaLocationRequired": "Location required for Qibla direction",
+  "@qiblaLocationRequired": {
+    "description": "Message filling the compass screen when the app does not know where the user is and therefore cannot work out which way Mecca lies. 'Qibla' is the direction Muslims face in prayer: transliterate rather than translate. Centred over two short lines."
+  },
+  "qiblaDetectLocation": "Detect Location",
+  "@qiblaDetectLocation": {
+    "description": "Label on the main gold button shown when the compass screen has no location, which asks the device to find the user's position. Keep it short enough to fit one line on a button."
+  },
+  "qiblaAccuracyHigh": "Accuracy: High",
+  "@qiblaAccuracyHigh": {
+    "description": "Status shown beside a green tick in the top right of the compass screen when the magnetic readings are steady and the bearing can be trusted. Very small text (11px) on one line; 'Accuracy' labels the reading and 'High' is its level."
+  },
+  "qiblaAccuracyMedium": "Accuracy: Medium",
+  "@qiblaAccuracyMedium": {
+    "description": "Status shown beside an orange warning triangle in the top right of the compass screen when the magnetic readings wobble somewhat. Very small text (11px) on one line; 'Accuracy' labels the reading and 'Medium' is its level."
+  },
+  "qiblaAccuracyLow": "Accuracy: Low",
+  "@qiblaAccuracyLow": {
+    "description": "Status shown beside a red cross in the top right of the compass screen when the magnetic readings are too noisy to trust, usually because of nearby metal or electronics. Very small text (11px) on one line; 'Accuracy' labels the reading and 'Low' is its level."
+  },
+  "qiblaCompassNorth": "N",
+  "@qiblaCompassNorth": {
+    "description": "Single-letter abbreviation for north, drawn at the top of the compass dial on the Qibla screen. Use the initial your language uses on a compass rose; there is room for one or at most two characters."
+  },
+  "qiblaCompassEast": "E",
+  "@qiblaCompassEast": {
+    "description": "Single-letter abbreviation for east, drawn at the right of the compass dial on the Qibla screen. Use the initial your language uses on a compass rose; there is room for one or at most two characters."
+  },
+  "qiblaCompassSouth": "S",
+  "@qiblaCompassSouth": {
+    "description": "Single-letter abbreviation for south, drawn at the bottom of the compass dial on the Qibla screen. Use the initial your language uses on a compass rose; there is room for one or at most two characters."
+  },
+  "qiblaCompassWest": "W",
+  "@qiblaCompassWest": {
+    "description": "Single-letter abbreviation for west, drawn at the left of the compass dial on the Qibla screen. Use the initial your language uses on a compass rose; there is room for one or at most two characters."
+  },
+  "sponsorScreenTitle": "Support Get Quran",
+  "@sponsorScreenTitle": {
+    "description": "Title in the top bar of the screen that opens the project's donation page in an embedded web view. 'Get Quran' is the app's own name and must stay untranslated; translate only the word 'Support', which here means 'help fund'. One centred line at 16px next to a heart icon."
+  },
+  "hifzSearchHint": "Search surah name or number…",
+  "@hifzSearchHint": {
+    "description": "Placeholder text inside the search box at the top of the Hifz (Quran memorisation) screen. The user types either a chapter's name or its number from 1 to 114 to filter the list below. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is. Keep the trailing ellipsis character."
+  },
+  "hifzMetricAyahs": "Ayahs",
+  "@hifzMetricAyahs": {
+    "description": "Caption under a large number on one of three small statistic cards at the top of the Hifz (memorisation) screen; the number is how many individual Quran verses the user has marked as memorised so far. A bare noun with no number attached, so use the plural form. 'Ayah' is the Arabic word for a Quran verse: transliterate it conventionally rather than translating its meaning. The card is narrow — one short word."
+  },
+  "hifzMetricTodayReps": "Today's Reps",
+  "@hifzMetricTodayReps": {
+    "description": "Caption under a large number on one of three small statistic cards at the top of the Hifz (memorisation) screen; the number is how many times the user has listened through a verse today while practising. 'Reps' is short for 'repetitions'. The card is narrow (about 12 characters) — abbreviate in the target language too if needed."
+  },
+  "hifzQuranProgress": "Quran Progress",
+  "@hifzQuranProgress": {
+    "description": "Heading at the left of a card on the Hifz (memorisation) screen that holds a progress bar for the whole Quran; the matching percentage sits at the right of the same row. Two short words."
+  },
+  "hifzProgressPercent": "{percent}%",
+  "@hifzProgressPercent": {
+    "description": "The share of the whole Quran the user has memorised, shown at the right of the 'Quran Progress' row on the Hifz screen, e.g. '12.3%'. The value arrives already formatted with one decimal place. Keep the per-cent sign unless your language places or writes it differently.",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "12.3"
+      }
+    }
+  },
+  "hifzAyahsOfTotal": "{count} of {total, plural, =1{{total} ayah} other{{total} ayahs}}",
+  "@hifzAyahsOfTotal": {
+    "description": "Small caption under the whole-Quran progress bar on the Hifz (memorisation) screen, saying how many verses of the Quran the user has memorised out of all 6236, e.g. '42 of 6236 ayahs'. 'Ayah' is the Arabic word for a Quran verse: transliterate it conventionally rather than translating its meaning. The plural applies to the total, which in practice is always 6236.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "42"
+      },
+      "total": {
+        "type": "int",
+        "example": "6236"
+      }
+    }
+  },
+  "hifzSearchEmptyHint": "Try a different name or number",
+  "@hifzSearchEmptyHint": {
+    "description": "Advice shown under the 'No surahs found' headline on the Hifz (memorisation) screen when the user's search text matches no chapter of the Quran. It names the two things the search box matches on: the chapter's transliterated Arabic name and its number from 1 to 114."
+  },
+  "hifzGetStartedTitle": "Begin Your Hifz Journey",
+  "@hifzGetStartedTitle": {
+    "description": "Headline of the welcoming block shown low on the Hifz screen while the user has not yet memorised a single verse. 'Hifz' is the memorisation of the Quran by heart: transliterate it conventionally rather than translating its meaning."
+  },
+  "hifzGetStartedBody": "Tap any surah below to start memorizing.\nMark each ayah with ★ as you learn it.",
+  "@hifzGetStartedBody": {
+    "description": "Two-sentence explanation under the 'Begin Your Hifz Journey' headline on the Hifz screen, telling the first-time user to open a chapter from the list below and then mark each verse with the star button once learnt. Keep the line break (\\n) between the two sentences and keep the ★ character, which stands for the star button in the player. 'Surah' is a chapter of the Quran and 'ayah' a verse: transliterate both conventionally rather than translating them."
+  },
+  "hifzGetStartedQuote": "\"And We have certainly made the Quran easy to remember\" — 54:17",
+  "@hifzGetStartedQuote": {
+    "description": "Encouraging Quran quotation in a small gold pill at the bottom of the welcome block on the Hifz screen, shown before the user has memorised anything. '54:17' is the conventional citation of chapter 54, verse 17 — keep the numerals and the colon exactly as they are. Use your language's established wording of this verse if there is one, keep it inside quotation marks, and keep the em dash before the citation (or your language's equivalent separator)."
+  },
+  "hifzSortBy": "Sort by:",
+  "@hifzSortBy": {
+    "description": "Small label at the left of a row of three buttons on the Hifz screen that change the order of the chapter list below. The buttons follow it on the same line, so keep it short and keep the trailing colon if your language uses one."
+  },
+  "hifzSortSurah": "Surah",
+  "@hifzSortSurah": {
+    "description": "First of three small pill buttons that reorder the chapter list on the Hifz screen; this one restores the Quran's own order, chapter 1 to 114. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is. The pill fits about 10 characters."
+  },
+  "hifzSortProgress": "Progress",
+  "@hifzSortProgress": {
+    "description": "Second of three small pill buttons that reorder the chapter list on the Hifz screen; this one puts the chapters the user has memorised most of at the top. The pill fits about 10 characters."
+  },
+  "hifzSortShortest": "Shortest",
+  "@hifzSortShortest": {
+    "description": "Third of three small pill buttons that reorder the chapter list on the Hifz screen; this one puts the chapters with the fewest verses first, as those are easiest to memorise. The pill fits about 10 characters."
+  },
+  "hifzTileVerseProgress": "{count} / {total, plural, =1{{total} verse} other{{total} verses}}",
+  "@hifzTileVerseProgress": {
+    "description": "Caption under the small progress bar on each chapter row of the Hifz screen, giving how many of that chapter's verses the user has memorised, e.g. '3 / 7 verses'. Very small text in a tight row. The plural applies to the chapter's total number of verses.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "hifzLoopMediaTitle": "{surahName} – Verse {verse}",
+  "@hifzLoopMediaTitle": {
+    "description": "Track title shown in the phone's own media player and on the lock screen while a verse is being played on repeat in the memorisation looper, e.g. 'Al-Fatihah – Verse 3'. {surahName} is the chapter's transliterated Arabic name and is never translated. Keep the en dash or replace it with your language's equivalent separator.",
+    "placeholders": {
+      "surahName": {
+        "type": "String",
+        "example": "Al-Fatihah"
+      },
+      "verse": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "hifzLoopMediaAlbum": "Hifz",
+  "@hifzLoopMediaAlbum": {
+    "description": "Album name shown under the track title in the phone's own media player and on the lock screen while the memorisation looper is playing. 'Hifz' is the memorisation of the Quran by heart: transliterate it conventionally rather than translating its meaning."
+  },
+  "hifzLoopMemorizedOfTotal": "{count} / {total} memorized",
+  "@hifzLoopMemorizedOfTotal": {
+    "description": "Second line of the title bar of the memorisation looper, under the chapter's name, giving how many of the chapter's verses the user has marked as memorised, e.g. '3 / 7 memorized'. A very small font on one line — stay terse.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "hifzLoopWalkthroughTitle": "How Hifz works",
+  "@hifzLoopWalkthroughTitle": {
+    "description": "Heading of the card that slides up from the bottom the first time the user ever opens the memorisation looper, above three one-line tips. 'Hifz' is the memorisation of the Quran by heart: transliterate it conventionally rather than translating its meaning."
+  },
+  "hifzLoopTipMark": "Tap ★ once you've memorized a verse",
+  "@hifzLoopTipMark": {
+    "description": "First of three tips on the introductory card of the memorisation looper. ★ stands for the star button at the bottom right of the player; keep that character rather than naming it in words."
+  },
+  "hifzLoopTipAutoLoop": "Each verse loops automatically — 3× by default",
+  "@hifzLoopTipAutoLoop": {
+    "description": "Second of three tips on the introductory card of the memorisation looper, saying that each verse is replayed by itself three times before moving on, unless the user changes that number in the settings. '3×' means 'three times': keep the digit and use your language's multiplier mark. Keep the em dash or your language's equivalent separator."
+  },
+  "hifzLoopTipTune": "Tap ⚙ to change repeats, speed, or auto-advance",
+  "@hifzLoopTipTune": {
+    "description": "Third of three tips on the introductory card of the memorisation looper, listing the three settings behind the sliders icon in the top right: how many times each verse repeats, how fast it is played, and whether the player moves on to the next verse by itself. ⚙ stands for that icon; keep the character rather than naming it in words."
+  },
+  "hifzLoopLoadingVerse": "Loading verse…",
+  "@hifzLoopLoadingVerse": {
+    "description": "Label next to a small spinner on the main button of the introductory card of the memorisation looper, shown while the verse text and recitation are still being fetched; the button cannot be tapped yet. Keep the trailing ellipsis character."
+  },
+  "hifzLoopStartMemorizing": "Start Memorizing",
+  "@hifzLoopStartMemorizing": {
+    "description": "Label on the wide button at the bottom of the introductory card of the memorisation looper, which dismisses the card and begins the guided tour of the player. Keep it short enough for one line on a button."
+  },
+  "hifzLoopTooltipMark": "Tap ★ to mark this verse memorized",
+  "@hifzLoopTooltipMark": {
+    "description": "First step of the guided tour of the memorisation looper: a small gold speech bubble pointing down at the star button in the player controls. ★ stands for that button; keep the character. Two or three short lines of white text at most."
+  },
+  "hifzLoopTapToContinue": "Tap anywhere to continue",
+  "@hifzLoopTapToContinue": {
+    "description": "Faint second line inside the first speech bubble of the guided tour of the memorisation looper, telling the user that a tap anywhere on the screen moves on to the next tip. Very small text."
+  },
+  "hifzLoopTooltipRepeats": "Tap ⚙ to adjust repeats per verse",
+  "@hifzLoopTooltipRepeats": {
+    "description": "Second step of the guided tour of the memorisation looper: a small gold speech bubble pointing up at the sliders icon in the top right of the title bar, which opens the settings panel. ⚙ stands for that icon; keep the character. Two or three short lines of white text at most."
+  },
+  "hifzLoopTapToDismiss": "Tap anywhere to dismiss",
+  "@hifzLoopTapToDismiss": {
+    "description": "Faint second line inside the last speech bubble of the guided tour of the memorisation looper, telling the user that a tap anywhere closes the tour for good. Very small text."
+  },
+  "hifzLoopMashaAllah": "Masha Allah!",
+  "@hifzLoopMashaAllah": {
+    "description": "Congratulatory headline on the card that appears once the user has marked every verse of a chapter as memorised, shown directly under the same phrase written in Arabic script. A transliterated Arabic expression of praise and delight at someone's achievement: respell it as your language conventionally does rather than translating its meaning."
+  },
+  "hifzLoopYouHaveMemorized": "You have memorized",
+  "@hifzLoopYouHaveMemorized": {
+    "description": "Small lead-in line on the congratulation card shown when a whole chapter has been memorised; the chapter's name follows it on the next line, in Latin letters and then in Arabic script. Word it so that a name reads naturally after it."
+  },
+  "hifzLoopQuranQuote": "\"And We have certainly made the Quran easy to remember.\"\n— Quran 54:17",
+  "@hifzLoopQuranQuote": {
+    "description": "Quran quotation in a small panel on the congratulation card shown when a whole chapter has been memorised. Keep the line break (\\n) between the quotation and its citation, keep the quotation inside quotation marks, and keep '54:17' (chapter 54, verse 17) with its numerals and colon as they are. Use your language's established wording of this verse if there is one, and keep the em dash before the citation or replace it with your language's equivalent separator."
+  },
+  "hifzLoopVersesMemorizedOfTotal": "{count} of {total, plural, =1{{total} verse} other{{total} verses}} memorized",
+  "@hifzLoopVersesMemorizedOfTotal": {
+    "description": "Small summary line near the bottom of the congratulation card shown when a whole chapter has been memorised, e.g. '7 of 7 verses memorized'. In practice the two numbers are always equal here. The plural applies to the total.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "7"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      }
+    }
+  },
+  "hifzLoopAlhamdulillah": "Alhamdulillah  ✓",
+  "@hifzLoopAlhamdulillah": {
+    "description": "Label on the gold pill button that closes the congratulation card shown when a whole chapter has been memorised. A transliterated Arabic expression of thanks to God ('praise be to God'): respell it as your language conventionally does rather than translating its meaning. Keep the trailing check mark (✓) and the two spaces before it."
+  },
+  "hifzLoopRepeatsPerVerse": "Repeats per verse",
+  "@hifzLoopRepeatsPerVerse": {
+    "description": "Label of the first row of the settings panel of the memorisation looper, with minus and plus buttons at the right that set how many times each verse is replayed before the player moves on. Space is tight: the row also holds the two buttons and the number."
+  },
+  "hifzLoopRepeatsValue": "{count}×",
+  "@hifzLoopRepeatsValue": {
+    "description": "The chosen number of repeats, shown between the minus and plus buttons in the settings panel of the memorisation looper, e.g. '3×' meaning each verse plays three times. The '×' means 'times'; replace it only if your language has a different established multiplier mark. The slot is about three characters wide.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "hifzLoopAutoAdvance": "Auto-advance",
+  "@hifzLoopAutoAdvance": {
+    "description": "Label of the row in the settings panel of the memorisation looper whose on/off switch decides whether the player moves on to the next verse by itself once the chosen number of repeats is done. Keep it to one or two short words."
+  },
+  "hifzLoopSpeed": "Speed",
+  "@hifzLoopSpeed": {
+    "description": "Label of the row in the settings panel of the memorisation looper followed by five small buttons choosing how fast the recitation is played. One short word — the buttons share the row."
+  },
+  "hifzLoopSpeedValue": "{speed}×",
+  "@hifzLoopSpeedValue": {
+    "description": "One of five small playback-speed buttons in the settings panel of the memorisation looper, e.g. '1.0×' meaning normal speed and '1.5×' meaning one and a half times as fast. The '×' means 'times'; replace it only if your language has a different established multiplier mark. The button is only a few characters wide.",
+    "placeholders": {
+      "speed": {
+        "type": "String",
+        "example": "1.5"
+      }
+    }
+  },
+  "hifzLoopMemorized": "Memorized",
+  "@hifzLoopMemorized": {
+    "description": "Gold label next to a star icon under the verse in the memorisation looper, shown only once the user has marked the verse on screen as memorised. A state, not a button. One short word."
+  },
+  "hifzLoopMemorizedShort": "Mem.",
+  "@hifzLoopMemorizedShort": {
+    "description": "Tiny caption under the star button in the player controls of the memorisation looper while the verse on screen is already marked as memorised; tapping unmarks it. A deliberate abbreviation of 'memorized' — only about five characters fit in a 9px font, so abbreviate in the target language too."
+  },
+  "hifzLoopMarkShort": "Mark",
+  "@hifzLoopMarkShort": {
+    "description": "Tiny caption under the star button in the player controls of the memorisation looper while the verse on screen is not yet marked as memorised; tapping marks it. A verb in the imperative. Only about five characters fit in a 9px font."
+  },
+  "hifzLoopProgressInSurah": "{count} of {total} verses memorized in {surahName}",
+  "@hifzLoopProgressInSurah": {
+    "description": "Caption under the thin progress bar at the very bottom of the memorisation looper, e.g. '3 of 7 verses memorized in Al-Fatihah'. {surahName} is the chapter's transliterated Arabic name and is never translated. One line in a 10px font, so stay terse.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      },
+      "total": {
+        "type": "int",
+        "example": "7"
+      },
+      "surahName": {
+        "type": "String",
+        "example": "Al-Fatihah"
+      }
+    }
+  },
+  "modePickerPreviewSurahName": "Al-Fatihah",
+  "@modePickerPreviewSurahName": {
+    "description": "Title bar of the one-time screen where the user chooses how much of each verse to show while reading. It names the chapter of the Quran used for the sample verses on that screen, the first one. A transliterated Arabic name: respell it as your language conventionally does rather than translating its meaning."
+  },
+  "modePickerSubtitle": "Choose how you want to read",
+  "@modePickerSubtitle": {
+    "description": "One-line instruction under the title bar of the one-time screen where the user picks a reading layout, above three sample cards. Centred on one or two lines."
+  },
+  "modePickerScrollHint": "scroll to compare",
+  "@modePickerScrollHint": {
+    "description": "Caption under a gently bouncing downward arrow floating above the footer of the reading-layout picker, telling the user that the other sample cards are further down the page. Shown in lower case with wide letter spacing in a very small font, and it disappears as soon as the user scrolls — keep it to two or three short words."
+  },
+  "modePickerChangeLaterHint": "You can always change this in Settings › Text Settings",
+  "@modePickerChangeLaterHint": {
+    "description": "Reassuring line in the pinned footer of the reading-layout picker, saying the choice is not final. 'Settings' and 'Text Settings' are the names of two screens in this app and should match how those are worded in your translation; '›' separates the two steps of that path and should be kept."
+  },
+  "modePickerStartReading": "Start Reading — {mode}",
+  "@modePickerStartReading": {
+    "description": "Label on the wide gold button at the bottom of the reading-layout picker, which saves the choice and closes the screen, e.g. 'Start Reading — Arabic + Translation'. {mode} is the name of the layout the user has selected, already translated. Keep the em dash or replace it with your language's equivalent separator; the whole label must fit one line on a button.",
+    "placeholders": {
+      "mode": {
+        "type": "String",
+        "example": "Arabic + Translation"
+      }
+    }
+  },
+  "modePickerModeTranslationOnly": "Translation only",
+  "@modePickerModeTranslationOnly": {
+    "description": "Name of the first of three reading layouts, which shows only the translated meaning of each verse and no Arabic. Appears as the title of its sample card on the reading-layout picker and inside the label of the confirm button, so keep it short."
+  },
+  "modePickerModeTranslationOnlyDesc": "Just the meaning — clean and focused",
+  "@modePickerModeTranslationOnlyDesc": {
+    "description": "One-line description under the 'Translation only' card title on the reading-layout picker, praising the layout as uncluttered. Keep the em dash or replace it with your language's equivalent separator."
+  },
+  "modePickerModeArabicTranslation": "Arabic + Translation",
+  "@modePickerModeArabicTranslation": {
+    "description": "Name of the second of three reading layouts, which shows the Arabic scripture with its translated meaning under each verse. Appears as the title of its sample card on the reading-layout picker and inside the label of the confirm button, so keep it short; the '+' means 'together with' and can be kept as-is."
+  },
+  "modePickerModeArabicTranslationDesc": "Arabic text with meaning below each verse",
+  "@modePickerModeArabicTranslationDesc": {
+    "description": "One-line description under the 'Arabic + Translation' card title on the reading-layout picker, saying where the translated meaning appears relative to the scripture."
+  },
+  "modePickerModeArabicTransliteration": "Arabic + Transliteration",
+  "@modePickerModeArabicTransliteration": {
+    "description": "Name of the third of three reading layouts, which shows the Arabic scripture, then its sounds spelled out in Latin letters, then the translated meaning. Appears as the title of its sample card on the reading-layout picker and inside the label of the confirm button, so keep it short; the '+' means 'together with' and can be kept as-is."
+  },
+  "modePickerModeArabicTransliterationDesc": "Arabic, Roman phonetics, and translation",
+  "@modePickerModeArabicTransliterationDesc": {
+    "description": "One-line description under the 'Arabic + Transliteration' card title on the reading-layout picker, listing the three things each verse shows in that layout. 'Roman phonetics' means the sounds of the Arabic written in the Latin alphabet — not the city or the Romanian language."
+  },
+  "modePickerPreviewTranslit1": "Bismillaahir Rahmaanir Raheem",
+  "@modePickerPreviewTranslit1": {
+    "description": "Sample line on the reading-layout picker: the sounds of the first verse of the Quran's opening chapter spelled out in Latin letters, shown so the user can see what the transliteration layout looks like. It is a phonetic respelling of Arabic, not a sentence to translate — if your language reads another script, respell the same Arabic sounds the way that script conventionally does; otherwise leave it as it is. The Arabic original above it is fixed and never changes."
+  },
+  "modePickerPreviewTranslit2": "Alhamdu lillaahi Rabbil 'aalameen",
+  "@modePickerPreviewTranslit2": {
+    "description": "Sample line on the reading-layout picker: the sounds of the second verse of the Quran's opening chapter spelled out in Latin letters, shown so the user can see what the transliteration layout looks like. It is a phonetic respelling of Arabic, not a sentence to translate — if your language reads another script, respell the same Arabic sounds the way that script conventionally does; otherwise leave it as it is."
+  },
+  "modePickerPreviewTranslit3": "Ar-Rahmaanir Raheem",
+  "@modePickerPreviewTranslit3": {
+    "description": "Sample line on the reading-layout picker: the sounds of the third verse of the Quran's opening chapter spelled out in Latin letters, shown so the user can see what the transliteration layout looks like. It is a phonetic respelling of Arabic, not a sentence to translate — if your language reads another script, respell the same Arabic sounds the way that script conventionally does; otherwise leave it as it is."
+  },
+  "modePickerPreviewTranslation1": "In the name of Allah, the Entirely Merciful, the Especially Merciful",
+  "@modePickerPreviewTranslation1": {
+    "description": "Sample line on the reading-layout picker: the meaning of the first verse of the Quran's opening chapter, shown so the user can see what each layout looks like in their own language. Use your language's established translation of this verse rather than translating the English wording word for word. 'Allah' is the Arabic name of God: transliterate it conventionally if that is what your language's Quran translations do."
+  },
+  "modePickerPreviewTranslation2": "All praise is due to Allah, Lord of all the worlds",
+  "@modePickerPreviewTranslation2": {
+    "description": "Sample line on the reading-layout picker: the meaning of the second verse of the Quran's opening chapter, shown so the user can see what each layout looks like in their own language. Use your language's established translation of this verse rather than translating the English wording word for word."
+  },
+  "modePickerPreviewTranslation3": "The Entirely Merciful, the Especially Merciful",
+  "@modePickerPreviewTranslation3": {
+    "description": "Sample line on the reading-layout picker: the meaning of the third verse of the Quran's opening chapter, shown so the user can see what each layout looks like in their own language. Use your language's established translation of this verse rather than translating the English wording word for word."
   }
 }

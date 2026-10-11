@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/q_icons.dart';
 
@@ -42,7 +43,7 @@ class _SponsorScreenState extends State<SponsorScreen> {
           children: [
             Icon(Icons.favorite, size: 16, color: AppColors.gold),
             const SizedBox(width: 6),
-            Text('Support Get Quran',
+            Text(L.of(context).sponsorScreenTitle,
                 style: TextStyle(
                     color: context.text,
                     fontSize: 16,
