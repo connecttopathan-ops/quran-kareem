@@ -812,9 +812,9 @@
   "@greetingEvening": {
     "description": "Greeting in the home screen header, shown from 17:00 onwards. Displayed in small all-caps letters with wide letter spacing, so keep it short."
   },
-  "salaamGreeting": "Assalamu Alaikum",
+  "salaamGreeting": "Assalamu *Alaikum*",
   "@salaamGreeting": {
-    "description": "The large greeting line in the home screen header, directly under the time-of-day greeting. An Arabic salutation — keep it transliterated into the target script rather than translating its meaning. The same phrase in Arabic script appears on the line below it."
+    "description": "Greeting at the top of the home screen. A transliterated Arabic salutation (as-salamu alaykum) — respell it as your language conventionally does, but do not translate its meaning. The *asterisks* mark the words shown in the accent colour: keep exactly one matching pair, and move it if your spelling splits the phrase differently."
   },
   "sponsorAQuran": "Sponsor a Quran",
   "@sponsorAQuran": {

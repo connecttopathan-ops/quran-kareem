@@ -527,12 +527,22 @@ class _HomeTab extends StatelessWidget {
                             style: TextStyle(fontSize: 9, letterSpacing: 2,
                                 color: context.textDim, fontFamily: 'sans-serif')),
                         const SizedBox(height: 2),
-                        // One ARB string rather than two styled spans: the
-                        // phrase must stay whole for translators, so the
-                        // former gold-on-"Alaikum" accent is dropped.
-                        Text(l.salaamGreeting,
-                            style: TextStyle(fontFamily: 'serif', fontSize: 18,
-                                color: context.text)),
+                        // One ARB string, with the accented words marked by
+                        // asterisks inside it, so the phrase stays whole for
+                        // translators while keeping its two-tone treatment.
+                        emphasisedText(
+                          emphasiseMarkup(l.salaamGreeting),
+                          baseStyle: TextStyle(
+                              fontFamily: 'serif',
+                              fontSize: 18,
+                              color: context.text),
+                          emphasisStyle: TextStyle(
+                              fontFamily: 'serif',
+                              fontSize: 18,
+                              color: context.isDark
+                                  ? AppColors.gold
+                                  : AppColors.goldDark),
+                        ),
                         const SizedBox(height: 2),
                         Text('اَلسَّلَامُ عَلَيْكُمْ',
                             style: TextStyle(fontFamily: 'Scheherazade', fontSize: 14,
