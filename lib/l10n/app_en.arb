@@ -106,5 +106,105 @@
         "example": "286 verses"
       }
     }
+  },
+
+  "nextPrayerIn": "Next: {prayer} in {countdown}",
+  "@nextPrayerIn": {
+    "description": "Live countdown on the home screen, e.g. 'Next: Maghrib in 2h 15m'. Translators: place {prayer} and {countdown} wherever the language needs them — both are rendered in an accent colour, which follows them. Keep it short; it sits on one line in a compact row.",
+    "placeholders": {
+      "prayer": {
+        "type": "String",
+        "example": "Maghrib"
+      },
+      "countdown": {
+        "type": "String",
+        "example": "2h 15m 30s"
+      }
+    }
+  },
+
+  "sunriseIn": "Sunrise in {countdown}",
+  "@sunriseIn": {
+    "description": "Countdown to sunrise, shown between Fajr and sunrise. {countdown} is rendered in an accent colour.",
+    "placeholders": {
+      "countdown": {
+        "type": "String",
+        "example": "42m 10s"
+      }
+    }
+  },
+
+  "sunriseWasAt": "Sunrise was at {time}",
+  "@sunriseWasAt": {
+    "description": "Shown for an hour after sunrise has passed. {time} is a clock time rendered in an accent colour.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "6:42 AM"
+      }
+    }
+  },
+
+  "surahNumber": "Surah {number}",
+  "@surahNumber": {
+    "description": "A surah's position in the Quran, shown on compact cards where there is no room for the verse count.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+
+  "ayahReference": "Surah {surahName} · {surahNumber}:{ayahNumber}",
+  "@ayahReference": {
+    "description": "Cites a specific verse, e.g. 'Surah Al-Baqarah · 2:3'. The chapter:verse part is a conventional citation format — keep the colon and the numeral order as they are, even where the surrounding words move.",
+    "placeholders": {
+      "surahName": {
+        "type": "String",
+        "example": "Al-Baqarah"
+      },
+      "surahNumber": {
+        "type": "int",
+        "example": "2"
+      },
+      "ayahNumber": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+
+  "meaningInLanguage": "Meaning in {language}",
+  "@meaningInLanguage": {
+    "description": "Subtitle on the reader's translation row, e.g. 'Meaning in French'. {language} arrives already in its own language and is not translated here.",
+    "placeholders": {
+      "language": {
+        "type": "String",
+        "example": "French"
+      }
+    }
+  },
+
+  "fontSizePx": "{size}px",
+  "@fontSizePx": {
+    "description": "A font size in pixels, shown under the font-size sliders. Translators: 'px' is a unit abbreviation — leave it as-is unless the language genuinely uses something else.",
+    "placeholders": {
+      "size": {
+        "type": "int",
+        "example": "24"
+      }
+    }
+  },
+
+  "atTime": "at {time}",
+  "@atTime": {
+    "description": "Secondary line under the sunrise countdown giving the clock time it will happen, e.g. 'at 6:42 AM'.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "6:42 AM"
+      }
+    }
   }
 }

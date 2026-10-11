@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
+import '../widgets/emphasised_text.dart';
 import '../services/location_service.dart';
 import '../services/audio_service.dart';
 import '../services/notification_service.dart';
@@ -1149,6 +1151,7 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final (nextRaw, rem) = _computeNextPrayerFrom(widget.pt);
     final isFriday = DateTime.now().weekday == DateTime.friday;
     final next = (isFriday && nextRaw == 'Dhuhr') ? 'Jumu\'ah' : nextRaw;
@@ -1184,6 +1187,25 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
       ),
     );
 
+    // The countdown reads as a dim label with the live values picked out in
+    // gold. Those values are wrapped with `emphasise()` and the sentence is
+    // rendered by `emphasisedText`, so the translator decides where in the
+    // sentence they fall and the styling follows them there.
+    final labelStyle = TextStyle(
+        fontSize: 10, fontFamily: 'sans-serif', color: context.textDim);
+    const valueStyle = TextStyle(
+        fontSize: 10,
+        fontFamily: 'sans-serif',
+        color: AppColors.gold,
+        fontWeight: FontWeight.w700);
+    final subLabelStyle = TextStyle(
+        fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim);
+    const subValueStyle = TextStyle(
+        fontSize: 8.5,
+        fontFamily: 'sans-serif',
+        color: AppColors.gold,
+        fontWeight: FontWeight.w600);
+
     // State 1: After Fajr, before Sunrise — countdown to sunrise
     if (afterFajrWindow && beforeSunrise) {
       final until = sunriseTime.difference(now);
@@ -1197,14 +1219,17 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
           Row(children: [
             blinkingDot(),
             const SizedBox(width: 6),
-            Text('Sunrise in ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(cd, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+            emphasisedText(
+              l.sunriseIn(emphasise(cd)),
+              baseStyle: labelStyle,
+              emphasisStyle: valueStyle,
+            ),
           ]),
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.only(left: 14),
-            child: Text('at ${widget.pt.sunriseStr}',
-              style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
+            child: Text(l.atTime(widget.pt.sunriseStr),
+              style: subLabelStyle),
           ),
         ],
       );
@@ -1218,17 +1243,20 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
           Row(children: [
             blinkingDot(),
             const SizedBox(width: 6),
-            Text('Sunrise was at ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-            Text(widget.pt.sunriseStr, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+            emphasisedText(
+              l.sunriseWasAt(emphasise(widget.pt.sunriseStr)),
+              baseStyle: labelStyle,
+              emphasisStyle: valueStyle,
+            ),
           ]),
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.only(left: 14),
-            child: Row(children: [
-              Text('Next: ', style: TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: context.textDim)),
-              Text(next, style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
-              Text(' in $countdown', style: const TextStyle(fontSize: 8.5, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w600)),
-            ]),
+            child: emphasisedText(
+              l.nextPrayerIn(emphasise(next), emphasise(countdown)),
+              baseStyle: subLabelStyle,
+              emphasisStyle: subValueStyle,
+            ),
           ),
         ],
       );
@@ -1238,9 +1266,15 @@ class _NextPrayerRowState extends State<_NextPrayerRow>
     return Row(children: [
       blinkingDot(),
       const SizedBox(width: 6),
-      Text('Next: ', style: TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: context.textDim)),
-      Text(next, style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
-      Text(' in $countdown', style: const TextStyle(fontSize: 10, fontFamily: 'sans-serif', color: AppColors.gold, fontWeight: FontWeight.w700)),
+      Flexible(
+        child: emphasisedText(
+          l.nextPrayerIn(emphasise(next), emphasise(countdown)),
+          baseStyle: labelStyle,
+          emphasisStyle: valueStyle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     ]);
   }
 }
@@ -1526,7 +1560,9 @@ class _ContinueCardState extends State<_ContinueCard>
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(surahName,
                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.text)),
-                      Text('Surah ${surah.number} · ${surah.verses} verses',
+                      Text(
+                          L.of(context).surahSubtitle(surah.number,
+                              L.of(context).surahVerseCount(surah.verses)),
                           style: TextStyle(fontSize: 10, color: context.textDim, fontFamily: 'sans-serif')),
                     ])),
                     Icon(Icons.chevron_right, size: 18, color: AppColors.gold),
@@ -1603,7 +1639,9 @@ class _DailyAyah extends StatelessWidget {
               color: context.isDark ? const Color(0xFF888888) : const Color(0xFF806840)),
         ),
         const SizedBox(height: 6),
-        Text('Surah ${ayah.surahName} · ${ayah.surah}:${ayah.ayah}',
+        Text(
+            L.of(context)
+                .ayahReference(ayah.surahName, ayah.surah, ayah.ayah),
             style: TextStyle(fontSize: 9, fontFamily: 'sans-serif',
                 color: context.isDark ? AppColors.goldDim : AppColors.goldDark)),
       ]),
@@ -1630,11 +1668,11 @@ class _PopularSurahs extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Surah ${s.number}',
+                Text(L.of(context).surahNumber(s.number),
                     style: TextStyle(fontSize: 7, fontFamily: 'sans-serif', color: context.textDim)),
                 Text(s.nameTransliteration,
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.text)),
-                Text('${s.verses} verses',
+                Text(L.of(context).surahVerseCount(s.verses),
                     style: TextStyle(fontSize: 8, fontFamily: 'sans-serif', color: context.textDim)),
               ],
             )),

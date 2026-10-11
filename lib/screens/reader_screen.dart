@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/quran_data.dart';
+import '../l10n/app_localizations.dart';
 import '../models/app_state.dart';
 import '../models/surah.dart';
 import '../models/language.dart';
@@ -1534,7 +1535,7 @@ class _TextTab extends StatelessWidget {
             value: state.showTranslit, onChanged: (_) => state.toggleTranslit()),
         const SizedBox(height: 8),
         _ToggleRow(title: 'Show Translation',
-            subtitle: 'Meaning in ${state.currentLanguage.name}',
+            subtitle: L.of(context).meaningInLanguage(state.currentLanguage.name),
             value: state.showTranslation, onChanged: (_) => state.toggleTranslation()),
       ]),
     );

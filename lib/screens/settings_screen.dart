@@ -70,7 +70,9 @@ class SettingsScreen extends StatelessWidget {
                       _TextSettingsTile(),
                       _SettingTile(
                         title: 'Arabic Font Size',
-                        subtitle: '${state.arabicFontSize.toInt()}px',
+                        subtitle: L
+                            .of(context)
+                            .fontSizePx(state.arabicFontSize.toInt()),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
