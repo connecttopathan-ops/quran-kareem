@@ -133,20 +133,6 @@ class NotificationService {
       }
     }
 
-    // One-time migration: cancel stale prayer notifications that were stored
-    // without an icon field, causing a NullPointerException in
-    // ScheduledNotificationReceiver.setSmallIcon on Android. Daily reminders
-    // and ayah notifications are left untouched. HomeScreen reschedules
-    // prayer notifications fresh on the next launch.
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final prefs = await SharedPreferences.getInstance();
-      const _migrationKey = 'notif_icon_migration_v1';
-      if (!(prefs.getBool(_migrationKey) ?? false)) {
-        await cancelPrayerNotifications();
-        await prefs.setBool(_migrationKey, true);
-      }
-    }
-
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
@@ -232,6 +218,45 @@ class NotificationService {
       await androidPlugin?.createNotificationChannel(ayahChannel);
 
       await prefs.setInt('notification_channel_version', _channelVersion);
+    }
+
+    // One-time migration: clear every stale alarm an older build stored without
+    // an icon field. Those throw a NullPointerException in
+    // ScheduledNotificationReceiver.setSmallIcon the moment they fire, which
+    // crashes the app from a background receiver.
+    //
+    // v1 only cancelled the prayer slots (IDs 1–35), so stale daily reminders
+    // (50–51) and ayah notifications (100–129) went on crashing — hence v2,
+    // which clears all of them.
+    //
+    // This runs AFTER channel creation on purpose: rescheduling before the
+    // channels exist would let Android create them implicitly with default
+    // sound and importance, undoing the adhan configuration above.
+    //
+    // Prayer times need a location, so HomeScreen reschedules those once it
+    // has one. Daily reminders and ayah notifications do not, so they are
+    // re-seeded right here — otherwise a user who denied location would lose
+    // them permanently.
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      const migrationKey = 'notif_icon_migration_v2';
+      if (!(prefs.getBool(migrationKey) ?? false)) {
+        await cancelAll();
+        await prefs.setBool(migrationKey, true);
+
+        await scheduleDailyReminders(
+          morningEnabled: prefs.getBool('reminder_morning_enabled') ?? true,
+          morningHour: prefs.getInt('reminder_morning_hour') ?? 6,
+          morningMinute: prefs.getInt('reminder_morning_minute') ?? 0,
+          eveningEnabled: prefs.getBool('reminder_evening_enabled') ?? true,
+          eveningHour: prefs.getInt('reminder_evening_hour') ?? 20,
+          eveningMinute: prefs.getInt('reminder_evening_minute') ?? 0,
+        );
+        await scheduleAyahNotifications(
+          enabled: prefs.getBool('ayah_notification_enabled') ?? true,
+          hour: prefs.getInt('ayah_notification_hour') ?? 11,
+          minute: prefs.getInt('ayah_notification_minute') ?? 0,
+        );
+      }
     }
 
     // NOTE: Runtime permissions (POST_NOTIFICATIONS on Android 13+, and the
@@ -597,9 +622,22 @@ class NotificationService {
 
   // ── Ayah of the Day ────────────────────────────────────────────────────────
 
-  // IDs 100–129 reserved for ayah of the day (30 days pre-scheduled)
+  // IDs 100–129 reserved for ayah of the day.
+  //
+  // iOS keeps only the soonest 64 pending local notifications per app and
+  // silently drops the rest. The budget: 35 prayer slots (7 days × 5) + 2
+  // daily reminders + this window. At 30 days that totalled 67, so the three
+  // furthest ayah notifications never fired. 25 leaves headroom at 62.
+  //
+  // The window length barely matters in practice — every app launch and
+  // resume reschedules it — so the shorter window costs nothing.
   static const int _ayahBaseId = 100;
-  static const int _ayahDays = 30;
+  static const int _ayahDays = 25;
+
+  /// Older builds scheduled 30 days of ayah notifications. Keep sweeping that
+  /// wider range when cancelling so slots 125–129 left by a previous version
+  /// are cleared instead of firing later with stale content.
+  static const int _ayahCancelSpan = 30;
 
   Future<void> scheduleAyahNotifications({
     required bool enabled,
@@ -607,7 +645,7 @@ class NotificationService {
     required int minute,
   }) async {
     // Cancel all previously scheduled ayah notifications
-    for (int i = 0; i < _ayahDays; i++) {
+    for (int i = 0; i < _ayahCancelSpan; i++) {
       await _plugin.cancel(_ayahBaseId + i);
     }
     if (!enabled) return;
