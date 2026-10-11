@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../models/app_state.dart';
 import '../data/quran_data.dart';
@@ -53,7 +54,7 @@ class _SurahListScreenState extends State<SurahListScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No surahs found',
+              L.of(context).surahListNoResults,
               style: TextStyle(
                 fontSize: 15,
                 fontFamily: 'serif',
@@ -63,7 +64,7 @@ class _SurahListScreenState extends State<SurahListScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Try searching by name, translation, or number',
+              L.of(context).surahListNoResultsHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -118,7 +119,7 @@ class _SurahListScreenState extends State<SurahListScreen> {
                                   ? AppColors.gold
                                   : AppColors.goldDark)),
                       const Spacer(),
-                      Text('114 Surahs',
+                      Text(L.of(context).surahListTotalCount(kSurahs.length),
                           style: TextStyle(
                               fontSize: 11,
                               color: context.textDim,
@@ -130,7 +131,7 @@ class _SurahListScreenState extends State<SurahListScreen> {
                     controller: _ctrl,
                     style: TextStyle(color: context.text, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Search surah...',
+                      hintText: L.of(context).surahListSearchHint,
                       hintStyle:
                           TextStyle(color: context.textDim, fontSize: 13),
                       prefixIcon: Padding(
@@ -259,7 +260,8 @@ class _SurahTile extends StatelessWidget {
                           color: context.text)),
                   const SizedBox(height: 2),
                   Text(
-                    '${surah.verses} verses · ${surah.revelationType} · Juz ${surah.juz}',
+                    L.of(context).surahListTileMeta(
+                        surah.verses, surah.revelationType, surah.juz),
                     style: TextStyle(
                         fontSize: 10,
                         color: context.textDim,
@@ -298,13 +300,15 @@ class _SurahTile extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (_) => AlertDialog(
-                      title: const Text('Delete download?'),
-                      content: Text(
-                          'Remove offline audio for ${surah.nameTransliteration}?'),
+                      title: Text(L.of(context).surahListDeleteDownloadTitle),
+                      content: Text(L
+                          .of(context)
+                          .surahListDeleteDownloadBody(
+                              surah.nameTransliteration)),
                       actions: [
                         TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel')),
+                            child: Text(L.of(context).cancel)),
                         TextButton(
                             onPressed: () {
                               dl.deleteSurah(
@@ -312,8 +316,8 @@ class _SurahTile extends StatelessWidget {
                                   surahNumber: surah.number);
                               Navigator.pop(context);
                             },
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red))),
+                            child: Text(L.of(context).delete,
+                                style: const TextStyle(color: Colors.red))),
                       ],
                     ),
                   );

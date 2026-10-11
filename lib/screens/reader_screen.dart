@@ -178,7 +178,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Bookmark saved',
+            L.of(context).readerBookmarkSaved,
             style: const TextStyle(fontFamily: 'sans-serif', fontSize: 13),
           ),
           duration: const Duration(seconds: 2),
@@ -264,7 +264,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text('Translation Language',
+                  Text(L.of(context).translationLanguage,
                       style: TextStyle(
                           color: context.text,
                           fontSize: 17,
@@ -276,7 +276,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     controller: searchCtrl,
                     style: TextStyle(color: context.text, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Search language...',
+                      hintText: L.of(context).readerSearchLanguageHint,
                       hintStyle:
                           TextStyle(color: context.textDim, fontSize: 13),
                       prefixIcon: Padding(
@@ -321,7 +321,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         ? Center(
                             child: Padding(
                               padding: const EdgeInsets.all(24),
-                              child: Text('No languages found',
+                              child: Text(L.of(context).readerNoLanguagesFound,
                                   style: TextStyle(
                                       color: context.textDim,
                                       fontFamily: 'sans-serif')),
@@ -600,7 +600,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Loading verses…',
+                      L.of(context).readerLoadingVerses,
                       style: TextStyle(
                           fontSize: 11,
                           color: context.textDim,
@@ -659,7 +659,7 @@ class _SurahNavFooter extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Previous',
+                                Text(L.of(context).readerPrevious,
                                     style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
                                         color: _RC.textDim(readerTheme))),
                                 Text(prevSurah.nameTransliteration,
@@ -694,7 +694,7 @@ class _SurahNavFooter extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('Next',
+                                Text(L.of(context).readerNext,
                                     style: TextStyle(fontSize: 10, fontFamily: 'sans-serif',
                                         color: _RC.textDim(readerTheme))),
                                 Text(nextSurah.nameTransliteration,
@@ -748,7 +748,7 @@ class _SurahHeader extends StatelessWidget {
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           _chip(context, surah.type),
           const SizedBox(width: 8),
-          _chip(context, '${surah.verses} Aayaat'),
+          _chip(context, L.of(context).readerAayaatCount(surah.verses)),
           const SizedBox(width: 8),
           _chip(context, surah.nameEnglish),
         ]),
@@ -944,7 +944,7 @@ class _VerseCardState extends State<_VerseCard> {
               decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: _RC.border(state.readerTheme)))),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('ROMAN ARABIC',
+                Text(L.of(context).readerRomanArabicLabel,
                     style: TextStyle(fontSize: 7, letterSpacing: 2,
                         color: AppColors.goldDim, fontFamily: 'sans-serif')),
                 const SizedBox(height: 3),
@@ -1216,7 +1216,8 @@ class _SurahAudioBar extends StatelessWidget {
                             fontFamily: 'serif',
                             fontWeight: FontWeight.w500,
                             color: _RC.text(readerTheme))),
-                    Text('Verse ${np.verseNumber} / ${np.totalVerses}',
+                    Text(L.of(context)
+                        .readerVerseProgress(np.verseNumber, np.totalVerses),
                         style: TextStyle(
                             fontSize: 9,
                             fontFamily: 'sans-serif',
@@ -1265,10 +1266,11 @@ class _ModeChipsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rt = state.readerTheme;
+    final l = L.of(context);
     final chips = [
-      [1, 'Translation'],
-      [2, 'Arabic+'],
-      [3, '+Roman'],
+      [1, l.readerModeTranslation],
+      [2, l.readerModeArabicPlus],
+      [3, l.readerModeRoman],
     ];
 
     return Container(
@@ -1313,7 +1315,7 @@ class _ModeChipsBar extends StatelessWidget {
         }),
         const Spacer(),
         Text(
-          '${surah.number} / 114',
+          l.readerSurahProgress(surah.number, 114),
           style: TextStyle(
             fontSize: 11,
             color: _RC.textDim(rt),
@@ -1367,7 +1369,7 @@ class _ReaderSettingsSheetState extends State<_ReaderSettingsSheet>
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 12, 14, 4),
             child: Row(children: [
-              Text('Reader Settings',
+              Text(L.of(context).readerSettingsTitle,
                   style: TextStyle(color: context.text, fontSize: 17,
                       fontFamily: 'serif', fontWeight: FontWeight.w600)),
               const Spacer(),
@@ -1381,7 +1383,11 @@ class _ReaderSettingsSheetState extends State<_ReaderSettingsSheet>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: ['Display', 'Text', 'Audio'].asMap().entries.map((e) {
+              children: [
+                L.of(context).readerTabDisplay,
+                L.of(context).readerTabText,
+                L.of(context).readerTabAudio,
+              ].asMap().entries.map((e) {
                 final sel = _tabs.index == e.key;
                 return GestureDetector(
                   onTap: () => setState(() => _tabs.index = e.key),
@@ -1435,43 +1441,47 @@ class _DisplayTab extends StatelessWidget {
           MediaQuery.of(context).viewInsets.bottom +
               MediaQuery.of(context).padding.bottom + 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _SheetLabel('THEME'),
+        _SheetLabel(L.of(context).readerSectionTheme),
         const SizedBox(height: 8),
         Row(children: [
-          _ThemeCard(label: 'Warm', arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
+          _ThemeCard(label: L.of(context).readerThemeWarm, arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
               bg: const Color(0xFFFFFFFF), textColor: const Color(0xFF2a1e08),
               selected: state.readerTheme == ReaderTheme.warm,
               onTap: () => state.setReaderTheme(ReaderTheme.warm)),
           const SizedBox(width: 8),
-          _ThemeCard(label: 'Paper', arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
+          _ThemeCard(label: L.of(context).readerThemePaper, arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
               bg: const Color(0xFFFDF3E0), textColor: const Color(0xFF3a2a10),
               selected: state.readerTheme == ReaderTheme.paper,
               onTap: () => state.setReaderTheme(ReaderTheme.paper)),
           const SizedBox(width: 8),
-          _ThemeCard(label: 'Dark', arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
+          _ThemeCard(label: L.of(context).readerThemeDark, arabic: '\u0628\u0650\u0633\u0652\u0645\u0650',
               bg: const Color(0xFF111111), textColor: AppColors.goldLight,
               selected: state.readerTheme == ReaderTheme.dark,
               onTap: () => state.setReaderTheme(ReaderTheme.dark)),
         ]),
         const SizedBox(height: 18),
-        _SheetLabel('READING MODE'),
+        _SheetLabel(L.of(context).readerSectionReadingMode),
         const SizedBox(height: 8),
         Row(children: [
-          _ModeCard(qicon: (c) => QIcon.listMode(size: 22, color: c), label: 'List',
+          _ModeCard(qicon: (c) => QIcon.listMode(size: 22, color: c),
+              label: L.of(context).readerModeList,
               selected: state.readingMode == ReadingMode.list,
               onTap: () => state.setReadingMode(ReadingMode.list)),
           const SizedBox(width: 8),
-          _ModeCard(qicon: (c) => QIcon.pageMode(size: 22, color: c), label: 'Page',
+          _ModeCard(qicon: (c) => QIcon.pageMode(size: 22, color: c),
+              label: L.of(context).readerModePage,
               selected: state.readingMode == ReadingMode.page,
               onTap: () => state.setReadingMode(ReadingMode.page)),
           const SizedBox(width: 8),
-          _ModeCard(qicon: (c) => QIcon.focusMode(size: 22, color: c), label: 'Focus',
+          _ModeCard(qicon: (c) => QIcon.focusMode(size: 22, color: c),
+              label: L.of(context).readerModeFocus,
               selected: state.readingMode == ReadingMode.focus,
               onTap: () => state.setReadingMode(ReadingMode.focus)),
         ]),
         const SizedBox(height: 18),
         _ToggleRow(
-          title: 'Keep Screen On', subtitle: 'While reading',
+          title: L.of(context).readerKeepScreenOn,
+          subtitle: L.of(context).readerKeepScreenOnSubtitle,
           value: state.keepScreenOn,
           onChanged: (_) {
             state.toggleKeepScreenOn();
@@ -1494,7 +1504,7 @@ class _TextTab extends StatelessWidget {
           MediaQuery.of(context).viewInsets.bottom +
               MediaQuery.of(context).padding.bottom + 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _SheetLabel('ARABIC TEXT SIZE'),
+        _SheetLabel(L.of(context).readerSectionArabicSize),
         const SizedBox(height: 6),
         _SizeRow(
           preview: Text('\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u064e\u0651\u0647\u0650',
@@ -1507,7 +1517,7 @@ class _TextTab extends StatelessWidget {
           onSlide: state.setArabicFontSize,
         ),
         const SizedBox(height: 18),
-        _SheetLabel('TRANSLITERATION SIZE'),
+        _SheetLabel(L.of(context).readerSectionTransliterationSize),
         const SizedBox(height: 6),
         _SizeRow(
           preview: Text('Alhamdu lillaahi',
@@ -1519,7 +1529,7 @@ class _TextTab extends StatelessWidget {
           onSlide: state.setTranslitFontSize,
         ),
         const SizedBox(height: 18),
-        _SheetLabel('TRANSLATION SIZE'),
+        _SheetLabel(L.of(context).readerSectionTranslationSize),
         const SizedBox(height: 6),
         _SizeRow(
           preview: Text('Tamam taareefein Allah hi ke liye',
@@ -1531,10 +1541,11 @@ class _TextTab extends StatelessWidget {
           onSlide: state.setTranslationFontSize,
         ),
         const SizedBox(height: 18),
-        _ToggleRow(title: 'Show Transliteration', subtitle: 'Roman Arabic pronunciation',
+        _ToggleRow(title: L.of(context).showTransliteration,
+            subtitle: L.of(context).showTransliterationSubtitle,
             value: state.showTranslit, onChanged: (_) => state.toggleTranslit()),
         const SizedBox(height: 8),
-        _ToggleRow(title: 'Show Translation',
+        _ToggleRow(title: L.of(context).showTranslation,
             subtitle: L.of(context).meaningInLanguage(state.currentLanguage.name),
             value: state.showTranslation, onChanged: (_) => state.toggleTranslation()),
       ]),
@@ -1556,7 +1567,7 @@ class _AudioTab extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Now playing card
           if (audio.nowPlaying != null) ...[
-            _SheetLabel('NOW PLAYING'),
+            _SheetLabel(L.of(context).readerSectionNowPlaying),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(14),
@@ -1571,7 +1582,9 @@ class _AudioTab extends StatelessWidget {
               child: Column(children: [
                 Text(audio.nowPlaying!.surahName,
                     style: TextStyle(fontFamily: 'serif', fontSize: 16, color: context.text)),
-                Text('Verse ${audio.nowPlaying!.verseNumber} of ${audio.nowPlaying!.totalVerses}',
+                Text(L.of(context).readerVerseOfTotal(
+                        audio.nowPlaying!.verseNumber,
+                        audio.nowPlaying!.totalVerses),
                     style: TextStyle(fontSize: 11, color: context.textDim,
                         fontFamily: 'sans-serif')),
                 const SizedBox(height: 14),
@@ -1609,7 +1622,7 @@ class _AudioTab extends StatelessWidget {
                 // Stop button
                 GestureDetector(
                   onTap: audio.stop,
-                  child: Text('Stop', style: TextStyle(
+                  child: Text(L.of(context).readerStop, style: TextStyle(
                       fontSize: 11, color: context.textDim,
                       fontFamily: 'sans-serif',
                       decoration: TextDecoration.underline)),
@@ -1620,7 +1633,7 @@ class _AudioTab extends StatelessWidget {
           ],
 
           // Playback speed
-          _SheetLabel('PLAYBACK SPEED'),
+          _SheetLabel(L.of(context).readerSectionPlaybackSpeed),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1640,7 +1653,8 @@ class _AudioTab extends StatelessWidget {
                           color: sel ? AppColors.gold : context.border,
                           width: sel ? 1.5 : 1),
                     ),
-                    child: Text('${speed}x',
+                    child: Text(
+                        L.of(context).readerPlaybackSpeedValue(speed.toString()),
                         style: TextStyle(fontSize: 13, fontFamily: 'sans-serif',
                             fontWeight: sel ? FontWeight.w700 : FontWeight.normal,
                             color: sel ? AppColors.gold : context.textDim)),
@@ -1652,7 +1666,7 @@ class _AudioTab extends StatelessWidget {
           const SizedBox(height: 18),
 
           // Reciter selector
-          _SheetLabel('RECITER'),
+          _SheetLabel(L.of(context).readerSectionReciter),
           const SizedBox(height: 8),
           ...Reciter.all.map((r) {
             final sel = audio.reciterId == r.id;

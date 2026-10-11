@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -86,8 +87,10 @@ class _PrayerNotificationSettingsScreenState
           assetPath,
           tag: MediaItem(
             id: id,
-            title: id == 'makkah' ? 'Makkah Adhan' : 'Madinah Adhan',
-            album: 'Adhan Preview',
+            title: id == 'makkah'
+                ? L.of(context).adhanPreviewMakkahTitle
+                : L.of(context).adhanPreviewMadinahTitle,
+            album: L.of(context).adhanPreviewAlbum,
           ),
         ),
       );
@@ -96,7 +99,8 @@ class _PrayerNotificationSettingsScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not play preview: $e')),
+          SnackBar(
+              content: Text(L.of(context).snackCouldNotPlayPreview('$e'))),
         );
         setState(() => _playingId = null);
       }
@@ -107,7 +111,7 @@ class _PrayerNotificationSettingsScreenState
     await NotificationService().sendTestNotification(_mode, _adhanType);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Test notification sent')),
+        SnackBar(content: Text(L.of(context).snackTestNotificationSent)),
       );
     }
   }
@@ -141,7 +145,9 @@ class _PrayerNotificationSettingsScreenState
         await NotificationService().cancelPrayerNotifications();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notifications turned off')));
+              SnackBar(
+                  content:
+                      Text(L.of(context).snackNotificationsTurnedOff)));
         }
         return;
       }
@@ -162,13 +168,14 @@ class _PrayerNotificationSettingsScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✓ Notifications scheduled')),
+          SnackBar(
+              content: Text(L.of(context).snackNotificationsScheduled)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(L.of(context).errorWithMessage('$e'))),
         );
       }
     }
@@ -206,7 +213,7 @@ class _PrayerNotificationSettingsScreenState
                       color: AppColors.gold, size: 28),
                 ),
                 const SizedBox(height: 16),
-                Text('Accurate Prayer Times',
+                Text(L.of(ctx).exactAlarmDialogTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.w600,
@@ -215,7 +222,7 @@ class _PrayerNotificationSettingsScreenState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'To notify you of exact prayer times, Get Quran needs permission to schedule precise alarms.',
+                  L.of(ctx).exactAlarmDialogBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'sans-serif', fontSize: 13, height: 1.5,
@@ -224,7 +231,7 @@ class _PrayerNotificationSettingsScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Without this, adhan notifications may arrive a few minutes late.',
+                  L.of(ctx).exactAlarmDialogAdhanNote,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'sans-serif', fontSize: 11,
@@ -243,14 +250,14 @@ class _PrayerNotificationSettingsScreenState
                       elevation: 0,
                     ),
                     onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.allow),
-                    child: const Text('Allow Precise Times',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+                    child: Text(L.of(ctx).allowPreciseTimes,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.notNow),
-                  child: Text('Not Now',
+                  child: Text(L.of(ctx).notNow,
                     style: TextStyle(
                       fontSize: 13, fontFamily: 'sans-serif',
                       color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
@@ -287,7 +294,7 @@ class _PrayerNotificationSettingsScreenState
                         size: 18, color: context.textDim),
                   ),
                   const SizedBox(width: 10),
-                  Text('Prayer Notifications',
+                  Text(L.of(context).prayerNotifications,
                       style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 20,
@@ -301,7 +308,7 @@ class _PrayerNotificationSettingsScreenState
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 children: [
-                  _SectionHeader('ALERT TYPE'),
+                  _SectionHeader(L.of(context).sectionAlertType),
                   _buildAlertTypeSection(),
                   // Adhan selector (animated reveal)
                   AnimatedContainer(
@@ -314,16 +321,16 @@ class _PrayerNotificationSettingsScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
-                        _SectionHeader('CHOOSE ADHAN'),
+                        _SectionHeader(L.of(context).sectionChooseAdhan),
                         _buildAdhanSection(),
                       ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _SectionHeader('FRIDAY JUMU\'AH'),
+                  _SectionHeader(L.of(context).sectionFridayJumuah),
                   _buildJumuahSection(),
                   const SizedBox(height: 8),
-                  _SectionHeader('TEST'),
+                  _SectionHeader(L.of(context).sectionTest),
                   _buildTestSection(),
                   const SizedBox(height: 24),
                 ],
@@ -343,8 +350,8 @@ class _PrayerNotificationSettingsScreenState
                         borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: _save,
-                  child: const Text('Save & Schedule Notifications',
-                      style: TextStyle(fontSize: 15)),
+                  child: Text(L.of(context).saveAndScheduleNotifications,
+                      style: const TextStyle(fontSize: 15)),
                 ),
               ),
             ),
@@ -355,14 +362,16 @@ class _PrayerNotificationSettingsScreenState
   }
 
   Widget _buildAlertTypeSection() {
+    final l = L.of(context);
     final options = [
-      (PrayerNotificationMode.adhan, Icons.volume_up, 'Adhan',
-          'Full adhan audio at prayer time'),
-      (PrayerNotificationMode.vibration, Icons.vibration, 'Vibration',
-          'Repeating vibration, no sound'),
-      (PrayerNotificationMode.singleVibration, Icons.phone_in_talk, 'Single pulse',
-          'One short vibration'),
-      (PrayerNotificationMode.off, Icons.notifications_off, 'Off', 'No alerts'),
+      (PrayerNotificationMode.adhan, Icons.volume_up, l.alertTypeAdhan,
+          l.alertTypeAdhanSubtitle),
+      (PrayerNotificationMode.vibration, Icons.vibration, l.alertTypeVibration,
+          l.alertTypeVibrationSubtitle),
+      (PrayerNotificationMode.singleVibration, Icons.phone_in_talk,
+          l.alertTypeSinglePulse, l.alertTypeSinglePulseSubtitle),
+      (PrayerNotificationMode.off, Icons.notifications_off, l.alertTypeOff,
+          l.alertTypeOffSubtitle),
     ];
 
     return Container(
@@ -411,21 +420,22 @@ class _PrayerNotificationSettingsScreenState
   }
 
   Widget _buildAdhanSection() {
+    final l = L.of(context);
     final options = [
       (
         AdhanType.makkah,
         'makkah',
         Icons.mosque,
-        'Makkah',
-        'Masjid al-Haram · Sheikh Mishary Rashid Alafasy',
+        l.adhanMakkah,
+        l.adhanMakkahSubtitle,
         'assets/audio/adhan_makkah.mp3',
       ),
       (
         AdhanType.madinah,
         'madinah',
         Icons.mosque_outlined,
-        'Madinah',
-        'Masjid an-Nabawi · Sheikh Ahmad al-Nafees',
+        l.adhanMadinah,
+        l.adhanMadinahSubtitle,
         'assets/audio/adhan_madinah.mp3',
       ),
     ];
@@ -513,7 +523,7 @@ class _PrayerNotificationSettingsScreenState
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  "Fajr will always use the special Fajr adhan with 'As-salatu khayrun minan nawm' regardless of selection.",
+                  l.fajrAdhanNote,
                   style: TextStyle(
                       fontSize: 11,
                       color: context.textDim,
@@ -528,6 +538,7 @@ class _PrayerNotificationSettingsScreenState
   }
 
   Widget _buildJumuahSection() {
+    final l = L.of(context);
     final h = _jumuahHour.toString().padLeft(2, '0');
     final m = _jumuahMinute.toString().padLeft(2, '0');
     return Container(
@@ -544,10 +555,10 @@ class _PrayerNotificationSettingsScreenState
             activeColor: AppColors.gold,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            title: Text('Custom Jumu\'ah time',
+            title: Text(l.customJumuahTime,
                 style: TextStyle(fontSize: 14, color: context.text)),
             subtitle: Text(
-              'Override the Friday Dhuhr alarm for your mosque\'s Jumu\'ah',
+              l.customJumuahTimeSubtitle,
               style: TextStyle(
                   fontSize: 11,
                   color: context.textDim,
@@ -559,7 +570,7 @@ class _PrayerNotificationSettingsScreenState
             ListTile(
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              title: Text('Jumu\'ah notification time',
+              title: Text(l.jumuahNotificationTime,
                   style: TextStyle(fontSize: 14, color: context.text)),
               trailing: GestureDetector(
                 onTap: () async {
@@ -611,7 +622,7 @@ class _PrayerNotificationSettingsScreenState
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         onPressed: _sendTest,
-        child: Text('Send Test Notification',
+        child: Text(L.of(context).sendTestNotification,
             style: TextStyle(fontSize: 14, color: context.text)),
       ),
     );

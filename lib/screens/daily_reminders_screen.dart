@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../services/notification_service.dart';
 
@@ -94,7 +95,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                       color: AppColors.gold, size: 28),
                 ),
                 const SizedBox(height: 16),
-                Text('Accurate Prayer Times',
+                Text(L.of(ctx).exactAlarmDialogTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.w600,
@@ -103,7 +104,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'To notify you of exact prayer times, Get Quran needs permission to schedule precise alarms.',
+                  L.of(ctx).exactAlarmDialogBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'sans-serif', fontSize: 13, height: 1.5,
@@ -112,7 +113,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Without this, notifications may arrive a few minutes late.',
+                  L.of(ctx).exactAlarmDialogNote,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'sans-serif', fontSize: 11,
@@ -131,14 +132,14 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                       elevation: 0,
                     ),
                     onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.allow),
-                    child: const Text('Allow Precise Times',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
+                    child: Text(L.of(ctx).allowPreciseTimes,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'sans-serif')),
                   ),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, _ExactAlarmResult.notNow),
-                  child: Text('Not Now',
+                  child: Text(L.of(ctx).notNow,
                     style: TextStyle(
                       fontSize: 13, fontFamily: 'sans-serif',
                       color: isDark ? Colors.white.withOpacity(0.4) : const Color(0xFF9A8060),
@@ -226,13 +227,14 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✓ Daily reminders saved')),
+          SnackBar(content: Text(L.of(context).snackDailyRemindersSaved)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+            .showSnackBar(SnackBar(
+                content: Text(L.of(context).errorWithMessage('$e'))));
       }
     }
   }
@@ -258,7 +260,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                         size: 18, color: context.textDim),
                   ),
                   const SizedBox(width: 10),
-                  Text('Daily Reminders',
+                  Text(L.of(context).dailyRemindersTitle,
                       style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 20,
@@ -272,11 +274,11 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 children: [
-                  _SectionHeader('QURAN READING REMINDER'),
+                  _SectionHeader(L.of(context).sectionQuranReadingReminder),
                   _buildReminderCard(
                     icon: Icons.wb_sunny_outlined,
-                    label: 'Morning',
-                    subtitle: 'After Fajr — start the day with Quran',
+                    label: L.of(context).reminderMorning,
+                    subtitle: L.of(context).reminderMorningSubtitle,
                     enabled: _morningEnabled,
                     time: _morningTime,
                     onToggle: (v) => setState(() => _morningEnabled = v),
@@ -286,8 +288,8 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                   const SizedBox(height: 8),
                   _buildReminderCard(
                     icon: Icons.nightlight_outlined,
-                    label: 'Evening',
-                    subtitle: 'End the day with the words of Allah',
+                    label: L.of(context).reminderEvening,
+                    subtitle: L.of(context).reminderEveningSubtitle,
                     enabled: _eveningEnabled,
                     time: _eveningTime,
                     onToggle: (v) => setState(() => _eveningEnabled = v),
@@ -295,7 +297,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                         _eveningTime, (t) => setState(() => _eveningTime = t)),
                   ),
                   const SizedBox(height: 16),
-                  _SectionHeader('AYAH OF THE DAY'),
+                  _SectionHeader(L.of(context).sectionAyahOfTheDay),
                   _buildAyahCard(),
                   const SizedBox(height: 24),
                 ],
@@ -315,8 +317,8 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                         borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: _save,
-                  child: const Text('Save Reminders',
-                      style: TextStyle(fontSize: 15)),
+                  child: Text(L.of(context).saveReminders,
+                      style: const TextStyle(fontSize: 15)),
                 ),
               ),
             ),
@@ -383,7 +385,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                     Icon(Icons.access_time,
                         size: 16, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text('Reminder time',
+                    Text(L.of(context).reminderTime,
                         style: TextStyle(
                             fontSize: 13,
                             color: context.textDim,
@@ -428,10 +430,10 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ayah of the Day',
+                      Text(L.of(context).ayahOfTheDay,
                           style: TextStyle(fontSize: 14, color: context.text)),
                       const SizedBox(height: 2),
-                      Text('A new ayah with reflection, daily',
+                      Text(L.of(context).ayahOfTheDaySubtitle,
                           style: TextStyle(
                               fontSize: 11,
                               color: context.textDim,
@@ -459,7 +461,7 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                     Icon(Icons.access_time,
                         size: 16, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text('Delivery time',
+                    Text(L.of(context).deliveryTime,
                         style: TextStyle(
                             fontSize: 13,
                             color: context.textDim,

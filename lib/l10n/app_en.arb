@@ -1,16 +1,13 @@
 {
   "@@locale": "en",
-
   "appTitle": "Get Quran",
   "@appTitle": {
     "description": "The app's name. Left untranslated in most locales — it is a brand name, not a phrase."
   },
-
   "about": "About",
   "@about": {
     "description": "Section heading above the app name and version in settings."
   },
-
   "version": "Version {number}",
   "@version": {
     "description": "App version shown in the About section.",
@@ -21,62 +18,50 @@
       }
     }
   },
-
   "appLanguage": "App Language",
   "@appLanguage": {
     "description": "Settings row that chooses the language of the interface itself — buttons, labels, menus. Distinct from translationLanguage, which chooses the Quran translation."
   },
-
   "appLanguageSubtitle": "Language of buttons and menus",
   "@appLanguageSubtitle": {
     "description": "Explains appLanguage, so it is not confused with the Quran translation setting."
   },
-
   "translationLanguage": "Translation Language",
   "@translationLanguage": {
     "description": "Settings row that chooses which Quran translation is displayed. Distinct from appLanguage."
   },
-
   "translationLanguageSubtitle": "Language of the Quran translation",
   "@translationLanguageSubtitle": {
     "description": "Explains translationLanguage, so it is not confused with the interface language."
   },
-
   "matchDeviceLanguage": "Match device language",
   "@matchDeviceLanguage": {
     "description": "Option in the app language picker that follows the phone's own language setting instead of a fixed choice."
   },
-
   "save": "Save",
   "@save": {
     "description": "Button that commits a change."
   },
-
   "cancel": "Cancel",
   "@cancel": {
     "description": "Button that dismisses a dialog without saving."
   },
-
   "done": "Done",
   "@done": {
     "description": "Button that closes a screen once the user has finished with it."
   },
-
   "continueLabel": "Continue",
   "@continueLabel": {
     "description": "Button that moves to the next step. Named continueLabel because `continue` is a reserved word in Dart."
   },
-
   "maybeLater": "Maybe later",
   "@maybeLater": {
     "description": "Dismisses a permission prompt without granting it. Should read as a genuine option, not a refusal — the user can always come back via Settings."
   },
-
   "openAppSettings": "Open app settings",
   "@openAppSettings": {
     "description": "Link that opens the operating system's settings page for this app, so a previously denied permission can be granted."
   },
-
   "surahVerseCount": "{count, plural, =1{{count} verse} other{{count} verses}}",
   "@surahVerseCount": {
     "description": "Number of verses in a surah, shown under its name in lists. Plural because many languages inflect the noun.",
@@ -87,7 +72,6 @@
       }
     }
   },
-
   "surahSubtitle": "Surah {number} · {verses}",
   "@surahSubtitle": {
     "description": "Subtitle under a surah name, e.g. 'Surah 2 · 286 verses'. Built from a whole sentence rather than concatenated fragments so word order can change per language.",
@@ -102,7 +86,6 @@
       }
     }
   },
-
   "nextPrayerIn": "Next: {prayer} in {countdown}",
   "@nextPrayerIn": {
     "description": "Live countdown on the home screen, e.g. 'Next: Maghrib in 2h 15m'. Translators: place {prayer} and {countdown} wherever the language needs them — both are rendered in an accent colour, which follows them. Keep it short; it sits on one line in a compact row.",
@@ -117,7 +100,6 @@
       }
     }
   },
-
   "sunriseIn": "Sunrise in {countdown}",
   "@sunriseIn": {
     "description": "Countdown to sunrise, shown between Fajr and sunrise. {countdown} is rendered in an accent colour.",
@@ -128,7 +110,6 @@
       }
     }
   },
-
   "sunriseWasAt": "Sunrise was at {time}",
   "@sunriseWasAt": {
     "description": "Shown for an hour after sunrise has passed. {time} is a clock time rendered in an accent colour.",
@@ -139,7 +120,6 @@
       }
     }
   },
-
   "surahNumber": "Surah {number}",
   "@surahNumber": {
     "description": "A surah's position in the Quran, shown on compact cards where there is no room for the verse count.",
@@ -150,7 +130,6 @@
       }
     }
   },
-
   "ayahReference": "Surah {surahName} · {surahNumber}:{ayahNumber}",
   "@ayahReference": {
     "description": "Cites a specific verse, e.g. 'Surah Al-Baqarah · 2:3'. The chapter:verse part is a conventional citation format — keep the colon and the numeral order as they are, even where the surrounding words move.",
@@ -169,121 +148,158 @@
       }
     }
   },
-
   "settingsTitle": "Settings",
-  "@settingsTitle": { "description": "Title bar of the settings screen." },
-
+  "@settingsTitle": {
+    "description": "Title bar of the settings screen."
+  },
   "sectionAppearance": "Appearance",
-  "@sectionAppearance": { "description": "Settings section grouping theme and display options." },
-
+  "@sectionAppearance": {
+    "description": "Settings section grouping theme and display options."
+  },
   "sectionLanguage": "Language",
-  "@sectionLanguage": { "description": "Settings section grouping the app language and Quran translation language controls." },
-
+  "@sectionLanguage": {
+    "description": "Settings section grouping the app language and Quran translation language controls."
+  },
   "sectionReading": "Reading",
-  "@sectionReading": { "description": "Settings section grouping font sizes and reading display options." },
-
+  "@sectionReading": {
+    "description": "Settings section grouping font sizes and reading display options."
+  },
   "sectionIslamicBooks": "Islamic Books",
-  "@sectionIslamicBooks": { "description": "Settings section for the hadith and Islamic book collections." },
-
+  "@sectionIslamicBooks": {
+    "description": "Settings section for the hadith and Islamic book collections."
+  },
   "sectionQuranAudio": "Quran Audio",
-  "@sectionQuranAudio": { "description": "Settings section for recitation audio options." },
-
+  "@sectionQuranAudio": {
+    "description": "Settings section for recitation audio options."
+  },
   "sectionNotifications": "Notifications",
-  "@sectionNotifications": { "description": "Settings section for prayer alerts and daily reminders." },
-
+  "@sectionNotifications": {
+    "description": "Settings section for prayer alerts and daily reminders."
+  },
   "darkMode": "Dark Mode",
-  "@darkMode": { "description": "Toggle between the light and dark colour theme." },
-
+  "@darkMode": {
+    "description": "Toggle between the light and dark colour theme."
+  },
   "darkModeSubtitle": "Switch between light and dark theme",
-  "@darkModeSubtitle": { "description": "Explains the Dark Mode toggle." },
-
+  "@darkModeSubtitle": {
+    "description": "Explains the Dark Mode toggle."
+  },
   "arabicFontSize": "Arabic Font Size",
-  "@arabicFontSize": { "description": "Slider controlling how large the Arabic Quran text is rendered." },
-
+  "@arabicFontSize": {
+    "description": "Slider controlling how large the Arabic Quran text is rendered."
+  },
   "showTransliteration": "Show Transliteration",
-  "@showTransliteration": { "description": "Toggle for the Roman-letter phonetic rendering of the Arabic." },
-
+  "@showTransliteration": {
+    "description": "Toggle for the Roman-letter phonetic rendering of the Arabic."
+  },
   "showTransliterationSubtitle": "Display Roman transliteration",
-  "@showTransliterationSubtitle": { "description": "Explains the transliteration toggle. 'Roman' means the Latin alphabet, not the city." },
-
+  "@showTransliterationSubtitle": {
+    "description": "Explains the transliteration toggle. 'Roman' means the Latin alphabet, not the city."
+  },
   "showTranslation": "Show Translation",
-  "@showTranslation": { "description": "Toggle for the translated meaning shown under each verse." },
-
+  "@showTranslation": {
+    "description": "Toggle for the translated meaning shown under each verse."
+  },
   "showTranslationSubtitle": "Display translation below Arabic",
-  "@showTranslationSubtitle": { "description": "Explains the translation toggle." },
-
+  "@showTranslationSubtitle": {
+    "description": "Explains the translation toggle."
+  },
   "aboutAppName": "Quran Kareem",
-  "@aboutAppName": { "description": "The app's name as shown in the About section. A proper name — leave untranslated." },
-
+  "@aboutAppName": {
+    "description": "The app's name as shown in the About section. A proper name — leave untranslated."
+  },
   "textSettings": "Text Settings",
-  "@textSettings": { "description": "Row opening the text and reading display settings screen." },
-
+  "@textSettings": {
+    "description": "Row opening the text and reading display settings screen."
+  },
   "textSettingsSubtitle": "Reading mode, font size, swipe navigation",
-  "@textSettingsSubtitle": { "description": "Lists what the Text Settings screen contains." },
-
+  "@textSettingsSubtitle": {
+    "description": "Lists what the Text Settings screen contains."
+  },
   "prayerNotifications": "Prayer Notifications",
-  "@prayerNotifications": { "description": "Row opening the prayer-time alert settings." },
-
+  "@prayerNotifications": {
+    "description": "Row opening the prayer-time alert settings."
+  },
   "prayerNotificationsSubtitle": "Adhan, vibration, or silent alerts",
-  "@prayerNotificationsSubtitle": { "description": "Lists the prayer alert styles available. 'Adhan' is the Islamic call to prayer — keep the term, transliterated as that language conventionally writes it." },
-
+  "@prayerNotificationsSubtitle": {
+    "description": "Lists the prayer alert styles available. 'Adhan' is the Islamic call to prayer — keep the term, transliterated as that language conventionally writes it."
+  },
   "dailyRemindersTitle": "Daily Reminders",
-  "@dailyRemindersTitle": { "description": "Row opening the daily Quran reading reminder settings." },
-
+  "@dailyRemindersTitle": {
+    "description": "Row opening the daily Quran reading reminder settings."
+  },
   "dailyRemindersSubtitle": "Quran reading & Ayah of the Day",
-  "@dailyRemindersSubtitle": { "description": "Lists what the Daily Reminders screen covers. 'Ayah' means a verse of the Quran — keep the term." },
-
+  "@dailyRemindersSubtitle": {
+    "description": "Lists what the Daily Reminders screen covers. 'Ayah' means a verse of the Quran — keep the term."
+  },
   "readingLanguage": "Reading language",
-  "@readingLanguage": { "description": "Which language the Islamic book collections are read in." },
-
+  "@readingLanguage": {
+    "description": "Which language the Islamic book collections are read in."
+  },
   "noBooksDownloaded": "No books downloaded",
-  "@noBooksDownloaded": { "description": "Shown on the books row when nothing has been downloaded yet." },
-
+  "@noBooksDownloaded": {
+    "description": "Shown on the books row when nothing has been downloaded yet."
+  },
   "manageDownloads": "Manage downloads",
-  "@manageDownloads": { "description": "Link to the screen for removing downloaded books." },
-
+  "@manageDownloads": {
+    "description": "Link to the screen for removing downloaded books."
+  },
   "manageDownloadsTitle": "Manage Downloads",
-  "@manageDownloadsTitle": { "description": "Title of the screen listing downloaded books so they can be deleted." },
-
+  "@manageDownloadsTitle": {
+    "description": "Title of the screen listing downloaded books so they can be deleted."
+  },
   "noBooksDownloadedYet": "No books downloaded yet.",
-  "@noBooksDownloadedYet": { "description": "Empty state on the Manage Downloads screen. A full sentence, unlike noBooksDownloaded which is a row subtitle." },
-
+  "@noBooksDownloadedYet": {
+    "description": "Empty state on the Manage Downloads screen. A full sentence, unlike noBooksDownloaded which is a row subtitle."
+  },
   "delete": "Delete",
-  "@delete": { "description": "Button that removes a downloaded book." },
-
+  "@delete": {
+    "description": "Button that removes a downloaded book."
+  },
   "translationSource": "Translation Source",
-  "@translationSource": { "description": "Which scholar's translation to use for the currently selected language." },
-
+  "@translationSource": {
+    "description": "Which scholar's translation to use for the currently selected language."
+  },
   "rateApp": "Rate Get Quran",
-  "@rateApp": { "description": "Row inviting the user to leave a store review. 'Get Quran' is the app's name — leave it untranslated." },
-
+  "@rateApp": {
+    "description": "Row inviting the user to leave a store review. 'Get Quran' is the app's name — leave it untranslated."
+  },
   "rateAppSubtitle": "Share your feedback on the Play Store",
-  "@rateAppSubtitle": { "description": "Explains the rate row. 'Play Store' is a product name — leave untranslated." },
-
+  "@rateAppSubtitle": {
+    "description": "Explains the rate row. 'Play Store' is a product name — leave untranslated."
+  },
   "audioLanguage": "Audio Language",
-  "@audioLanguage": { "description": "Which language the recitation audio is in." },
-
+  "@audioLanguage": {
+    "description": "Which language the recitation audio is in."
+  },
   "audioLanguageSubtitle": "Language for Quran recitation",
-  "@audioLanguageSubtitle": { "description": "Explains the Audio Language row." },
-
+  "@audioLanguageSubtitle": {
+    "description": "Explains the Audio Language row."
+  },
   "reciter": "Reciter",
-  "@reciter": { "description": "The person reciting the Quran in the audio. A noun for the reader, not the recitation itself." },
-
+  "@reciter": {
+    "description": "The person reciting the Quran in the audio. A noun for the reader, not the recitation itself."
+  },
   "languageArabic": "Arabic",
-  "@languageArabic": { "description": "Language name, shown in a picker. Translate into the display language, e.g. 'Arabe' in French." },
-
+  "@languageArabic": {
+    "description": "Language name, shown in a picker. Translate into the display language, e.g. 'Arabe' in French."
+  },
   "languageEnglish": "English",
-  "@languageEnglish": { "description": "Language name, shown in a picker. Translate into the display language." },
-
+  "@languageEnglish": {
+    "description": "Language name, shown in a picker. Translate into the display language."
+  },
   "languageUrdu": "Urdu",
-  "@languageUrdu": { "description": "Language name, shown in a picker. Translate into the display language." },
-
+  "@languageUrdu": {
+    "description": "Language name, shown in a picker. Translate into the display language."
+  },
   "languageFrench": "French",
-  "@languageFrench": { "description": "Language name, shown in a picker. Translate into the display language." },
-
+  "@languageFrench": {
+    "description": "Language name, shown in a picker. Translate into the display language."
+  },
   "languagePersian": "Persian",
-  "@languagePersian": { "description": "Language name, shown in a picker. Translate into the display language. Also known as Farsi." },
-
+  "@languagePersian": {
+    "description": "Language name, shown in a picker. Translate into the display language. Also known as Farsi."
+  },
   "meaningInLanguage": "Meaning in {language}",
   "@meaningInLanguage": {
     "description": "Subtitle on the reader's translation row, e.g. 'Meaning in French'. {language} arrives already in its own language and is not translated here.",
@@ -294,7 +310,6 @@
       }
     }
   },
-
   "fontSizePx": "{size}px",
   "@fontSizePx": {
     "description": "A font size in pixels, shown under the font-size sliders. Translators: 'px' is a unit abbreviation — leave it as-is unless the language genuinely uses something else.",
@@ -305,7 +320,6 @@
       }
     }
   },
-
   "atTime": "at {time}",
   "@atTime": {
     "description": "Secondary line under the sunrise countdown giving the clock time it will happen, e.g. 'at 6:42 AM'.",
@@ -313,6 +327,450 @@
       "time": {
         "type": "String",
         "example": "6:42 AM"
+      }
+    }
+  },
+  "adhanPreviewMakkahTitle": "Makkah Adhan",
+  "@adhanPreviewMakkahTitle": {
+    "description": "Track title shown in the phone's media/lock-screen player while the user previews the Makkah call to prayer recording from the prayer notification settings screen. 'Makkah' is the Arabic place name (Mecca) and 'Adhan' is the Islamic call to prayer: transliterate both conventionally for your language rather than translating their meaning."
+  },
+  "adhanPreviewMadinahTitle": "Madinah Adhan",
+  "@adhanPreviewMadinahTitle": {
+    "description": "Track title shown in the phone's media/lock-screen player while the user previews the Madinah call to prayer recording from the prayer notification settings screen. 'Madinah' is the Arabic place name (Medina) and 'Adhan' is the Islamic call to prayer: transliterate both conventionally for your language rather than translating their meaning."
+  },
+  "adhanPreviewAlbum": "Adhan Preview",
+  "@adhanPreviewAlbum": {
+    "description": "Album name shown under the track title in the phone's media/lock-screen player while a call-to-prayer recording is being previewed. 'Adhan' is the Islamic call to prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "snackCouldNotPlayPreview": "Could not play preview: {error}",
+  "@snackCouldNotPlayPreview": {
+    "description": "Brief error message shown at the bottom of the prayer notification settings screen when tapping the play button next to a call-to-prayer recording fails. The technical error text is appended and is not translated.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "PlayerException: asset not found"
+      }
+    }
+  },
+  "snackTestNotificationSent": "Test notification sent",
+  "@snackTestNotificationSent": {
+    "description": "Brief confirmation shown at the bottom of the prayer notification settings screen after the user taps the button that sends a sample prayer notification to their phone."
+  },
+  "snackNotificationsTurnedOff": "Notifications turned off",
+  "@snackNotificationsTurnedOff": {
+    "description": "Brief confirmation shown at the bottom of the prayer notification settings screen after the user saves while the alert type is set to Off, so all scheduled prayer-time notifications have been cancelled."
+  },
+  "snackNotificationsScheduled": "✓ Notifications scheduled",
+  "@snackNotificationsScheduled": {
+    "description": "Brief confirmation shown at the bottom of the prayer notification settings screen after the user saves and the daily prayer-time notifications have been scheduled successfully. Keep the leading check mark character (✓) at the start of the translation."
+  },
+  "errorWithMessage": "Error: {error}",
+  "@errorWithMessage": {
+    "description": "Generic failure message shown briefly at the bottom of the screen when saving notification settings fails. Only the word 'Error' is translated; the technical detail that follows comes from the system and is not translated.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "PlatformException(channel-error)"
+      }
+    }
+  },
+  "exactAlarmDialogTitle": "Accurate Prayer Times",
+  "@exactAlarmDialogTitle": {
+    "description": "Title of a pop-up dialog asking the user to grant the Android permission that lets the app schedule alarms at an exact minute, so prayer-time notifications arrive on time."
+  },
+  "exactAlarmDialogBody": "To notify you of exact prayer times, Get Quran needs permission to schedule precise alarms.",
+  "@exactAlarmDialogBody": {
+    "description": "Main explanatory sentence in the pop-up dialog that asks for the Android exact-alarm permission. 'Get Quran' is the name of this app and must stay as-is, untranslated."
+  },
+  "exactAlarmDialogAdhanNote": "Without this, adhan notifications may arrive a few minutes late.",
+  "@exactAlarmDialogAdhanNote": {
+    "description": "Small secondary note at the bottom of the exact-alarm permission dialog, shown on the prayer notification settings screen, warning what happens if the permission is refused. 'Adhan' is the Islamic call to prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "exactAlarmDialogNote": "Without this, notifications may arrive a few minutes late.",
+  "@exactAlarmDialogNote": {
+    "description": "Small secondary note at the bottom of the exact-alarm permission dialog, shown on the daily reminders screen, warning what happens if the permission is refused. This is the wording used for ordinary reminders, with no mention of the call to prayer."
+  },
+  "allowPreciseTimes": "Allow Precise Times",
+  "@allowPreciseTimes": {
+    "description": "Label on the main confirm button of the exact-alarm permission dialog. Tapping it opens the Android system settings page where the user grants the permission. Keep it short enough to fit one line on a button."
+  },
+  "notNow": "Not Now",
+  "@notNow": {
+    "description": "Label on the dismiss button of the exact-alarm permission dialog, letting the user skip granting the permission for the time being. Keep it short."
+  },
+  "sectionAlertType": "ALERT TYPE",
+  "@sectionAlertType": {
+    "description": "Small all-capitals heading above the list of choices for how the app should alert the user at prayer time (call to prayer audio, vibration, or nothing). Use capital letters if that is natural for your language."
+  },
+  "sectionChooseAdhan": "CHOOSE ADHAN",
+  "@sectionChooseAdhan": {
+    "description": "Small all-capitals heading above the list of call-to-prayer recordings the user can pick between. 'Adhan' is the Islamic call to prayer: transliterate it conventionally rather than translating its meaning. Use capital letters if that is natural for your language."
+  },
+  "sectionFridayJumuah": "FRIDAY JUMU'AH",
+  "@sectionFridayJumuah": {
+    "description": "Small all-capitals heading above the settings for the Friday congregational prayer. 'Jumu'ah' is the Arabic name of that prayer: transliterate it conventionally rather than translating its meaning. Use capital letters if that is natural for your language."
+  },
+  "sectionTest": "TEST",
+  "@sectionTest": {
+    "description": "Small all-capitals heading above a single button that sends a sample notification so the user can check their settings. Use capital letters if that is natural for your language."
+  },
+  "saveAndScheduleNotifications": "Save & Schedule Notifications",
+  "@saveAndScheduleNotifications": {
+    "description": "Label on the wide button at the bottom of the prayer notification settings screen. Tapping it stores the chosen settings and schedules the prayer-time notifications."
+  },
+  "alertTypeAdhan": "Adhan",
+  "@alertTypeAdhan": {
+    "description": "Name of the alert option that plays the full call-to-prayer recording out loud at prayer time. One of four options in a radio-button list. 'Adhan' is the Islamic call to prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "alertTypeAdhanSubtitle": "Full adhan audio at prayer time",
+  "@alertTypeAdhanSubtitle": {
+    "description": "One-line explanation under the 'Adhan' alert option in the radio-button list. 'Adhan' is the Islamic call to prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "alertTypeVibration": "Vibration",
+  "@alertTypeVibration": {
+    "description": "Name of the alert option where the phone vibrates repeatedly at prayer time instead of playing sound. One of four options in a radio-button list."
+  },
+  "alertTypeVibrationSubtitle": "Repeating vibration, no sound",
+  "@alertTypeVibrationSubtitle": {
+    "description": "One-line explanation under the 'Vibration' alert option in the radio-button list."
+  },
+  "alertTypeSinglePulse": "Single pulse",
+  "@alertTypeSinglePulse": {
+    "description": "Name of the alert option where the phone gives one brief vibration at prayer time. One of four options in a radio-button list."
+  },
+  "alertTypeSinglePulseSubtitle": "One short vibration",
+  "@alertTypeSinglePulseSubtitle": {
+    "description": "One-line explanation under the 'Single pulse' alert option in the radio-button list."
+  },
+  "alertTypeOff": "Off",
+  "@alertTypeOff": {
+    "description": "Name of the alert option that disables prayer-time notifications entirely. One of four options in a radio-button list. Keep it very short."
+  },
+  "alertTypeOffSubtitle": "No alerts",
+  "@alertTypeOffSubtitle": {
+    "description": "One-line explanation under the 'Off' alert option in the radio-button list, meaning the user will receive no prayer-time notifications."
+  },
+  "adhanMakkah": "Makkah",
+  "@adhanMakkah": {
+    "description": "Name of one of the two selectable call-to-prayer recordings, the one recorded in Makkah (Mecca). Shown as a radio-button option label. This is an Arabic place name: transliterate it conventionally for your language rather than translating its meaning."
+  },
+  "adhanMakkahSubtitle": "Masjid al-Haram · Sheikh Mishary Rashid Alafasy",
+  "@adhanMakkahSubtitle": {
+    "description": "One-line detail under the 'Makkah' call-to-prayer option, naming the mosque and the reciter. 'Masjid al-Haram' is the mosque in Makkah and 'Mishary Rashid Alafasy' is a person's name: transliterate both conventionally rather than translating them. 'Sheikh' is an Islamic honorific, also transliterated. Keep the middle dot separator (·)."
+  },
+  "adhanMadinah": "Madinah",
+  "@adhanMadinah": {
+    "description": "Name of one of the two selectable call-to-prayer recordings, the one recorded in Madinah (Medina). Shown as a radio-button option label. This is an Arabic place name: transliterate it conventionally for your language rather than translating its meaning."
+  },
+  "adhanMadinahSubtitle": "Masjid an-Nabawi · Sheikh Ahmad al-Nafees",
+  "@adhanMadinahSubtitle": {
+    "description": "One-line detail under the 'Madinah' call-to-prayer option, naming the mosque and the reciter. 'Masjid an-Nabawi' is the Prophet's Mosque in Madinah and 'Ahmad al-Nafees' is a person's name: transliterate both conventionally rather than translating them. 'Sheikh' is an Islamic honorific, also transliterated. Keep the middle dot separator (·)."
+  },
+  "fajrAdhanNote": "Fajr will always use the special Fajr adhan with 'As-salatu khayrun minan nawm' regardless of selection.",
+  "@fajrAdhanNote": {
+    "description": "Informational note in a small bordered card below the call-to-prayer chooser, explaining that the dawn prayer always uses its own recording whichever option the user picks. 'Fajr' is the Arabic name of the dawn prayer and 'adhan' is the call to prayer: transliterate both conventionally rather than translating their meaning. 'As-salatu khayrun minan nawm' is an Arabic phrase from the dawn call to prayer (meaning 'prayer is better than sleep'): keep it as a transliteration and leave it inside quotation marks."
+  },
+  "customJumuahTime": "Custom Jumu'ah time",
+  "@customJumuahTime": {
+    "description": "Label of an on/off switch that lets the user set their own time for the Friday congregational prayer notification. 'Jumu'ah' is the Arabic name of that prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "customJumuahTimeSubtitle": "Override the Friday Dhuhr alarm for your mosque's Jumu'ah",
+  "@customJumuahTimeSubtitle": {
+    "description": "One-line explanation under the 'Custom Jumu'ah time' switch, saying that the chosen time replaces the usual Friday midday prayer notification to match the user's local mosque. 'Dhuhr' is the Arabic name of the midday prayer and 'Jumu'ah' the Friday congregational prayer: transliterate both conventionally rather than translating their meaning."
+  },
+  "jumuahNotificationTime": "Jumu'ah notification time",
+  "@jumuahNotificationTime": {
+    "description": "Label of a row whose tappable value on the right opens a clock picker for choosing the time of the Friday congregational prayer notification. 'Jumu'ah' is the Arabic name of that prayer: transliterate it conventionally rather than translating its meaning."
+  },
+  "sendTestNotification": "Send Test Notification",
+  "@sendTestNotification": {
+    "description": "Label on an outlined button that immediately sends a sample notification using the currently chosen alert type, so the user can hear or feel what it will be like."
+  },
+  "snackDailyRemindersSaved": "✓ Daily reminders saved",
+  "@snackDailyRemindersSaved": {
+    "description": "Brief confirmation shown at the bottom of the daily reminders screen after the user's reminder times have been stored and scheduled successfully. Keep the leading check mark character (✓) at the start of the translation."
+  },
+  "sectionQuranReadingReminder": "QURAN READING REMINDER",
+  "@sectionQuranReadingReminder": {
+    "description": "Small all-capitals heading above the morning and evening reminders that nudge the user to read the Quran. Use capital letters if that is natural for your language."
+  },
+  "reminderMorning": "Morning",
+  "@reminderMorning": {
+    "description": "Title of the card for the morning Quran-reading reminder, which has an on/off switch and a time picker. Keep it to a single word if possible."
+  },
+  "reminderMorningSubtitle": "After Fajr — start the day with Quran",
+  "@reminderMorningSubtitle": {
+    "description": "One-line explanation under the title of the morning Quran-reading reminder card. 'Fajr' is the Arabic name of the dawn prayer: transliterate it conventionally rather than translating its meaning. Keep the em dash (—) or replace it with the equivalent separator used in your language."
+  },
+  "reminderEvening": "Evening",
+  "@reminderEvening": {
+    "description": "Title of the card for the evening Quran-reading reminder, which has an on/off switch and a time picker. Keep it to a single word if possible."
+  },
+  "reminderEveningSubtitle": "End the day with the words of Allah",
+  "@reminderEveningSubtitle": {
+    "description": "One-line explanation under the title of the evening Quran-reading reminder card. 'Allah' is the Arabic name of God: transliterate it conventionally rather than translating it."
+  },
+  "sectionAyahOfTheDay": "AYAH OF THE DAY",
+  "@sectionAyahOfTheDay": {
+    "description": "Small all-capitals heading above the settings for a daily notification containing one verse of the Quran. 'Ayah' is the Arabic word for a Quran verse: transliterate it conventionally rather than translating its meaning. Use capital letters if that is natural for your language."
+  },
+  "saveReminders": "Save Reminders",
+  "@saveReminders": {
+    "description": "Label on the wide button at the bottom of the daily reminders screen. Tapping it stores the reminder switches and times and schedules the notifications."
+  },
+  "reminderTime": "Reminder time",
+  "@reminderTime": {
+    "description": "Label of the row inside a morning or evening reminder card whose value on the right is a clock time; tapping the row opens a time picker."
+  },
+  "ayahOfTheDay": "Ayah of the Day",
+  "@ayahOfTheDay": {
+    "description": "Title of the card with an on/off switch for the daily notification that delivers one Quran verse. 'Ayah' is the Arabic word for a Quran verse: transliterate it conventionally rather than translating its meaning."
+  },
+  "ayahOfTheDaySubtitle": "A new ayah with reflection, daily",
+  "@ayahOfTheDaySubtitle": {
+    "description": "One-line explanation under the 'Ayah of the Day' card title, saying that each day brings a different Quran verse together with a short commentary. 'Ayah' is the Arabic word for a Quran verse: transliterate it conventionally rather than translating its meaning."
+  },
+  "deliveryTime": "Delivery time",
+  "@deliveryTime": {
+    "description": "Label of the row inside the 'Ayah of the Day' card whose value on the right is a clock time; tapping the row opens a time picker for when the daily verse notification should arrive."
+  },
+  "readerBookmarkSaved": "Bookmark saved",
+  "@readerBookmarkSaved": {
+    "description": "Brief confirmation toast shown after the user bookmarks the chapter (surah) they are reading, so they can return to it later."
+  },
+  "readerSearchLanguageHint": "Search language...",
+  "@readerSearchLanguageHint": {
+    "description": "Placeholder text inside the search box of the language picker in the Quran reader. The user types a language name to filter a long list of translation languages."
+  },
+  "readerNoLanguagesFound": "No languages found",
+  "@readerNoLanguagesFound": {
+    "description": "Empty-state message shown in the language picker when the user's search text matches no language in the list."
+  },
+  "readerLoadingVerses": "Loading verses…",
+  "@readerLoadingVerses": {
+    "description": "Small progress badge shown at the top of the reader while the verses of the current chapter are still being fetched. Keep the trailing ellipsis character."
+  },
+  "readerPrevious": "Previous",
+  "@readerPrevious": {
+    "description": "Small label above the name of the preceding chapter, on a button that navigates backwards to it. Space is tight: one short word is best."
+  },
+  "readerNext": "Next",
+  "@readerNext": {
+    "description": "Small label above the name of the following chapter, on a button that navigates forwards to it. Space is tight: one short word is best."
+  },
+  "readerAayaatCount": "{count, plural, =1{{count} Aayah} other{{count} Aayaat}}",
+  "@readerAayaatCount": {
+    "description": "Chip in the chapter header stating how many verses the chapter contains. 'Aayah' (singular) and 'Aayaat' (plural) are the Arabic words for a Quranic verse, used here as religious vocabulary; keep them transliterated rather than translating them, unless your language has its own established transliteration.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "286"
+      }
+    }
+  },
+  "readerRomanArabicLabel": "ROMAN ARABIC",
+  "@readerRomanArabicLabel": {
+    "description": "Tiny all-caps caption above the phonetic rendering of a verse, which spells the Arabic sounds using Latin letters. 'Roman' means the Latin alphabet, not the city or the Romanian language. Displayed in capitals with wide letter spacing, so keep it very short."
+  },
+  "readerVerseProgress": "Verse {current} / {total}",
+  "@readerVerseProgress": {
+    "description": "Position of the verse currently being recited, shown in the compact audio bar pinned to the bottom of the reader, e.g. 'Verse 5 / 286'.",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "5"
+      },
+      "total": {
+        "type": "int",
+        "example": "286"
+      }
+    }
+  },
+  "readerVerseOfTotal": "Verse {current} of {total}",
+  "@readerVerseOfTotal": {
+    "description": "Position of the verse currently being recited, shown as a full phrase on the larger 'now playing' card inside the reader settings sheet, e.g. 'Verse 5 of 286'.",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "example": "5"
+      },
+      "total": {
+        "type": "int",
+        "example": "286"
+      }
+    }
+  },
+  "readerModeTranslation": "Translation",
+  "@readerModeTranslation": {
+    "description": "Label on the first of three small chips that pick how much of each verse is shown. This one shows the translated meaning only, with no Arabic. It sits in a narrow pill, so keep it to one word if possible."
+  },
+  "readerModeArabicPlus": "Arabic+",
+  "@readerModeArabicPlus": {
+    "description": "Label on the second of three small chips that pick how much of each verse is shown. This one adds the Arabic scripture above the translation; the '+' means 'as well'. Keep it very short — it sits in a narrow pill."
+  },
+  "readerModeRoman": "+Roman",
+  "@readerModeRoman": {
+    "description": "Label on the third of three small chips that pick how much of each verse is shown. This one additionally shows the phonetic spelling in Latin letters; the leading '+' means 'and also'. 'Roman' refers to the Latin alphabet. Keep it very short — it sits in a narrow pill."
+  },
+  "readerSurahProgress": "{number} / {total}",
+  "@readerSurahProgress": {
+    "description": "Shows which chapter of the Quran is open out of the complete set, e.g. '2 / 114'. Numbers only, no words.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "2"
+      },
+      "total": {
+        "type": "int",
+        "example": "114"
+      }
+    }
+  },
+  "readerSettingsTitle": "Reader Settings",
+  "@readerSettingsTitle": {
+    "description": "Heading of the bottom sheet that holds the reading-screen options (theme, text size, audio)."
+  },
+  "readerTabDisplay": "Display",
+  "@readerTabDisplay": {
+    "description": "Name of the first tab in the reader settings sheet, holding colour theme and layout options. One short word; it sits in a small pill."
+  },
+  "readerTabText": "Text",
+  "@readerTabText": {
+    "description": "Name of the second tab in the reader settings sheet, holding font-size and text visibility options. One short word; it sits in a small pill."
+  },
+  "readerTabAudio": "Audio",
+  "@readerTabAudio": {
+    "description": "Name of the third tab in the reader settings sheet, holding recitation playback options. One short word; it sits in a small pill."
+  },
+  "readerSectionTheme": "THEME",
+  "@readerSectionTheme": {
+    "description": "All-caps section heading above three colour-scheme choices for the reading page. Displayed in capitals with wide letter spacing; keep it to one short word."
+  },
+  "readerThemeWarm": "Warm",
+  "@readerThemeWarm": {
+    "description": "Name of a reading colour scheme: a plain white page with warm-toned dark text. One short word under a small preview card."
+  },
+  "readerThemePaper": "Paper",
+  "@readerThemePaper": {
+    "description": "Name of a reading colour scheme: a cream, printed-book page. One short word under a small preview card."
+  },
+  "readerThemeDark": "Dark",
+  "@readerThemeDark": {
+    "description": "Name of a reading colour scheme: light text on a near-black page. One short word under a small preview card."
+  },
+  "readerSectionReadingMode": "READING MODE",
+  "@readerSectionReadingMode": {
+    "description": "All-caps section heading above three choices for how verses are laid out on the page. Displayed in capitals with wide letter spacing; keep it short."
+  },
+  "readerModeList": "List",
+  "@readerModeList": {
+    "description": "Name of a layout where each verse is a separate scrolling card. One short word under a small icon."
+  },
+  "readerModePage": "Page",
+  "@readerModePage": {
+    "description": "Name of a layout that imitates the printed pages of a Quran, turned one at a time. One short word under a small icon."
+  },
+  "readerModeFocus": "Focus",
+  "@readerModeFocus": {
+    "description": "Name of a layout showing one verse at a time with nothing else on screen, to aid concentration. One short word under a small icon."
+  },
+  "readerKeepScreenOn": "Keep Screen On",
+  "@readerKeepScreenOn": {
+    "description": "Label of a switch that stops the phone screen from dimming or locking by itself."
+  },
+  "readerKeepScreenOnSubtitle": "While reading",
+  "@readerKeepScreenOnSubtitle": {
+    "description": "Small caption under the 'Keep Screen On' switch, saying the screen stays awake only for as long as the reading page is open."
+  },
+  "readerSectionArabicSize": "ARABIC TEXT SIZE",
+  "@readerSectionArabicSize": {
+    "description": "All-caps section heading above a slider that scales the Arabic Quran script. Displayed in capitals with wide letter spacing."
+  },
+  "readerSectionTransliterationSize": "TRANSLITERATION SIZE",
+  "@readerSectionTransliterationSize": {
+    "description": "All-caps section heading above a slider that scales the phonetic Latin-letter spelling of the Arabic. Displayed in capitals with wide letter spacing."
+  },
+  "readerSectionTranslationSize": "TRANSLATION SIZE",
+  "@readerSectionTranslationSize": {
+    "description": "All-caps section heading above a slider that scales the translated meaning of each verse. Displayed in capitals with wide letter spacing."
+  },
+  "readerSectionNowPlaying": "NOW PLAYING",
+  "@readerSectionNowPlaying": {
+    "description": "All-caps section heading above the card showing which recitation is currently being played. Displayed in capitals with wide letter spacing."
+  },
+  "readerStop": "Stop",
+  "@readerStop": {
+    "description": "Small underlined link that halts the recitation altogether, as opposed to merely pausing it."
+  },
+  "readerSectionPlaybackSpeed": "PLAYBACK SPEED",
+  "@readerSectionPlaybackSpeed": {
+    "description": "All-caps section heading above buttons choosing how fast the recitation is played. Displayed in capitals with wide letter spacing."
+  },
+  "readerPlaybackSpeedValue": "{speed}x",
+  "@readerPlaybackSpeedValue": {
+    "description": "A playback-speed button, e.g. '1.0x' meaning normal speed and '1.5x' meaning one and a half times as fast. The 'x' stands for 'times'; replace it only if your language has a different established multiplier mark.",
+    "placeholders": {
+      "speed": {
+        "type": "String",
+        "example": "1.5"
+      }
+    }
+  },
+  "readerSectionReciter": "RECITER",
+  "@readerSectionReciter": {
+    "description": "All-caps section heading above the list of people whose recorded Quran recitation the user can choose. Displayed in capitals with wide letter spacing."
+  },
+  "surahListNoResults": "No surahs found",
+  "@surahListNoResults": {
+    "description": "Headline of the empty state on the chapter list when the user's search text matches no chapter. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is."
+  },
+  "surahListNoResultsHint": "Try searching by name, translation, or number",
+  "@surahListNoResultsHint": {
+    "description": "Advice under the 'No surahs found' headline, naming the three things the search box matches on: the chapter's transliterated Arabic name, the translation of that name, and its number from 1 to 114."
+  },
+  "surahListTotalCount": "{count, plural, other{{count} Surahs}}",
+  "@surahListTotalCount": {
+    "description": "Count of all chapters in the Quran, shown at the top right of the chapter list; always 114 in practice. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "114"
+      }
+    }
+  },
+  "surahListSearchHint": "Search surah...",
+  "@surahListSearchHint": {
+    "description": "Placeholder text inside the search box above the list of Quran chapters. 'Surah' is the Arabic word for a chapter of the Quran and is normally kept as-is."
+  },
+  "surahListTileMeta": "{verses, plural, =1{{verses} verse} other{{verses} verses}} · {revelationType} · Juz {juz}",
+  "@surahListTileMeta": {
+    "description": "One-line summary under each chapter name in the list, e.g. '286 verses · Medinan · Juz 1'. {revelationType} is supplied already-worded and says where the chapter was revealed (such as Meccan or Medinan). 'Juz' is one of the thirty equal parts the Quran is traditionally divided into, and is normally kept as-is. The '·' characters are separators and the parts may be reordered if your language reads better that way.",
+    "placeholders": {
+      "verses": {
+        "type": "int",
+        "example": "286"
+      },
+      "revelationType": {
+        "type": "String",
+        "example": "Medinan"
+      },
+      "juz": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "surahListDeleteDownloadTitle": "Delete download?",
+  "@surahListDeleteDownloadTitle": {
+    "description": "Title of the confirmation dialog shown when the user taps the download button on a chapter whose recitation audio is already saved on the device."
+  },
+  "surahListDeleteDownloadBody": "Remove offline audio for {surahName}?",
+  "@surahListDeleteDownloadBody": {
+    "description": "Body of the confirmation dialog for deleting a saved recitation, asking whether the audio stored on the device for that one chapter should be erased. {surahName} is the chapter's transliterated Arabic name and is never translated.",
+    "placeholders": {
+      "surahName": {
+        "type": "String",
+        "example": "Al-Baqarah"
       }
     }
   }
