@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+// `hide TextDirection`: intl exports its own TextDirection, which collides
+// with Flutter's and breaks the release build. This file uses Flutter's.
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
@@ -651,16 +654,16 @@ class _CalPrayerCard extends StatelessWidget {
     const hMonthsAr = ['\u0645\u064f\u062d\u064e\u0631\u064e\u0651\u0645', '\u0635\u064e\u0641\u064e\u0631', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u0623\u064e\u0648\u064e\u0651\u0644', '\u0631\u064e\u0628\u0650\u064a\u0639\u064f \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a',
         '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u0623\u064f\u0648\u0644\u064e\u0649', '\u062c\u064f\u0645\u064e\u0627\u062f\u064e\u0649 \u0627\u0644\u062b\u064e\u0651\u0627\u0646\u0650\u064a\u064e\u0629', '\u0631\u064e\u062c\u064e\u0628', '\u0634\u064e\u0639\u0652\u0628\u064e\u0627\u0646',
         '\u0631\u064e\u0645\u064e\u0636\u064e\u0627\u0646', '\u0634\u064e\u0648\u064e\u0651\u0627\u0644', '\u0630\u064f\u0648 \u0627\u0644\u0652\u0642\u064e\u0639\u0652\u062f\u064e\u0629', '\u0630\u064f\u0648 \u0627\u0644\u0652\u062d\u0650\u062c\u064e\u0651\u0629'];
-    final months = [
-      l.monthShortJan, l.monthShortFeb, l.monthShortMar, l.monthShortApr,
-      l.monthShortMay, l.monthShortJun, l.monthShortJul, l.monthShortAug,
-      l.monthShortSep, l.monthShortOct, l.monthShortNov, l.monthShortDec,
-    ];
-    final wdays = [
-      l.weekdayShortMon, l.weekdayShortTue, l.weekdayShortWed,
-      l.weekdayShortThu, l.weekdayShortFri, l.weekdayShortSat,
-      l.weekdayShortSun,
-    ];
+    // Gregorian weekday and month names come from intl's CLDR data rather
+    // than the ARB: it already has them for every locale, correctly
+    // abbreviated, and it orders the parts the way each language does — the
+    // 11th of October reads "Mon, Oct 11" in English but "lun. 11 oct." in
+    // French. A hand-translated template could not move the day like that.
+    //
+    // Hijri months stay in the ARB above; intl has no reliable Islamic
+    // calendar month names.
+    final gregorianDateFormat =
+        DateFormat('EEE, MMM d', Localizations.localeOf(context).toString());
 
     String toAI(int n) {
       const d = ['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'];
@@ -721,8 +724,7 @@ class _CalPrayerCard extends StatelessWidget {
                   Text(hMonthsAr[h['month']! - 1],
                       style: TextStyle(fontFamily: 'Scheherazade', fontSize: 15,
                           color: context.isDark ? AppColors.goldDim : const Color(0xFF9a7030))),
-                  Text(l.shortDateLine(wdays[now.weekday - 1],
-                      months[now.month - 1], now.day),
+                  Text(gregorianDateFormat.format(now),
                       style: TextStyle(fontSize: 11, fontFamily: 'sans-serif',
                           color: context.isDark ? const Color(0xFF5a5040) : const Color(0xFF9a7030))),
                 ]),

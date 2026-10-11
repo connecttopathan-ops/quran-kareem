@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -25,6 +26,11 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Loads CLDR date symbols for every locale. Without this, DateFormat throws
+  // LocaleDataException the moment it is handed anything but en_US — which is
+  // exactly what the home screen's date line does once the app is not in
+  // English.
+  await initializeDateFormatting();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   try {
     await NotificationService().init();
