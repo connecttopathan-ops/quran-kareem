@@ -106,9 +106,9 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iOSSettings =
         DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -122,6 +122,30 @@ class NotificationService {
         }
       },
     );
+
+    // On iOS, sync the plugin's internal authorization state with whatever
+    // the OS has already granted (e.g. from a previous install or session).
+    // Only fires when permission is already determined — never shows a dialog.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final status = await Permission.notification.status;
+      if (status.isGranted || status.isLimited) {
+        await syncIOSPermissions();
+      }
+    }
+
+    // One-time migration: cancel stale prayer notifications that were stored
+    // without an icon field, causing a NullPointerException in
+    // ScheduledNotificationReceiver.setSmallIcon on Android. Daily reminders
+    // and ayah notifications are left untouched. HomeScreen reschedules
+    // prayer notifications fresh on the next launch.
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final prefs = await SharedPreferences.getInstance();
+      const _migrationKey = 'notif_icon_migration_v1';
+      if (!(prefs.getBool(_migrationKey) ?? false)) {
+        await cancelPrayerNotifications();
+        await prefs.setBool(_migrationKey, true);
+      }
+    }
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
@@ -221,6 +245,17 @@ class NotificationService {
   Future<bool> hasNotificationPermission() async {
     final status = await Permission.notification.status;
     return status.isGranted || status.isLimited;
+  }
+
+  /// Tells flutter_local_notifications the notification options it should use
+  /// on iOS. Must be called after the user grants permission via permission_handler
+  /// so the plugin's internal authorization state is synced with the OS grant.
+  Future<void> syncIOSPermissions() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   /// Returns true if exact alarms are permitted.
@@ -439,6 +474,8 @@ class NotificationService {
 
     final DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
       presentAlert: true,
+      presentBanner: true,
+      presentList: true,
       presentBadge: true,
       presentSound: mode != PrayerNotificationMode.off,
       sound: iOSSound,
@@ -471,7 +508,7 @@ class NotificationService {
         priority: Priority.high,
         playSound: true,
       ),
-      iOS: DarwinNotificationDetails(presentAlert: true, presentSound: true),
+      iOS: DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentList: true, presentSound: true),
     );
 
     final scheduleMode = await _resolveScheduleMode();
@@ -604,7 +641,7 @@ class NotificationService {
               '${ayah.translation}\n\n${ayah.message}',
             ),
           ),
-          iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: true),
+          iOS: const DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentList: true, presentSound: true),
         ),
         scheduleMode: scheduleMode,
         payload: 'ayah_of_the_day',

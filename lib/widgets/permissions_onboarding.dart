@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 
@@ -13,9 +14,38 @@ import '../theme/app_theme.dart';
 ///  • Subsequent launches → show only if notifications still not granted
 ///  • Battery / exact alarm → shown once (flag set after first display)
 Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
-  if (!Platform.isAndroid) return;
+  if (!Platform.isAndroid && !Platform.isIOS) return;
 
   final notifGranted = await NotificationService().hasNotificationPermission();
+
+  // iOS: only notification permission is relevant — no battery/exact-alarm concepts.
+  if (Platform.isIOS) {
+    if (notifGranted) return;
+    // Show the sheet at most once. If the user tapped "Maybe later" they can
+    // enable notifications later via Settings → Prayer Notifications.
+    final prefs = await SharedPreferences.getInstance();
+    const _shownKey = 'notif_sheet_shown_ios';
+    if (prefs.getBool(_shownKey) ?? false) return;
+    await prefs.setBool(_shownKey, true);
+    if (!context.mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PermissionsSheet(
+        initialNotifGranted: false,
+        initialExactGranted: true,
+        initialBatteryExempt: true,
+        showExactRow: false,
+        showBatteryRow: false,
+        manufacturer: '',
+      ),
+    );
+    return;
+  }
+
   final batteryExempt =
       (await Permission.ignoreBatteryOptimizations.status).isGranted;
 
@@ -48,6 +78,7 @@ Future<void> showPermissionsOnboardingIfNeeded(BuildContext context) async {
       initialExactGranted: exactGranted,
       initialBatteryExempt: batteryExempt,
       showExactRow: showExactRow,
+      showBatteryRow: true,
       manufacturer: manufacturer,
     ),
   );
@@ -60,6 +91,7 @@ class _PermissionsSheet extends StatefulWidget {
   final bool initialExactGranted;
   final bool initialBatteryExempt;
   final bool showExactRow;
+  final bool showBatteryRow;
   final String manufacturer;
 
   const _PermissionsSheet({
@@ -67,6 +99,7 @@ class _PermissionsSheet extends StatefulWidget {
     required this.initialExactGranted,
     required this.initialBatteryExempt,
     required this.showExactRow,
+    required this.showBatteryRow,
     required this.manufacturer,
   });
 
@@ -80,6 +113,26 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
   late bool _exactGranted;
   late bool _batteryExempt;
   late bool _showExactRow;
+  bool _requesting = false;
+
+  Future<void> _requestNotifications() async {
+    setState(() => _requesting = true);
+    await Permission.notification.request();
+    // Sync flutter_local_notifications' internal iOS authorization state so
+    // it knows which notification options (alert/badge/sound) to use.
+    await NotificationService().syncIOSPermissions();
+    await _recheck();
+    if (!mounted) return;
+    setState(() => _requesting = false);
+    // iOS: always dismiss after the system dialog — notifications are the only
+    // permission on iOS so the flow is complete.
+    // Android: stay on the sheet so the user can see and grant the remaining
+    // rows (exact alarm, battery optimization). The Continue button updates to
+    // "All Set — Continue" once notifications are granted.
+    if (Platform.isIOS) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void initState() {
@@ -105,9 +158,13 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
 
   Future<void> _recheck() async {
     final notif = await NotificationService().hasNotificationPermission();
-    final exact = await NotificationService().hasExactAlarmPermission();
-    final battery =
-        (await Permission.ignoreBatteryOptimizations.status).isGranted;
+    // Battery / exact-alarm only exist on Android — skip the lookups on iOS.
+    final exact = Platform.isAndroid
+        ? await NotificationService().hasExactAlarmPermission()
+        : true;
+    final battery = Platform.isAndroid
+        ? (await Permission.ignoreBatteryOptimizations.status).isGranted
+        : true;
     if (mounted) {
       setState(() {
         _notifGranted = notif;
@@ -231,10 +288,7 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
             description: 'Required to receive prayer time alerts',
             granted: _notifGranted,
             isDark: _isDark,
-            onGrant: () async {
-              await Permission.notification.request();
-              await _recheck();
-            },
+            onGrant: _requestNotifications,
           ),
 
           // 2. Precise timing (Android 12–13 only when not auto-granted)
@@ -253,36 +307,37 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
               },
             ),
 
-          // 3. Battery optimisation
-          _PermRow(
-            icon: Icons.battery_saver_outlined,
-            title: 'Always Run in Background',
-            description:
-                'Prevents your phone from blocking prayer alerts when the screen is off',
-            granted: _batteryExempt,
-            tip: _batteryTip,
-            isDark: _isDark,
-            onGrant: () async {
-              await Permission.ignoreBatteryOptimizations.request();
-              await _recheck();
-              // If exact alarm is still pending, automatically prompt for it now.
-              // The user tapped the last row — chain straight into alarm settings
-              // so they don't have to notice and tap row 2 separately.
-              if (mounted && _showExactRow && !_exactGranted) {
-                await NotificationService().openExactAlarmSettings();
-              }
-            },
-          ),
+          // 3. Battery optimisation (Android only)
+          if (widget.showBatteryRow)
+            _PermRow(
+              icon: Icons.battery_saver_outlined,
+              title: 'Always Run in Background',
+              description:
+                  'Prevents your phone from blocking prayer alerts when the screen is off',
+              granted: _batteryExempt,
+              tip: _batteryTip,
+              isDark: _isDark,
+              onGrant: () async {
+                await Permission.ignoreBatteryOptimizations.request();
+                await _recheck();
+                // If exact alarm is still pending, automatically prompt for it now.
+                if (mounted && _showExactRow && !_exactGranted) {
+                  await NotificationService().openExactAlarmSettings();
+                }
+              },
+            ),
 
           const SizedBox(height: 20),
 
-          // ── Continue button ─────────────────────────────────────────────
+          // ── Primary action ──────────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _allCriticalGranted
-                  ? () => Navigator.of(context).pop()
-                  : null,
+              onPressed: _requesting
+                  ? null
+                  : (_allCriticalGranted
+                      ? () => Navigator.of(context).pop()
+                      : _requestNotifications),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 foregroundColor: Colors.white,
@@ -294,25 +349,34 @@ class _PermissionsSheetState extends State<_PermissionsSheet>
                 elevation: 0,
               ),
               child: Text(
-                _allCriticalGranted ? 'All Set — Continue' : 'Allow Notifications to Continue',
+                _allCriticalGranted ? 'All Set — Continue' : 'Allow Notifications',
                 style: const TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ),
 
-          if (!_notifGranted) ...[
-            const SizedBox(height: 10),
+          // Escape hatch — notifications are optional, never trap the user.
+          if (!_allCriticalGranted) ...[
+            const SizedBox(height: 8),
             Center(
               child: TextButton(
-                onPressed: () async {
-                  // Open app settings as last resort if permission is permanently denied
-                  await openAppSettings();
-                },
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Maybe later',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _subtitleColor),
+                ),
+              ),
+            ),
+            Center(
+              child: TextButton(
+                onPressed: openAppSettings,
                 child: Text(
                   'Open app settings',
-                  style:
-                      TextStyle(fontSize: 12, color: _subtitleColor),
+                  style: TextStyle(fontSize: 12, color: _subtitleColor),
                 ),
               ),
             ),

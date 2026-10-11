@@ -10,6 +10,24 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
   private static var eventChannel: FlutterMethodChannel?
   private static var commandsRegistered = false
   private static var setupCount = 0
+  private static var sessionActivated = false
+
+  /// Activates the shared AVAudioSession with .playback so background audio
+  /// and lock-screen now-playing controls work. Idempotent — safe to call
+  /// many times. Used both at register and as a safety net inside
+  /// setNowPlaying so a transient failure at startup can self-heal.
+  private static func ensureAudioSessionActive() {
+    if sessionActivated { return }
+    do {
+      let session = AVAudioSession.sharedInstance()
+      try session.setCategory(.playback, mode: .default, options: [])
+      try session.setActive(true)
+      sessionActivated = true
+      NSLog("[NowPlayingPlugin] AVAudioSession active, category=playback")
+    } catch {
+      NSLog("[NowPlayingPlugin] AVAudioSession error: \(error)")
+    }
+  }
 
   static func register(with registrar: FlutterPluginRegistrar) {
     NSLog("[NowPlayingPlugin] register called")
@@ -21,16 +39,7 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: channel)
     eventChannel = channel
 
-    // Activate audio session with .playback so background audio and
-    // MPNowPlayingInfoCenter work correctly.
-    do {
-      let session = AVAudioSession.sharedInstance()
-      try session.setCategory(.playback, mode: .default, options: [])
-      try session.setActive(true)
-      NSLog("[NowPlayingPlugin] AVAudioSession active, category=playback")
-    } catch {
-      NSLog("[NowPlayingPlugin] AVAudioSession error: \(error)")
-    }
+    ensureAudioSessionActive()
   }
 
   /// Re-registers remote command handlers, clearing any previously registered
@@ -99,6 +108,10 @@ class NowPlayingPlugin: NSObject, FlutterPlugin {
     NSLog("[NowPlayingPlugin] handle: \(call.method)")
     switch call.method {
     case "setNowPlaying":
+      // Safety net: if the audio session failed to activate at register time
+      // (e.g. interruption or scene timing), retry now so lock-screen
+      // controls aren't permanently broken for the rest of the session.
+      NowPlayingPlugin.ensureAudioSessionActive()
       // Register remote commands now — just_audio_background has already
       // initialised by the time the first setNowPlaying call arrives.
       NowPlayingPlugin.setupRemoteCommandsIfNeeded()

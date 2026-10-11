@@ -111,7 +111,7 @@ class SettingsScreen extends StatelessWidget {
                       _SectionHeader('About'),
                       _SettingTile(
                         title: 'Quran Kareem',
-                        subtitle: 'Version 1.0.10',
+                        subtitle: 'Version 1.1.0',
                         trailing: null,
                       ),
                       _RateAppTile(),

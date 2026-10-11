@@ -158,7 +158,23 @@ class QuranAudioHandler {
       }
       print('[QuranAudio] setAudioSource playlist done');
     } catch (e) {
-      print('[QuranAudio] setAudioSource playlist error: $e — playing anyway');
+      print('[QuranAudio] setAudioSource playlist error: $e — verifying');
+      // iOS 26: the Future may never resolve even though AVPlayer loaded.
+      // Give the engine a brief grace period, then retry once if still idle.
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (_player.processingState == ProcessingState.idle) {
+          print('[QuranAudio] state still idle — retrying setAudioSource');
+          try {
+            await _player
+                .setAudioSource(playlist,
+                    initialIndex: startIndex, initialPosition: Duration.zero)
+                .timeout(const Duration(seconds: 2));
+          } catch (e2) {
+            print('[QuranAudio] retry setAudioSource also failed: $e2');
+          }
+        }
+      }
     }
 
     try {
@@ -173,7 +189,19 @@ class QuranAudioHandler {
         await _player.play();
       }
     } catch (e) {
-      print('[QuranAudio] play() error/timeout: $e');
+      print('[QuranAudio] play() error/timeout: $e — verifying playback');
+      // If the player is actually playing, the timeout was a false alarm.
+      // If still not playing after a beat, retry play() once.
+      if (Platform.isIOS && !_player.playing) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (!_player.playing) {
+          try {
+            await _player.play().timeout(const Duration(seconds: 3));
+          } catch (e2) {
+            print('[QuranAudio] retry play() also failed: $e2');
+          }
+        }
+      }
     }
     _intentionalStop = false;
     _startWatchdog();
