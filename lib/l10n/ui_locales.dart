@@ -22,6 +22,16 @@ class UiLocale {
   const UiLocale(this.code, this.nativeName, this.englishName);
 }
 
+/// Only languages with a translation bundle belong here.
+///
+/// `supportedLocales` is generated from whichever `app_*.arb` files exist, so
+/// listing a language without one lets the user pick it and then silently get
+/// English — a worse outcome than not offering it, because nothing on screen
+/// explains why their choice did nothing.
+///
+/// Chinese and Japanese are deferred: re-add a line here when `app_zh.arb` and
+/// `app_ja.arb` land. Until then `resolveUiLocale` maps those devices to
+/// English, which is the honest fallback.
 const List<UiLocale> kUiLocales = [
   UiLocale('en', 'English', 'English'),
   UiLocale('fr', 'Français', 'French'),
@@ -29,8 +39,6 @@ const List<UiLocale> kUiLocales = [
   UiLocale('it', 'Italiano', 'Italian'),
   UiLocale('de', 'Deutsch', 'German'),
   UiLocale('pt', 'Português', 'Portuguese'),
-  UiLocale('zh', '中文', 'Chinese'),
-  UiLocale('ja', '日本語', 'Japanese'),
 ];
 
 const String kDefaultUiLocale = 'en';
@@ -82,9 +90,10 @@ String resolveUiLocale(String languageCode) {
       return kDefaultUiLocale;
     case 'iw': // pre-1989 Hebrew code
       return kDefaultUiLocale;
-    case 'cmn': // Mandarin
-    case 'yue': // Cantonese
-      return 'zh';
+    // 'cmn' (Mandarin) and 'yue' (Cantonese) mapped to 'zh' here until Chinese
+    // is translated. Restore that mapping alongside app_zh.arb; routing them
+    // to an unshipped locale now would only take the English fallback by a
+    // longer road.
     case 'gl': // Galician — mutually intelligible with Portuguese
       return 'pt';
     default:
