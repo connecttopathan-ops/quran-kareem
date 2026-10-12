@@ -14,11 +14,26 @@ this ships.
 | Content | Where | Languages | Reviewed |
 |---|---|---|---|
 | 99 Names of Allah — meanings | `asma_ul_husna.dart` | en fr es it de pt | **No** |
+| 30 curated ayahs — excerpt + reflection | `curated_ayahs.dart` | en fr es it de pt | **No** |
+| Hasanat promises, labels, conditions | `hasanat_promises.dart` | en fr es it de pt | **No** |
 | 51 duas — translations | `../screens/duas_screen.dart` | en only | n/a |
-| 30 curated ayahs — translation + reflection | `curated_ayahs.dart` | en only | n/a |
-| Hasanat promises — Quran/hadith quotations | `hasanat_promises.dart` | en only | n/a |
 
-Only the Names have been translated so far. The rest are still English-only.
+## The most important caveat: provenance
+
+Where this file says a translation "follows Hamidullah" or "follows
+Bubenheim", that means **the assistant reproduced what it believed those
+translators say, working from recall rather than from a copy of the text.**
+
+The sense and register should be right. The exact wording may drift from the
+printed edition in word order, particles and punctuation. **Before release,
+every Quranic passage should be checked against an actual edition.** This
+applies to:
+
+- all 30 curated ayah excerpts
+- the four Quran verses in `hasanat_promises.dart`
+
+It does not apply to the Names, the reflections, or the hadith, which were
+never claimed to come from a specific published text.
 
 ## Pre-existing problems in the English source
 
@@ -95,6 +110,51 @@ Roughly 37 of 99 were flagged. The ones most worth a reviewer's time:
 - **Counting pair (40 Al-Hasib, 57 Al-Muhsi):** distinguished as
   reckoning-to-account vs enumerating; no language has crisp single words for
   both.
+
+## Curated ayahs — specific items
+
+### Deliberate departures from the published text
+- **103:1** — Cortés reads *¡Por la tarde!* and Bubenheim *Bei der
+  Nachmittagszeit!*, both taking *al-'asr* as the afternoon. The English
+  excerpt says "By time", so Spanish and German follow the English with *¡Por
+  el tiempo!* / *Bei der Zeit!*. An editorial call, not a recall error —
+  reverse it if fidelity to the translator matters more than matching the card.
+- **Allah, not God.** Cortés' *Alá*, García's *Dios* and El Hayek's *Deus*
+  were all replaced with *Allah* to match the app's convention. Verified: no
+  *Dieu*, *Dios* or *Deus* remains in any verse. German and Italian keep
+  *Gott* / *dio* only where those render *ilāh* ("deity"), which mirrors what
+  the English does with "no deity except Him" — that is correct, not a miss.
+
+### Mixed translators within one language
+- **3:173 German** uses Rassoul, not Bubenheim, whose *der Obhutgebende* for
+  *al-wakīl* reads oddly on a card. Everything else German is Bubenheim.
+- **94:5 Spanish** uses García; Cortés' rendering does not match the shape of
+  the English excerpt at all.
+- **29:45 Spanish** uses *la oración* rather than Cortés' *la azalá*.
+
+### Least confident
+**23:1 Italian** is the weakest item in the file. Also unsure: 23:1 Spanish,
+94:5 Italian, 67:2 and 30:21 Portuguese.
+
+### Reflections where the English idiom did not carry
+- **40:60 "Allah is waiting for your du'a"** — rendered with *attend* /
+  *espera* / *wartet auf*. A literal "waiting" is theologically awkward in
+  some registers, implying need on Allah's part. Reads as warm invitation in
+  English; may want softening.
+- **25:63 "True strength is gentleness"** — English *gentleness* splits in the
+  Romance languages between *douceur* (softness) and
+  *mansedumbre*/*mitezza* (meekness). Not the same note; worth a native read.
+- **55:13 "Count your blessings"** is an English idiom rendered literally
+  everywhere; understandable but not idiomatic.
+
+### Transliteration
+*dhikr*, *du'a*, *tawakkul*, *istiqamah*, *Ayat al-Kursi* and *Jannah* are
+kept untranslated, with each language applying its own scheme — Spanish
+*Yannah* (matching its *Yumu'ah*), German *Schafi* (matching its *Ischa*).
+Checked: none of these terms appear anywhere in the ARB files, so there is no
+cross-file conflict. The one loose end is Italian, which writes *Jannah* here
+but *Giumu'ah* in the ARB — the same Arabic letter two ways, though the two
+never appear together.
 
 ## Layout note
 

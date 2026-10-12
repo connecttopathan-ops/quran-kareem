@@ -687,15 +687,21 @@ class NotificationService {
     tz.TZDateTime base = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (base.isBefore(now)) base = base.add(const Duration(days: 1));
 
+    // The curated ayahs keep their own per-language maps, so the bundle alone
+    // is not enough — the code is needed to read them.
+    final lang = await currentLanguageCode();
+
     for (int i = 0; i < _ayahDays; i++) {
       final ayah = curatedAyahs[(startIndex + i) % curatedAyahs.length];
       final tz.TZDateTime scheduled = base.add(Duration(days: i));
+      final ayahBody =
+          '${ayah.translation(lang)}\n\n${ayah.message(lang)}';
 
       await _safeZonedSchedule(
         id: _ayahBaseId + i,
         title: '✨ ${l.ayahOfTheDay} — '
             '${l.ayahReference(ayah.surahName, ayah.surah, ayah.ayah)}',
-        body: '${ayah.translation}\n\n${ayah.message}',
+        body: ayahBody,
         scheduledDate: scheduled,
         details: NotificationDetails(
           android: AndroidNotificationDetails(
@@ -704,9 +710,7 @@ class NotificationService {
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
-            styleInformation: BigTextStyleInformation(
-              '${ayah.translation}\n\n${ayah.message}',
-            ),
+            styleInformation: BigTextStyleInformation(ayahBody),
           ),
           iOS: const DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentList: true, presentSound: true),
         ),

@@ -1717,13 +1717,14 @@ class _DailyAyah extends StatelessWidget {
         Divider(color: AppColors.goldDim.withOpacity(0.25)),
         const SizedBox(height: 4),
         Text(
-          L.of(context).quotedText(ayah.translation),
+          L.of(context).quotedText(
+              ayah.translation(Localizations.localeOf(context).languageCode)),
           style: TextStyle(fontSize: 12, fontFamily: 'sans-serif',
               color: context.isDark ? const Color(0xFFb0a080) : const Color(0xFF5a4020)),
         ),
         const SizedBox(height: 6),
         Text(
-          ayah.message,
+          ayah.message(Localizations.localeOf(context).languageCode),
           style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic,
               color: context.isDark ? const Color(0xFF888888) : const Color(0xFF806840)),
         ),

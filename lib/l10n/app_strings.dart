@@ -19,15 +19,24 @@ import 'ui_locales.dart';
 /// change catches up almost immediately — but a notification already sitting in
 /// the OS queue keeps its old language until then.
 Future<L> loadAppStrings() async {
-  final prefs = await SharedPreferences.getInstance();
-  final stored = prefs.getString('uiLangCode') ?? kSystemUiLocale;
-  final code = (stored == kSystemUiLocale || !isSupportedUiLocale(stored))
-      ? detectUiLocale()
-      : stored;
   // `L.delegate.load` rather than the generated lookup function: the delegate
   // is the same object MaterialApp already uses, so this cannot drift from
   // what the widget tree resolves.
-  return L.delegate.load(Locale(code));
+  return L.delegate.load(Locale(await currentLanguageCode()));
+}
+
+/// The interface language code currently in force, resolved the same way
+/// [loadAppStrings] resolves it.
+///
+/// Services need this separately because some content — the curated ayahs,
+/// the Names, the duas — keeps its own per-language maps rather than living
+/// in the generated localisations, so a bare `L` is not enough to read it.
+Future<String> currentLanguageCode() async {
+  final prefs = await SharedPreferences.getInstance();
+  final stored = prefs.getString('uiLangCode') ?? kSystemUiLocale;
+  return (stored == kSystemUiLocale || !isSupportedUiLocale(stored))
+      ? detectUiLocale()
+      : stored;
 }
 
 /// Turns an internal prayer identifier into its display name.
