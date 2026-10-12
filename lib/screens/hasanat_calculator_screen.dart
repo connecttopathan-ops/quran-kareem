@@ -750,18 +750,24 @@ class _PromiseCard extends StatelessWidget {
                       ? AppColors.gold
                       : AppColors.goldDark),
               const SizedBox(width: 6),
-              Text(
-                isQuran
-                    ? L.of(context).hasanatPromiseHeadingQuran
-                    : L.of(context).hasanatPromiseHeadingHadeeth,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: context.isDark
-                      ? AppColors.gold
-                      : AppColors.goldDark,
-                  fontFamily: 'sans-serif',
+              // Shares the row with the source badge, and 1.2px of tracking
+              // widens it faster than the 10px size implies.
+              Flexible(
+                child: Text(
+                  isQuran
+                      ? L.of(context).hasanatPromiseHeadingQuran
+                      : L.of(context).hasanatPromiseHeadingHadeeth,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: context.isDark
+                        ? AppColors.gold
+                        : AppColors.goldDark,
+                    fontFamily: 'sans-serif',
+                  ),
                 ),
               ),
               const Spacer(),

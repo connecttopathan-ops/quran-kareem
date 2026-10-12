@@ -2138,12 +2138,18 @@ class _BooksHomeSectionState extends State<_BooksHomeSection> {
             // Section header
             Row(
               children: [
-                Text(L.of(context).sectionIslamicBooks.toUpperCase(),
-                    style: TextStyle(
-                        fontSize: 8,
-                        letterSpacing: 2.5,
-                        color: context.textDim,
-                        fontFamily: 'sans-serif')),
+                // 2.5px of tracking on every character makes this heading
+                // grow faster with length than its font size suggests.
+                Flexible(
+                  child: Text(L.of(context).sectionIslamicBooks.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 8,
+                          letterSpacing: 2.5,
+                          color: context.textDim,
+                          fontFamily: 'sans-serif')),
+                ),
                 const Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.push(

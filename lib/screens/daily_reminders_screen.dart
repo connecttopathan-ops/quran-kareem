@@ -385,11 +385,15 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                     Icon(Icons.access_time,
                         size: 16, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text(L.of(context).reminderTime,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: context.textDim,
-                            fontFamily: 'sans-serif')),
+                    Flexible(
+                      child: Text(L.of(context).reminderTime,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: context.textDim,
+                              fontFamily: 'sans-serif')),
+                    ),
                     const Spacer(),
                     Text(
                       time.format(context),
@@ -461,11 +465,15 @@ class _DailyRemindersScreenState extends State<DailyRemindersScreen>
                     Icon(Icons.access_time,
                         size: 16, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text(L.of(context).deliveryTime,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: context.textDim,
-                            fontFamily: 'sans-serif')),
+                    Flexible(
+                      child: Text(L.of(context).deliveryTime,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: context.textDim,
+                              fontFamily: 'sans-serif')),
+                    ),
                     const Spacer(),
                     Text(
                       _ayahTime.format(context),

@@ -970,9 +970,16 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.repeat_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text(L.of(context).hifzLoopRepeatsPerVerse,
-                        style:
-                            TextStyle(color: context.text, fontSize: 13)),
+                    // The control group to the right is fixed width, so once
+                    // the label outgrows the Spacer the row overflows.
+                    // Flexible lets the label give way first.
+                    Flexible(
+                      child: Text(L.of(context).hifzLoopRepeatsPerVerse,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(color: context.text, fontSize: 13)),
+                    ),
                     const Spacer(),
                     Row(
                       children: [
@@ -1012,9 +1019,13 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.skip_next_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text(L.of(context).hifzLoopAutoAdvance,
-                        style:
-                            TextStyle(color: context.text, fontSize: 13)),
+                    Flexible(
+                      child: Text(L.of(context).hifzLoopAutoAdvance,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(color: context.text, fontSize: 13)),
+                    ),
                     const Spacer(),
                     Switch(
                       value: _autoAdvance,
@@ -1033,9 +1044,16 @@ class _HifzLoopScreenState extends State<HifzLoopScreen>
                     Icon(Icons.speed_rounded,
                         size: 18, color: context.textDim),
                     const SizedBox(width: 8),
-                    Text(L.of(context).hifzLoopSpeed,
-                        style:
-                            TextStyle(color: context.text, fontSize: 13)),
+                    // Tightest of the three: five speed chips sit to the
+                    // right, and "Geschwindigkeit" is three times the width
+                    // of "Speed".
+                    Flexible(
+                      child: Text(L.of(context).hifzLoopSpeed,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              TextStyle(color: context.text, fontSize: 13)),
+                    ),
                     const Spacer(),
                     Wrap(
                       spacing: 6,

@@ -290,12 +290,19 @@ class _HifzScreenState extends State<HifzScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      L.of(context).hifzQuranProgress,
-                      style: TextStyle(
-                        color: context.text,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    // Flexible so a longer translation shortens itself rather
+                    // than pushing the percentage out of the row. English
+                    // fits; "Progresso no Alcorão" is half again as wide.
+                    Flexible(
+                      child: Text(
+                        L.of(context).hifzQuranProgress,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: context.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     Text(
