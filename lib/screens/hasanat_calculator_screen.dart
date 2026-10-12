@@ -209,7 +209,11 @@ class _OneTimeTabState extends State<_OneTimeTab>
         const SizedBox(height: AppSpacing.sm),
         _ChipsRow(
           options: sadaqahCategories
-              .map((c) => (key: c.key, label: c.label))
+              .map((c) => (
+                    key: c.key,
+                    label: c.label(
+                        Localizations.localeOf(context).languageCode),
+                  ))
               .toList(),
           selectedKey: _selectedCategoryKey,
           onTap: (k) => setState(() => _selectedCategoryKey = k),
@@ -238,7 +242,9 @@ class _OneTimeTabState extends State<_OneTimeTab>
           const SizedBox(height: AppSpacing.lg),
         ] else
           const SizedBox(height: AppSpacing.md),
-        _ConditionsCard(conditions: cat.conditions),
+        _ConditionsCard(
+            conditions: cat.conditionsFor(
+                Localizations.localeOf(context).languageCode)),
         const SizedBox(height: AppSpacing.md),
         _Disclaimer(text: L.of(context).hasanatDisclaimer),
       ],
@@ -367,7 +373,11 @@ class _RecurringTabState extends State<_RecurringTab>
         const SizedBox(height: AppSpacing.sm),
         _ChipsRow(
           options: sadaqahCategories
-              .map((c) => (key: c.key, label: c.label))
+              .map((c) => (
+                    key: c.key,
+                    label: c.label(
+                        Localizations.localeOf(context).languageCode),
+                  ))
               .toList(),
           selectedKey: _selectedCategoryKey,
           onTap: (k) => setState(() => _selectedCategoryKey = k),
@@ -417,7 +427,9 @@ class _RecurringTabState extends State<_RecurringTab>
           const SizedBox(height: AppSpacing.lg),
         ] else
           const SizedBox(height: AppSpacing.md),
-        _ConditionsCard(conditions: cat.conditions),
+        _ConditionsCard(
+            conditions: cat.conditionsFor(
+                Localizations.localeOf(context).languageCode)),
         const SizedBox(height: AppSpacing.md),
         _Disclaimer(text: L.of(context).hasanatDisclaimer),
       ],
@@ -788,9 +800,14 @@ class _PromiseCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
+          // Both read the same locale: _HighlightedText finds the highlight
+          // as a substring of the text, so mixing languages here would
+          // silently drop the emphasis.
           _HighlightedText(
-            text: promise.translation,
-            highlight: promise.highlight,
+            text: promise
+                .translation(Localizations.localeOf(context).languageCode),
+            highlight: promise
+                .highlight(Localizations.localeOf(context).languageCode),
           ),
           const SizedBox(height: 10),
           Container(
