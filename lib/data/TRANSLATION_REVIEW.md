@@ -16,7 +16,7 @@ this ships.
 | 99 Names of Allah — meanings | `asma_ul_husna.dart` | en fr es it de pt | **No** |
 | 30 curated ayahs — excerpt + reflection | `curated_ayahs.dart` | en fr es it de pt | **No** |
 | Hasanat promises, labels, conditions | `hasanat_promises.dart` | en fr es it de pt | **No** |
-| 51 duas — translations | `../screens/duas_screen.dart` | en only | n/a |
+| 51 duas — titles + meanings | `../screens/duas_screen.dart` | en fr es it de pt | **No** |
 
 ## The most important caveat: provenance
 
@@ -155,6 +155,60 @@ Checked: none of these terms appear anywhere in the ARB files, so there is no
 cross-file conflict. The one loose end is Italian, which writes *Jannah* here
 but *Giumu'ah* in the ARB — the same Arabic letter two ways, though the two
 never appear together.
+
+## Duas — specific items
+
+26 of the 51 are Quranic and follow a published rendering. **25 are hadith or
+widely-reported supplications and are the assistant's own plain translation,
+not a published one** — category 0 indices 19–23, and all of Daily Duas,
+Special Occasions, and Success & Protection. Those 25 are where a
+native-speaker pass matters most.
+
+### Problems in the English source, found while translating
+
+These affect English users now and should probably be fixed in the English
+first, since the translations faithfully reproduce them:
+
+- **1.7** — "from evil and the evil ones" flattens *al-khubuth wal-khabā'ith*,
+  which means the male and female unclean jinn. The Roman Urdu field glosses
+  it correctly; the English does not, so **the distinction is lost in all six
+  languages**. Reword the English and the translations can follow.
+- **0.10** — compresses four verses (20:25–28) into one sentence and drops
+  *waj'al lī wazīran min ahlī*, so the citation range overstates what is
+  actually quoted.
+- **4.1** — a double-length explanatory rendering rather than a translation;
+  the translations mirror its length, making it the longest body text here.
+- **0.21** — the Arabic itself is truncated mid-supplication. The English
+  matches the quoted part, so the two are consistent; it is the Arabic that
+  is short.
+- **1.8** — "my physical form" / "my character" for *khalqī* / *khuluqī* is
+  accurate but loses the Arabic wordplay. No language preserves it.
+
+### Deity vs Allah
+**0.8** (Quran 21:87) and **3.2** (Day of Arafah) render *ilāh* as German
+*Gott* / French *dieu* / Spanish *dios* / Italian *dio* — "deity" — while
+*Allāh* stays "Allah". This matches what the English does with "no deity
+except Him" and what the curated ayahs do. If the rule is meant to bar the
+word outright, these become *Gottheit* / *divinité* / *divinidad* /
+*divinità*.
+
+### Smaller calls
+- **0.16** (17:80) — *sultānan nasīra* follows Hamidullah's *autorité
+  secourable*; *pouvoir secourable* is the alternative.
+- **0.21** — *nāsiyatī* is literally the forelock; French keeps the literal
+  *toupet* (standard in French hadith translations, odd-sounding), while the
+  others use forehead/hair. Worth one decision across all five.
+- **4.2** is marked *Athari — widely reported*, i.e. not a graded hadith. The
+  attribution is what needs checking, not the wording.
+- **Shaytan** is left transliterated (es *Shaytán*, de *Schaitan*). Normalise
+  if the app has a house spelling.
+
+### Titles that will strain a single-line header
+French runs 15–25% longer than the English. The worst: **0.23** *Dua pour
+redresser la religion et la vie d'ici-bas* (50 chars) and **0.16** *Dua pour
+une entrée et une sortie véridiques* (45). Shorter forms exist — *Dua pour la
+religion et la vie*, *Dua de l'entrée et de la sortie* — if the header does
+not wrap.
 
 ## Layout note
 
