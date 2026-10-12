@@ -24,10 +24,13 @@ class _AsmaScreenState extends State<AsmaScreen> {
   List<AsmaEntry> get _filtered {
     if (_query.isEmpty) return kAsmaUlHusna;
     final q = _query.toLowerCase();
+    // Search the meaning the user can actually see. Matching against English
+    // while the cards show French would look broken from either direction.
+    final lang = Localizations.localeOf(context).languageCode;
     return kAsmaUlHusna
         .where((e) =>
             e.transliteration.toLowerCase().contains(q) ||
-            e.meaning.toLowerCase().contains(q) ||
+            e.meaning(lang).toLowerCase().contains(q) ||
             e.number.toString() == q)
         .toList();
   }
@@ -347,7 +350,8 @@ class _AsmaCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: Text(
-                      entry.meaning,
+                      entry.meaning(
+                          Localizations.localeOf(context).languageCode),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 10,
@@ -489,7 +493,7 @@ class _AsmaDetailSheet extends StatelessWidget {
 
           // Meaning
           Text(
-            entry.meaning,
+            entry.meaning(Localizations.localeOf(context).languageCode),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'sans-serif',
