@@ -1,6 +1,84 @@
 import WidgetKit
 import SwiftUI
 
+// BEGIN GENERATED — from lib/l10n/app_*.arb via gen_widget_strings.py.
+// Do not edit by hand; regenerate so the widget cannot drift from the app.
+enum WidgetStrings {
+    private static let table: [String: [String: String]] = [
+        "widget_prayer_times": ["en": "Prayer Times", "fr": "Horaires de prière", "es": "Horarios de oración", "it": "Orari di preghiera", "de": "Gebetszeiten", "pt": "Horários de oração"],
+        "widget_next_prayer": ["en": "Next Prayer", "fr": "Prochaine prière", "es": "Próxima oración", "it": "Prossima preghiera", "de": "Nächstes Gebet", "pt": "Próxima oração"],
+        "widget_next": ["en": "Next", "fr": "Prochaine", "es": "Siguiente", "it": "Prossima", "de": "Nächstes", "pt": "Próxima"],
+        "widget_qibla": ["en": "Qibla", "fr": "Qibla", "es": "Quibla", "it": "Qibla", "de": "Qibla", "pt": "Qibla"],
+        "widget_open_app": ["en": "Open app", "fr": "Ouvrir l'app", "es": "Abrir la app", "it": "Apri l'app", "de": "App öffnen", "pt": "Abrir a app"],
+        "widget_prayer_fajr": ["en": "Fajr", "fr": "Fajr", "es": "Fajr", "it": "Fajr", "de": "Fajr", "pt": "Fajr"],
+        "widget_prayer_dhuhr": ["en": "Dhuhr", "fr": "Dhuhr", "es": "Dhuhr", "it": "Dhuhr", "de": "Dhuhr", "pt": "Dhuhr"],
+        "widget_prayer_asr": ["en": "Asr", "fr": "Asr", "es": "Asr", "it": "Asr", "de": "Asr", "pt": "Asr"],
+        "widget_prayer_maghrib": ["en": "Maghrib", "fr": "Maghrib", "es": "Maghrib", "it": "Maghrib", "de": "Maghrib", "pt": "Maghrib"],
+        "widget_prayer_isha": ["en": "Isha", "fr": "Isha", "es": "Isha", "it": "Iscià", "de": "Ischa", "pt": "Ishá"],
+        "widget_hijri_month_1": ["en": "Muharram", "fr": "Mouharram", "es": "Muharram", "it": "Muharram", "de": "Muharram", "pt": "Muharram"],
+        "widget_hijri_month_2": ["en": "Safar", "fr": "Safar", "es": "Safar", "it": "Safar", "de": "Safar", "pt": "Safar"],
+        "widget_hijri_month_3": ["en": "Rabi' al-Awwal", "fr": "Rabi' al-Awwal", "es": "Rabi' al-Awwal", "it": "Rabi' al-Awwal", "de": "Rabi' al-Awwal", "pt": "Rabi' al-Awwal"],
+        "widget_hijri_month_4": ["en": "Rabi' al-Thani", "fr": "Rabi' al-Thani", "es": "Rabi' al-Thani", "it": "Rabi' al-Thani", "de": "Rabi' al-Thani", "pt": "Rabi' al-Thani"],
+        "widget_hijri_month_5": ["en": "Jumada al-Awwal", "fr": "Joumada al-Awwal", "es": "Yumada al-Awwal", "it": "Jumada al-Awwal", "de": "Jumada al-Awwal", "pt": "Jumada al-Awwal"],
+        "widget_hijri_month_6": ["en": "Jumada al-Thani", "fr": "Joumada al-Thani", "es": "Yumada al-Thani", "it": "Jumada al-Thani", "de": "Jumada al-Thani", "pt": "Jumada al-Thani"],
+        "widget_hijri_month_7": ["en": "Rajab", "fr": "Rajab", "es": "Rayab", "it": "Rajab", "de": "Rajab", "pt": "Rajab"],
+        "widget_hijri_month_8": ["en": "Sha'ban", "fr": "Cha'ban", "es": "Sha'bán", "it": "Sha'ban", "de": "Scha'ban", "pt": "Sha'ban"],
+        "widget_hijri_month_9": ["en": "Ramadan", "fr": "Ramadan", "es": "Ramadán", "it": "Ramadan", "de": "Ramadan", "pt": "Ramadão"],
+        "widget_hijri_month_10": ["en": "Shawwal", "fr": "Chawwal", "es": "Shawwal", "it": "Shawwal", "de": "Schawwal", "pt": "Shawwal"],
+        "widget_hijri_month_11": ["en": "Dhu al-Qi'dah", "fr": "Dhou al-Qi'dah", "es": "Dhu al-Qi'dah", "it": "Dhu al-Qi'dah", "de": "Dhu al-Qi'dah", "pt": "Dhu al-Qi'dah"],
+        "widget_hijri_month_12": ["en": "Dhu al-Hijjah", "fr": "Dhou al-Hijjah", "es": "Dhu al-Hiyyah", "it": "Dhu al-Hijjah", "de": "Dhu al-Hijjah", "pt": "Dhu al-Hijjah"],
+        "widget_qibla_title": ["en": "Qibla Direction", "fr": "Direction de la Qibla", "es": "Dirección de la quibla", "it": "Direzione della qibla", "de": "Qibla-Richtung", "pt": "Direção da Qibla"],
+        "widget_desc_next": ["en": "Shows the next upcoming prayer time.", "fr": "Affiche la prochaine prière.", "es": "Muestra la próxima oración.", "it": "Mostra la prossima preghiera.", "de": "Zeigt das nächste Gebet.", "pt": "Mostra a próxima oração."],
+        "widget_desc_all": ["en": "Shows all 5 daily prayer times.", "fr": "Affiche les 5 prières du jour.", "es": "Muestra las 5 oraciones diarias.", "it": "Mostra le 5 preghiere del giorno.", "de": "Zeigt alle 5 Gebetszeiten.", "pt": "Mostra as 5 orações diárias."],
+        "widget_desc_large": ["en": "Shows all 5 daily prayer times with next prayer highlight.", "fr": "Affiche les 5 prières, la suivante mise en avant.", "es": "Muestra las 5 oraciones, destacando la siguiente.", "it": "Mostra le 5 preghiere, evidenziando la prossima.", "de": "Zeigt alle 5 Gebetszeiten, das nächste hervorgehoben.", "pt": "Mostra as 5 orações, destacando a próxima."],
+        "widget_desc_qibla": ["en": "Shows the direction to the Kaaba.", "fr": "Indique la direction de la Kaaba.", "es": "Indica la dirección de la Kaaba.", "it": "Indica la direzione della Kaaba.", "de": "Zeigt die Richtung zur Kaaba.", "pt": "Indica a direção da Caaba."],
+        "widget_title_large": ["en": "Prayer Times (Large)", "fr": "Horaires de prière (grand)", "es": "Horarios de oración (grande)", "it": "Orari di preghiera (grande)", "de": "Gebetszeiten (groß)", "pt": "Horários de oração (grande)"],
+    ]
+    private static let dateFormats: [String: String] = ["en": "%1$s %2$s %3$s AH", "fr": "%1$s %2$s %3$s H", "es": "%1$s de %2$s de %3$s H", "it": "%1$s %2$s %3$s H", "de": "%1$s. %2$s %3$s AH", "pt": "%1$s de %2$s de %3$s H"]
+
+    /// Two-letter code of the device language, falling back to English.
+    private static var lang: String {
+        let first = Locale.preferredLanguages.first ?? "en"
+        return String(first.prefix(2)).lowercased()
+    }
+
+    static func t(_ key: String) -> String {
+        guard let row = table[key] else { return key }
+        return row[lang] ?? row["en"] ?? key
+    }
+
+    /// Localised name for a prayer, from the English identifier the app
+    /// stores. The identifier is sent rather than a translated name because
+    /// a widget can be added before the app has ever run.
+    static func prayer(_ id: String) -> String {
+        switch id {
+        case "Fajr":    return t("widget_prayer_fajr")
+        case "Dhuhr":   return t("widget_prayer_dhuhr")
+        case "Asr":     return t("widget_prayer_asr")
+        case "Maghrib": return t("widget_prayer_maghrib")
+        case "Isha":    return t("widget_prayer_isha")
+        default:        return id
+        }
+    }
+
+    /// Hijri date built from parts, so each language can order day, month and
+    /// year its own way. Falls back to the pre-formatted English string an
+    /// older build wrote, so the widget survives an app upgrade.
+    static func hijri(day: String, month: String, year: String,
+                      fallback: String) -> String {
+        guard !day.isEmpty, !year.isEmpty,
+              let m = Int(month), (1...12).contains(m) else { return fallback }
+        let name = t("widget_hijri_month_\(m)")
+        let fmt = dateFormats[lang] ?? dateFormats["en"]!
+        return fmt
+            .replacingOccurrences(of: "%1$s", with: day)
+            .replacingOccurrences(of: "%2$s", with: name)
+            .replacingOccurrences(of: "%3$s", with: year)
+    }
+}
+// END GENERATED
+
+
 // MARK: - iOS 17 containerBackground compatibility
 
 extension View {
@@ -40,7 +118,14 @@ struct PrayerData {
             maghrib:    str("widget_maghrib"),
             isha:       str("widget_isha"),
             city:       str("widget_city", ""),
-            hijri:      str("widget_hijri", ""),
+            // Built here from parts so the date reads in the device's
+            // language and order; falls back to the English string an older
+            // build wrote, so the widget survives an app upgrade.
+            hijri:      WidgetStrings.hijri(
+                            day:      str("widget_hijri_day", ""),
+                            month:    str("widget_hijri_month", ""),
+                            year:     str("widget_hijri_year", ""),
+                            fallback: str("widget_hijri", "")),
             nextPrayer: str("widget_next_prayer", "")
         )
     }
@@ -93,7 +178,9 @@ struct PrayerProvider: TimelineProvider {
         PrayerEntry(date: Date(), prayer: PrayerData(
             fajr: "5:23", dhuhr: "12:45", asr: "3:58",
             maghrib: "6:32", isha: "8:01",
-            city: "Makkah", hijri: "1 Ramadan 1446",
+            city: WidgetStrings.t("widget_prayer_times"),
+            hijri: WidgetStrings.hijri(day: "1", month: "9", year: "1446",
+                                       fallback: "1 Ramadan 1446"),
             nextPrayer: "Dhuhr"
         ))
     }
@@ -119,7 +206,7 @@ struct QiblaEntry: TimelineEntry {
 
 struct QiblaProvider: TimelineProvider {
     func placeholder(in context: Context) -> QiblaEntry {
-        QiblaEntry(date: Date(), qibla: QiblaData(degrees: 45, city: "Makkah"))
+        QiblaEntry(date: Date(), qibla: QiblaData(degrees: 45, city: WidgetStrings.t("widget_qibla")))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (QiblaEntry) -> Void) {
@@ -148,7 +235,9 @@ struct PrayerWidgetSmallView: View {
                         .foregroundColor(.widgetDim)
                         .lineLimit(1)
                 }
-                Text(prayer.nextPrayer.isEmpty ? "Prayer" : prayer.nextPrayer)
+                Text(prayer.nextPrayer.isEmpty
+                    ? WidgetStrings.t("widget_next_prayer")
+                    : WidgetStrings.prayer(prayer.nextPrayer))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.widgetGold)
                 Text(prayer.nextPrayerTime)
@@ -171,7 +260,9 @@ struct PrayerWidgetMediumView: View {
             Color.widgetBg
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(prayer.city.isEmpty ? "Prayer Times" : prayer.city)
+                    Text(prayer.city.isEmpty
+                        ? WidgetStrings.t("widget_prayer_times")
+                        : prayer.city)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.widgetGold)
                     Spacer()
@@ -182,11 +273,11 @@ struct PrayerWidgetMediumView: View {
                 }
                 Divider().background(Color.widgetDim.opacity(0.4))
                 let prayers: [(String, String)] = [
-                    ("Fajr",    prayer.fajr),
-                    ("Dhuhr",   prayer.dhuhr),
-                    ("Asr",     prayer.asr),
-                    ("Maghrib", prayer.maghrib),
-                    ("Isha",    prayer.isha),
+                    (WidgetStrings.t("widget_prayer_fajr"),    prayer.fajr),
+                    (WidgetStrings.t("widget_prayer_dhuhr"),   prayer.dhuhr),
+                    (WidgetStrings.t("widget_prayer_asr"),     prayer.asr),
+                    (WidgetStrings.t("widget_prayer_maghrib"), prayer.maghrib),
+                    (WidgetStrings.t("widget_prayer_isha"),    prayer.isha),
                 ]
                 ForEach(prayers, id: \.0) { name, time in
                     let isCurrent = name == prayer.nextPrayer
@@ -223,7 +314,9 @@ struct PrayerWidgetLargeView: View {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(prayer.city.isEmpty ? "Prayer Times" : prayer.city)
+                        Text(prayer.city.isEmpty
+                        ? WidgetStrings.t("widget_prayer_times")
+                        : prayer.city)
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.widgetGold)
                         Text(prayer.hijri)
@@ -234,7 +327,7 @@ struct PrayerWidgetLargeView: View {
                     // Next prayer badge
                     if !prayer.nextPrayer.isEmpty {
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("Next")
+                            Text(WidgetStrings.t("widget_next"))
                                 .font(.system(size: 10))
                                 .foregroundColor(.widgetDim)
                             Text(prayer.nextPrayer)
@@ -249,11 +342,11 @@ struct PrayerWidgetLargeView: View {
                 Divider().background(Color.widgetDim.opacity(0.4))
 
                 let prayers: [(String, String)] = [
-                    ("Fajr",    prayer.fajr),
-                    ("Dhuhr",   prayer.dhuhr),
-                    ("Asr",     prayer.asr),
-                    ("Maghrib", prayer.maghrib),
-                    ("Isha",    prayer.isha),
+                    (WidgetStrings.t("widget_prayer_fajr"),    prayer.fajr),
+                    (WidgetStrings.t("widget_prayer_dhuhr"),   prayer.dhuhr),
+                    (WidgetStrings.t("widget_prayer_asr"),     prayer.asr),
+                    (WidgetStrings.t("widget_prayer_maghrib"), prayer.maghrib),
+                    (WidgetStrings.t("widget_prayer_isha"),    prayer.isha),
                 ]
                 ForEach(prayers, id: \.0) { name, time in
                     let isCurrent = name == prayer.nextPrayer
@@ -299,11 +392,11 @@ struct QiblaWidgetView: View {
                     Image(systemName: "arrow.up")
                         .font(.system(size: 32, weight: .semibold))
                         .foregroundColor(.widgetDim)
-                    Text("Open app")
+                    Text(WidgetStrings.t("widget_open_app"))
                         .font(.system(size: 12))
                         .foregroundColor(.widgetDim)
                 }
-                Text("Qibla")
+                Text(WidgetStrings.t("widget_qibla"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.widgetGold)
                 if !qibla.city.isEmpty {
@@ -328,8 +421,8 @@ struct PrayerTimesWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             PrayerWidgetSmallView(prayer: entry.prayer)
         }
-        .configurationDisplayName("Prayer Times")
-        .description("Shows the next upcoming prayer time.")
+        .configurationDisplayName(WidgetStrings.t("widget_prayer_times"))
+        .description(WidgetStrings.t("widget_desc_next"))
         .supportedFamilies([.systemSmall])
     }
 }
@@ -341,8 +434,8 @@ struct PrayerTimesMediumWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             PrayerWidgetMediumView(prayer: entry.prayer)
         }
-        .configurationDisplayName("Prayer Times")
-        .description("Shows all 5 daily prayer times.")
+        .configurationDisplayName(WidgetStrings.t("widget_prayer_times"))
+        .description(WidgetStrings.t("widget_desc_all"))
         .supportedFamilies([.systemMedium])
     }
 }
@@ -354,8 +447,8 @@ struct PrayerTimesLargeWidget: Widget {
         StaticConfiguration(kind: kind, provider: PrayerProvider()) { entry in
             PrayerWidgetLargeView(prayer: entry.prayer)
         }
-        .configurationDisplayName("Prayer Times (Large)")
-        .description("Shows all 5 daily prayer times with next prayer highlight.")
+        .configurationDisplayName(WidgetStrings.t("widget_title_large"))
+        .description(WidgetStrings.t("widget_desc_large"))
         .supportedFamilies([.systemLarge])
     }
 }
@@ -367,8 +460,8 @@ struct QiblaWidget: Widget {
         StaticConfiguration(kind: kind, provider: QiblaProvider()) { entry in
             QiblaWidgetView(qibla: entry.qibla)
         }
-        .configurationDisplayName("Qibla Direction")
-        .description("Shows the direction to the Kaaba.")
+        .configurationDisplayName(WidgetStrings.t("widget_qibla_title"))
+        .description(WidgetStrings.t("widget_desc_qibla"))
         .supportedFamilies([.systemSmall])
     }
 }

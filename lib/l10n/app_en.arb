@@ -2431,5 +2431,37 @@
   "modePickerPreviewTranslation3": "The Entirely Merciful, the Especially Merciful",
   "@modePickerPreviewTranslation3": {
     "description": "Sample line on the reading-layout picker: the meaning of the third verse of the Quran's opening chapter, shown so the user can see what each layout looks like in their own language. Use your language's established translation of this verse rather than translating the English wording word for word."
+  },
+  "widgetNextPrayer": "Next Prayer",
+  "@widgetNextPrayer": {
+    "description": "Heading on the home-screen widget above the upcoming prayer. Rendered by the native widget, not the app, so it must fit a small tile — keep it short."
+  },
+  "widgetNext": "Next",
+  "@widgetNext": {
+    "description": "Very short form of \"Next Prayer\" for the compact widget, where the full heading does not fit. Agrees with the word for prayer in gendered languages."
+  },
+  "widgetOpenApp": "Open app",
+  "@widgetOpenApp": {
+    "description": "Shown on the Qibla home-screen widget when it has no bearing yet, inviting the user to open the app so it can get a location. Rendered by the native widget on a small tile — keep it very short."
+  },
+  "widgetDescNext": "Shows the next upcoming prayer time.",
+  "@widgetDescNext": {
+    "description": "Description in the iOS widget gallery, read before adding the widget."
+  },
+  "widgetDescAll": "Shows all 5 daily prayer times.",
+  "@widgetDescAll": {
+    "description": "Description in the iOS widget gallery for the medium size."
+  },
+  "widgetDescLarge": "Shows all 5 daily prayer times with next prayer highlight.",
+  "@widgetDescLarge": {
+    "description": "Description in the iOS widget gallery for the large size."
+  },
+  "widgetDescQibla": "Shows the direction to the Kaaba.",
+  "@widgetDescQibla": {
+    "description": "Description in the iOS widget gallery for the Qibla widget. Kaaba is the structure in Makkah — use the conventional spelling in your language."
+  },
+  "widgetTitleLarge": "Prayer Times (Large)",
+  "@widgetTitleLarge": {
+    "description": "Name of the large prayer-times widget in the iOS gallery."
   }
 }

@@ -465,5 +465,13 @@
   "modePickerPreviewTranslit3": "Ar-Rahmanir Rahim",
   "modePickerPreviewTranslation1": "Nel nome di Allah, il Compassionevole, il Misericordioso",
   "modePickerPreviewTranslation2": "Lode ad Allah, Signore dei mondi",
-  "modePickerPreviewTranslation3": "Il Compassionevole, il Misericordioso"
+  "modePickerPreviewTranslation3": "Il Compassionevole, il Misericordioso",
+  "widgetNextPrayer": "Prossima preghiera",
+  "widgetNext": "Prossima",
+  "widgetOpenApp": "Apri l'app",
+  "widgetDescNext": "Mostra la prossima preghiera.",
+  "widgetDescAll": "Mostra le 5 preghiere del giorno.",
+  "widgetDescLarge": "Mostra le 5 preghiere, evidenziando la prossima.",
+  "widgetDescQibla": "Indica la direzione della Kaaba.",
+  "widgetTitleLarge": "Orari di preghiera (grande)"
 }

@@ -23,7 +23,7 @@
             android:id="@+id/next_prayer_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Next Prayer"
+            android:text="@string/widget_next_prayer"
             android:textColor="#9A8060"
             android:textSize="9sp"
             android:letterSpacing="0.05"/>
@@ -32,7 +32,7 @@
             android:id="@+id/next_prayer_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Fajr"
+            android:text="@string/widget_prayer_fajr"
             android:textColor="#C9A84C"
             android:textSize="13sp"
             android:textStyle="bold"/>

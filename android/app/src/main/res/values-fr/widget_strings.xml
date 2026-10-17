@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GENERATED from lib/l10n/app_*.arb — do not edit by hand.
+     Regenerate with scratchpad/gen_widget_strings.py so the
+     home-screen widget cannot drift from the app. -->
+<resources>
+    <string name="widget_prayer_times">Horaires de prière</string>
+    <string name="widget_next_prayer">Prochaine prière</string>
+    <string name="widget_next">Prochaine</string>
+    <string name="widget_qibla">Qibla</string>
+    <string name="widget_open_app">Ouvrir l\'app</string>
+    <string name="widget_prayer_fajr">Fajr</string>
+    <string name="widget_prayer_dhuhr">Dhuhr</string>
+    <string name="widget_prayer_asr">Asr</string>
+    <string name="widget_prayer_maghrib">Maghrib</string>
+    <string name="widget_prayer_isha">Isha</string>
+    <string name="widget_hijri_month_1">Mouharram</string>
+    <string name="widget_hijri_month_2">Safar</string>
+    <string name="widget_hijri_month_3">Rabi\' al-Awwal</string>
+    <string name="widget_hijri_month_4">Rabi\' al-Thani</string>
+    <string name="widget_hijri_month_5">Joumada al-Awwal</string>
+    <string name="widget_hijri_month_6">Joumada al-Thani</string>
+    <string name="widget_hijri_month_7">Rajab</string>
+    <string name="widget_hijri_month_8">Cha\'ban</string>
+    <string name="widget_hijri_month_9">Ramadan</string>
+    <string name="widget_hijri_month_10">Chawwal</string>
+    <string name="widget_hijri_month_11">Dhou al-Qi\'dah</string>
+    <string name="widget_hijri_month_12">Dhou al-Hijjah</string>
+    <string name="widget_hijri_date">%1$s %2$s %3$s H</string>
+</resources>

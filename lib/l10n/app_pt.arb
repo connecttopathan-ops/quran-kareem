@@ -465,5 +465,13 @@
   "modePickerPreviewTranslit3": "Ar-Rahmaanir Raheem",
   "modePickerPreviewTranslation1": "Em nome de Allah, o Clemente, o Misericordioso",
   "modePickerPreviewTranslation2": "Louvado seja Allah, Senhor do universo",
-  "modePickerPreviewTranslation3": "O Clemente, o Misericordioso"
+  "modePickerPreviewTranslation3": "O Clemente, o Misericordioso",
+  "widgetNextPrayer": "Próxima oração",
+  "widgetNext": "Próxima",
+  "widgetOpenApp": "Abrir a app",
+  "widgetDescNext": "Mostra a próxima oração.",
+  "widgetDescAll": "Mostra as 5 orações diárias.",
+  "widgetDescLarge": "Mostra as 5 orações, destacando a próxima.",
+  "widgetDescQibla": "Indica a direção da Caaba.",
+  "widgetTitleLarge": "Horários de oração (grande)"
 }

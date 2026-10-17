@@ -465,5 +465,13 @@
   "modePickerPreviewTranslit3": "Ar-Rahmanir Rahim",
   "modePickerPreviewTranslation1": "Im Namen Allahs, des Allerbarmers, des Barmherzigen",
   "modePickerPreviewTranslation2": "Alles Lob gehört Allah, dem Herrn der Welten",
-  "modePickerPreviewTranslation3": "Der Allerbarmer, der Barmherzige"
+  "modePickerPreviewTranslation3": "Der Allerbarmer, der Barmherzige",
+  "widgetNextPrayer": "Nächstes Gebet",
+  "widgetNext": "Nächstes",
+  "widgetOpenApp": "App öffnen",
+  "widgetDescNext": "Zeigt das nächste Gebet.",
+  "widgetDescAll": "Zeigt alle 5 Gebetszeiten.",
+  "widgetDescLarge": "Zeigt alle 5 Gebetszeiten, das nächste hervorgehoben.",
+  "widgetDescQibla": "Zeigt die Richtung zur Kaaba.",
+  "widgetTitleLarge": "Gebetszeiten (groß)"
 }

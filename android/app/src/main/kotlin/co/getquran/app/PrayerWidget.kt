@@ -45,9 +45,49 @@ private fun loadPrayerData(context: Context): PrayerData {
         maghrib = str(context, "widget_maghrib"),
         isha    = str(context, "widget_isha"),
         city    = str(context, "widget_city", ""),
-        hijri   = str(context, "widget_hijri", ""),
-        current = str(context, "widget_next_prayer", ""),
+        hijri   = hijriDate(context),
+        current = prayerLabel(context, str(context, "widget_next_prayer", "")),
     )
+}
+
+/**
+ * Localised name for a prayer, given the English identifier the app stores.
+ *
+ * The app writes the identifier rather than a translated name on purpose:
+ * a widget can be placed before the app has ever run, so anything it needs
+ * to render must be resolvable from its own resources.
+ */
+private fun prayerLabel(context: Context, id: String): String = when (id) {
+    "Fajr"    -> context.getString(R.string.widget_prayer_fajr)
+    "Dhuhr"   -> context.getString(R.string.widget_prayer_dhuhr)
+    "Asr"     -> context.getString(R.string.widget_prayer_asr)
+    "Maghrib" -> context.getString(R.string.widget_prayer_maghrib)
+    "Isha"    -> context.getString(R.string.widget_prayer_isha)
+    else      -> id
+}
+
+/**
+ * Builds the Hijri date from the parts the app stores.
+ *
+ * Formatted here rather than in Dart because the order of day, month and
+ * year differs by language — Spanish and Portuguese want "15 de Rabi' al-Awwal
+ * de 1447", German "15. Rabi' al-Awwal 1447" — and only the resource file
+ * knows which applies. Falls back to the pre-formatted English string that
+ * older builds wrote, so a widget updates cleanly across an app upgrade.
+ */
+private fun hijriDate(context: Context): String {
+    val day = str(context, "widget_hijri_day", "")
+    val month = str(context, "widget_hijri_month", "")
+    val year = str(context, "widget_hijri_year", "")
+    if (day.isEmpty() || month.isEmpty() || year.isEmpty()) {
+        return str(context, "widget_hijri", "")
+    }
+    val monthIndex = month.toIntOrNull() ?: return str(context, "widget_hijri", "")
+    val monthId = context.resources.getIdentifier(
+        "widget_hijri_month_$monthIndex", "string", context.packageName)
+    if (monthId == 0) return str(context, "widget_hijri", "")
+    return context.getString(
+        R.string.widget_hijri_date, day, context.getString(monthId), year)
 }
 
 private val GOLD   = Color.parseColor("#C9A84C")
@@ -73,7 +113,7 @@ class PrayerWidgetSmall : AppWidgetProvider() {
         }
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.prayer_widget_small)
-            views.setTextViewText(R.id.next_prayer_name, data.current.ifEmpty { "Prayer" })
+            views.setTextViewText(R.id.next_prayer_name, data.current.ifEmpty { context.getString(R.string.widget_next_prayer) })
             views.setTextViewText(R.id.next_prayer_time, nextTime)
             views.setTextViewText(R.id.city_name, data.city)
             views.setOnClickPendingIntent(R.id.next_prayer_name, launchIntent(context))
@@ -93,7 +133,7 @@ class PrayerWidgetMedium : AppWidgetProvider() {
         val data = loadPrayerData(context)
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.prayer_widget_medium)
-            views.setTextViewText(R.id.city_name, data.city.ifEmpty { "Prayer Times" })
+            views.setTextViewText(R.id.city_name, data.city.ifEmpty { context.getString(R.string.widget_prayer_times) })
             views.setTextViewText(R.id.hijri_date, data.hijri)
             views.setTextViewText(R.id.time_fajr, data.fajr)
             views.setTextViewText(R.id.time_dhuhr, data.dhuhr)
@@ -127,7 +167,7 @@ class PrayerWidgetLarge : AppWidgetProvider() {
         val data = loadPrayerData(context)
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.prayer_widget_large)
-            views.setTextViewText(R.id.city_name, data.city.ifEmpty { "Prayer Times" })
+            views.setTextViewText(R.id.city_name, data.city.ifEmpty { context.getString(R.string.widget_prayer_times) })
             views.setTextViewText(R.id.hijri_date, data.hijri)
             views.setTextViewText(R.id.next_prayer_name, data.current)
             views.setTextViewText(R.id.time_fajr, data.fajr)

@@ -29,7 +29,7 @@
                 android:id="@+id/city_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Prayer Times"
+                android:text="@string/widget_prayer_times"
                 android:textColor="#F5ECD7"
                 android:textSize="11sp"
                 android:textStyle="bold"/>
@@ -51,7 +51,7 @@
                 android:id="@+id/next_prayer_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Next"
+                android:text="@string/widget_next"
                 android:textColor="#9A8060"
                 android:textSize="8sp"/>
             <TextView
@@ -80,7 +80,7 @@
         android:paddingEnd="6dp" android:layout_marginBottom="2dp">
         <TextView android:id="@+id/lbl_fajr"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="Fajr"
+            android:layout_weight="1" android:text="@string/widget_prayer_fajr"
             android:textColor="#9A8060" android:textSize="12sp"/>
         <TextView android:id="@+id/time_fajr"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -95,7 +95,7 @@
         android:paddingEnd="6dp" android:layout_marginBottom="2dp">
         <TextView android:id="@+id/lbl_dhuhr"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="Dhuhr"
+            android:layout_weight="1" android:text="@string/widget_prayer_dhuhr"
             android:textColor="#9A8060" android:textSize="12sp"/>
         <TextView android:id="@+id/time_dhuhr"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -110,7 +110,7 @@
         android:paddingEnd="6dp" android:layout_marginBottom="2dp">
         <TextView android:id="@+id/lbl_asr"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="Asr"
+            android:layout_weight="1" android:text="@string/widget_prayer_asr"
             android:textColor="#9A8060" android:textSize="12sp"/>
         <TextView android:id="@+id/time_asr"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -125,7 +125,7 @@
         android:paddingEnd="6dp" android:layout_marginBottom="2dp">
         <TextView android:id="@+id/lbl_maghrib"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="Maghrib"
+            android:layout_weight="1" android:text="@string/widget_prayer_maghrib"
             android:textColor="#9A8060" android:textSize="12sp"/>
         <TextView android:id="@+id/time_maghrib"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -140,7 +140,7 @@
         android:paddingEnd="6dp">
         <TextView android:id="@+id/lbl_isha"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:text="Isha"
+            android:layout_weight="1" android:text="@string/widget_prayer_isha"
             android:textColor="#9A8060" android:textSize="12sp"/>
         <TextView android:id="@+id/time_isha"
             android:layout_width="wrap_content" android:layout_height="wrap_content"

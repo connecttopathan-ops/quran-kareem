@@ -239,7 +239,11 @@ class LocationService extends ChangeNotifier {
   Future<void> _saveWidgetData(PrayerTimes pt) async {
     try {
       final bearing = _calcQiblaBearing(pt.lat, pt.lng);
+      // Parts for the widget to word itself; the pre-formatted English string
+      // stays so a widget from a previous build keeps rendering after an
+      // upgrade, before the first refresh writes the parts.
       final hijri   = _hijriDate();
+      final hParts  = _hijriParts();
 
       // Android: write to Flutter SharedPreferences (widgets read these directly)
       final p = await SharedPreferences.getInstance();
@@ -252,6 +256,9 @@ class LocationService extends ChangeNotifier {
       await p.setString('widget_next_prayer',   pt.nextPrayerName);
       await p.setDouble('widget_qibla_degrees', bearing);
       await p.setString('widget_hijri',         hijri);
+      await p.setString('widget_hijri_day',     '${hParts.day}');
+      await p.setString('widget_hijri_month',   '${hParts.month}');
+      await p.setString('widget_hijri_year',    '${hParts.year}');
 
       // Trigger widget refresh via MethodChannel.
       // On Android → MainActivity broadcasts update to AppWidgetProviders.
@@ -269,6 +276,9 @@ class LocationService extends ChangeNotifier {
             'widget_next_prayer':  pt.nextPrayerName,
             'widget_qibla_degrees': bearing,
             'widget_hijri':        hijri,
+            'widget_hijri_day':    '${hParts.day}',
+            'widget_hijri_month':  '${hParts.month}',
+            'widget_hijri_year':   '${hParts.year}',
           },
         );
       } catch (_) {}
@@ -315,6 +325,36 @@ class LocationService extends ChangeNotifier {
     ];
     final mIdx = (month - 1).clamp(0, 11);
     return '$day2 ${months[mIdx]} $year';
+  }
+
+  /// The same Hijri date as [_hijriDate], but as parts the home-screen widget
+  /// can word for itself.
+  ///
+  /// The widget formats rather than receiving a finished sentence for two
+  /// reasons. Date order differs by language — "15 de Rabi' al-Awwal de 1447"
+  /// in Spanish against "15. Rabi' al-Awwal 1447" in German — and only the
+  /// widget's own resources know which applies to the device. And the widget
+  /// may be placed before the app has ever run, so anything it must render
+  /// has to be resolvable without us.
+  ///
+  /// Month is 1-based, matching the `widget_hijri_month_N` string resources.
+  ({int day, int month, int year}) _hijriParts() {
+    final jd = _julianDay(DateTime.now().year, DateTime.now().month,
+        DateTime.now().day);
+    final jdHijri = jd.floor();
+    final l5 = jdHijri - 1948440 + 10632;
+    final n2 = (l5 - 1) ~/ 10631;
+    final l6 = l5 - 10631 * n2 + 354;
+    final j2 = ((10985 - l6) ~/ 5316) * ((50 * l6) ~/ 17719) +
+        (l6 ~/ 5670) * ((43 * l6) ~/ 15238);
+    final l7 = l6 - ((30 - j2) ~/ 15) * ((17719 * j2) ~/ 50) -
+        (j2 ~/ 16) * ((15238 * j2) ~/ 43) + 29;
+    final month = 24 * l7 ~/ 709;
+    return (
+      day: l7 - 709 * month ~/ 24,
+      month: (month).clamp(1, 12),
+      year: 30 * n2 + j2 - 30,
+    );
   }
 
   double _julianDay(int y, int m, int d) {

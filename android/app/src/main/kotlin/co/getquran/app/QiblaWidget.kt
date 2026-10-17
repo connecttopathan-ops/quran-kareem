@@ -47,7 +47,8 @@ class QiblaWidget : AppWidgetProvider() {
                     views.setImageViewBitmap(R.id.qibla_arrow, rotated)
                 }
             } else {
-                views.setTextViewText(R.id.qibla_degrees, "Open app")
+                views.setTextViewText(R.id.qibla_degrees,
+                    context.getString(R.string.widget_open_app))
             }
 
             views.setTextViewText(R.id.qibla_city, city)
