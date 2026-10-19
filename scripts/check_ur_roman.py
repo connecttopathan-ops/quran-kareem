@@ -158,6 +158,66 @@ ADDRESSES_ALLAH = re.compile(
 )
 
 
+# Outright grammar errors, each verified against the reference translation
+# before being listed here. Every one of these was produced by a first draft
+# and missed by a checker that only looked at vocabulary.
+GRAMMAR = [
+    (re.compile(r"(?<![a-z])un ne(?![a-z])", re.I), "un ne", "unhon ne",
+     "the ergative of the honorific/plural 'woh' — the reference uses "
+     "'unhon ne' 287 times and 'un ne' never"),
+    (re.compile(r"(?<![a-z])unhon ke(?![a-z])", re.I), "unhon ke", "un ke",
+     "'unhon' takes only 'ne'; before any other postposition it is 'un'"),
+    (re.compile(r"(?<![a-z])nafson(?![a-z])", re.I), "nafson", "nafs",
+     "'nafs' is not pluralised this way; the reference has 'tumhare nafs ne'"),
+    (re.compile(r"(?<![a-z])chorron(?![a-z])", re.I), "chorron", "choron",
+     "spelling"),
+    (re.compile(r"(?<![a-z])shaksson(?![a-z])", re.I), "shaksson", "shakson",
+     "spelling"),
+    (re.compile(r"(?<![a-z])mu (?=kar|phere|pher)", re.I), "mu", "munh",
+     "'mu karna' is not a verb; the word is 'munh'"),
+    (re.compile(r"(?<![a-z])gharr (?=liye|li)", re.I), "gharr", "gharh",
+     "spelling"),
+]
+
+# "ke" opens a subordinate clause and cannot govern an imperative or a
+# second-person pronoun. "kaha ke jao" is an ungrammatical hybrid: either
+# close the frame and quote, or use the subjunctive.
+KAHA_KE = re.compile(
+    r"(kaha|bataya|poocha|kehne lage|farmaya) ke(?![a-z])(.{0,70})", re.I)
+SECOND_PERSON = re.compile(
+    r"(?<![a-z])(tum|tumhein|tumhare|tumhari|aap|jao|laao|batao|le jao|"
+    r"daal do|laut do|sun lo|dekho)(?![a-z])", re.I)
+
+# An honorific belongs in narration, never inside a character's own speech:
+# the brothers plotting murder do not say "peace be upon him".
+# Only an opening quote opens speech. Treating the closing curly quote as an
+# opener matched forward from the end of a quotation into the narration that
+# followed it, flagging a correctly placed honorific.
+HONORIFIC_IN_SPEECH = re.compile(
+    r"[“\"]\s*[^“”\"]{0,220}?\((?:alaihis|alaihas|alaihimus) salaam\)")
+
+
+def grammar_findings(surah: int, verses: dict[str, str]) -> list[str]:
+    out: list[str] = []
+    for v in sorted(verses, key=int):
+        text = verses[v]
+        for rx, bad, good, why in GRAMMAR:
+            for _ in rx.finditer(text):
+                out.append(f"{surah}:{v}: '{bad}' -> '{good}' ({why})")
+        for m in KAHA_KE.finditer(text):
+            hit = SECOND_PERSON.search(m.group(2))
+            if hit:
+                out.append(
+                    f"{surah}:{v}: '{m.group(1)} ke ... {hit.group(1)}' — 'ke' cannot "
+                    f"govern a second person or an imperative; quote it directly "
+                    f"or use the subjunctive")
+        for _ in HONORIFIC_IN_SPEECH.finditer(text):
+            out.append(
+                f"{surah}:{v}: an honorific sits inside direct speech — "
+                f"honorifics belong in narration only")
+    return out
+
+
 def prophet_address_findings(
     surah: int, verses: dict[str, str]
 ) -> tuple[list[str], list[str]]:
@@ -256,6 +316,7 @@ def main() -> int:
             problems.append(f"surah {n}: {len(missing)} verses not yet translated")
 
         done_verses += len(ur)
+        problems.extend(grammar_findings(n, ur))
         addr_fail, addr_advise = prophet_address_findings(n, ur)
         problems.extend(addr_fail)
         advisories.extend(addr_advise)
@@ -273,6 +334,13 @@ def main() -> int:
                 if w.lower() in ENGLISH_LEAKS:
                     leaks[w.lower()] += 1
                     problems.append(f"{vref}: English left in: '{w}'")
+
+            for sent in re.split(r"[.!?]+", text):
+                words_in = len(sent.split())
+                if words_in > 32:
+                    advisories.append(
+                        f"{vref}: a {words_in}-word sentence — the reference "
+                        f"averages 20 words; split at a clause boundary")
 
             for bad, good, cnt in vocab_findings(text, ref, ref_keys, args.ref_min):
                 off_register[f"{bad} -> {good}"] += 1
