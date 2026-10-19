@@ -62,6 +62,10 @@ flutter:
     - assets/audio/adhan_madinah.mp3
     - assets/audio/adhan_makkah_fajr.mp3
     - assets/books/
+    - assets/tafsir/en/
+    - assets/tafsir/fr/
+    - assets/tafsir/es/
+    - assets/tafsir/it/
   fonts:
     - family: Scheherazade
       fonts:
