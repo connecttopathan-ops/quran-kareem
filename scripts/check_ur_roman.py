@@ -73,6 +73,49 @@ def words(text: str) -> list[str]:
     return re.findall(r"[A-Za-z][A-Za-z'’-]*", text)
 
 
+# Familiar (tu) forms. Correct when the worshipper addresses Allah, wrong when
+# aimed at the Prophet, where Urdu wants the respectful aap form. The glossary's
+# "address" section has the rule.
+FAMILIAR = re.compile(
+    r"\b(keh de|keh do|jaan le|jaan lo|tujhe|tujh\b|tere\b|tera\b|teri\b|"
+    r"tu\b|dekhe\b|maang\b|sun le)\b"
+)
+# Marks a verse as addressing the Prophet.
+ADDRESSES_PROPHET = re.compile(r"Aey (Rasool|Nabi|Muhammad)")
+# Marks a verse as addressing Allah, where familiar forms are correct.
+ADDRESSES_ALLAH = re.compile(
+    r"\b(hum|humein|hamare)\b.{0,80}\b(tere|teri|tujh|tujhe|tu)\b|"
+    r"\b(tere|teri|tujh|tujhe)\b.{0,40}\b(ibadat|panah|siwa|hidayat|madad maangte)\b",
+    re.I,
+)
+
+
+def prophet_address_findings(surah: int, verses: dict[str, str]) -> list[str]:
+    """Flag familiar verb forms in verses that address the Prophet.
+
+    An address can carry over from the previous verse without being repeated
+    (110:2 and 110:3 continue 110:1), so this tracks it forwards until a verse
+    clearly addresses Allah instead.
+    """
+    out: list[str] = []
+    addressing = False
+    for v in sorted(verses, key=int):
+        text = verses[v]
+        if ADDRESSES_PROPHET.search(text):
+            addressing = True
+        elif ADDRESSES_ALLAH.search(text):
+            addressing = False
+        if not addressing:
+            continue
+        for m in set(FAMILIAR.findall(text)):
+            form = m if isinstance(m, str) else m[0]
+            out.append(
+                f"{surah}:{v}: '{form}' is the familiar tu form in a verse "
+                f"addressing the Prophet — use the respectful aap form"
+            )
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--surah", type=int)
@@ -115,6 +158,7 @@ def main() -> int:
             problems.append(f"surah {n}: {len(missing)} verses not yet translated")
 
         done_verses += len(ur)
+        problems.extend(prophet_address_findings(n, ur))
         for v, text in ur.items():
             total += 1
             ref = f"{n}:{v}"

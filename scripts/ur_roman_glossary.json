@@ -112,6 +112,33 @@
     "shukr":     {"count": 1,   "avoid": ["shukar"], "gloss": "gratitude"}
   },
 
+  "address": {
+    "_note": [
+      "WHO IS BEING ADDRESSED DECIDES THE VERB FORM. This is the single",
+      "easiest thing to get wrong across a whole edition, and it reads as",
+      "disrespectful rather than merely clumsy.",
+      "",
+      "The Mukhtasar addresses the Prophet constantly ('Say, O Messenger',",
+      "'know that', 'you see'). In Urdu that must take the respectful aap",
+      "form, never the familiar tu form."
+    ],
+    "prophet": {
+      "use": "aap — respectful. keh dijiye, jaan lijiye, aap dekhein, aap ko, aap ke, tasbeeh kijiye, maangiye",
+      "avoid": "tu — familiar. keh de, jaan le, tu dekhe, tujhe, tere, kar, maang",
+      "example": "'Aey Rasool, keh dijiye' — NOT 'Aey Rasool, keh de'"
+    },
+    "allah": {
+      "use": "tu — correct and reverent for Allah in Urdu, and what the app's own translation uses: 'Hum teri hi ibadat karte hain aur tujh hi se madad maangte hain' (1:5). Keep tu, tera, tujhe, tujh when the worshipper addresses Allah, as in 1:5-1:7.",
+      "note": "So tu-forms are not wrong in themselves — only wrong when aimed at the Prophet."
+    },
+    "reader": {
+      "use": "aap or the neutral plural. The source's 'tum' (1514 occurrences) addresses people in general and is fine there."
+    },
+    "continuation": {
+      "note": "A verse may continue an address begun in the previous verse without naming it again — 110:2 and 110:3 carry on from 110:1's 'Aey Rasool'. Check the preceding verse, not just the one in front of you."
+    }
+  },
+
   "register": {
     "_note": "The source's grammatical habits, for matching its voice.",
     "particles": ["ke", "hai", "aur", "se", "ki", "mein", "hain", "woh", "ko", "jo", "to", "ho", "yeh", "ka", "na", "ne", "nahin", "tum", "liye", "par", "kar"],
