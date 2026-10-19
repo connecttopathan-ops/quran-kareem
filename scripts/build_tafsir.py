@@ -71,7 +71,7 @@ ENCODING_FIXES = {
 
 NAME_MAP = {
     "en": {
-        "Joseph": "Yusuf", "Jacob": "Ya'qub", "Moses": "Musa",
+        "Joseph": "Yusuf", "Yousuf": "Yusuf", "Jacob": "Ya'qub", "Moses": "Musa",
         "Abraham": "Ibrahim", "Isaac": "Ishaq", "Ishmael": "Isma'il",
         "Jesus": "Isa", "Mary": "Maryam", "Noah": "Nuh", "Jonah": "Yunus",
         "Lot": "Lut", "Aaron": "Harun", "Solomon": "Sulayman",
@@ -90,6 +90,7 @@ NAME_MAP = {
         "Zacharie": "Zakariya", "Élie": "Ilyas", "Elie": "Ilyas",
         "Élisée": "Alyasa", "Job": "Ayyub", "Gabriel": "Jibril",
         "Ève": "Hawwa", "Eve": "Hawwa",
+        "Goliath": "Jalut", "Saül": "Talut", "Michaël": "Mika'il",
     },
     "es": {
         "José": "Yusuf", "Jacob": "Ya'qub", "Moisés": "Musa",
@@ -100,6 +101,7 @@ NAME_MAP = {
         "Zacarías": "Zakariya", "Elías": "Ilyas",
         "Eliseo": "Alyasa", "Job": "Ayyub", "Gabriel": "Jibril",
         "Adán": "Adam", "Eva": "Hawwa",
+        "Goliat": "Jalut", "Saúl": "Talut", "Miguel": "Mika'il",
     },
     # The Italian edition already uses Arabic forms, but in its own
     # transliteration (Muhammed, Suleymen, Zekerye) and with macrons. These
@@ -121,6 +123,7 @@ NAME_MAP = {
         "Muħammed": "Muhammad", "Muħammad": "Muhammad",
         "Sāleħ": "Salih", "Šāliħ": "Salih",
         "Sāliħ": "Salih",
+        "Michael": "Mika'il", "Michele": "Mika'il", "Golia": "Jalut",
     },
 }
 
@@ -225,12 +228,33 @@ def map_names(text: str, lang: str) -> str:
         return text
     # Longest first so "Isma'il" wins before any shorter prefix.
     for src in sorted(mapping, key=len, reverse=True):
+        # The trailing boundary must NOT exclude an apostrophe, or English
+        # possessives are silently skipped: "Joseph's shirt" stayed
+        # "Joseph's" in 10 places. The "'s" is left in place.
         text = re.sub(
-            r"(?<![\w'’])" + re.escape(src) + r"(?![\w'’])",
+            r"(?<![\w'’])" + re.escape(src) + r"(?![\w])",
             mapping[src],
             text,
         )
     return text
+
+
+def strip_redundant_gloss(text: str) -> str:
+    """Drop a parenthetical that merely repeats the name before it.
+
+    The French and Spanish editions gloss a localised name with its Arabic
+    form — "David (Dâwûd)". Once the name itself is mapped to the Arabic form
+    the gloss says nothing: "Dawud (paix et salut sur lui) (Dâwûd)".
+    """
+    def flat(s: str) -> str:
+        s = unicodedata.normalize("NFD", s)
+        return "".join(c for c in s if unicodedata.category(c) != "Mn"
+                       and c.isalpha()).lower()
+
+    def repl(m: re.Match[str]) -> str:
+        return m.group(1) if flat(m.group(2)) == flat(m.group(1)) else m.group(0)
+
+    return re.sub(r"(\b[A-Z][\w'’-]*)((?:\s*\([^()]{1,24}\)))", repl, text)
 
 
 def already_honoured(text: str, end: int, lang: str) -> bool:
@@ -305,6 +329,7 @@ def clean(text: str, lang: str) -> str:
     if lang == "es":
         text = fix_spanish_glyphs(text)
     text = map_names(text, lang)
+    text = strip_redundant_gloss(text)
     text = add_honorifics(text, lang)
     text = unicodedata.normalize("NFC", text)
     text = re.sub(r"[ \t]+", " ", text)
