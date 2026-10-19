@@ -211,10 +211,24 @@ def grammar_findings(surah: int, verses: dict[str, str]) -> list[str]:
                     f"{surah}:{v}: '{m.group(1)} ke ... {hit.group(1)}' — 'ke' cannot "
                     f"govern a second person or an imperative; quote it directly "
                     f"or use the subjunctive")
-        for _ in HONORIFIC_IN_SPEECH.finditer(text):
+    return out
+
+
+def honorific_speech_advisories(surah: int, verses: dict[str, str]) -> list[str]:
+    """Honorifics inside a quotation — advisory, because it depends on who speaks.
+
+    Yusuf naming "Ibrahim, Ishaq aur Yaqub (alaihimus salaam)" is pious; the
+    brothers plotting murder saying it of Yusuf is absurd, and Yusuf saying it
+    of himself is wrong. A checker cannot tell those apart, so it reports and
+    a reader decides.
+    """
+    out: list[str] = []
+    for v in sorted(verses, key=int):
+        for _ in HONORIFIC_IN_SPEECH.finditer(verses[v]):
             out.append(
-                f"{surah}:{v}: an honorific sits inside direct speech — "
-                f"honorifics belong in narration only")
+                f"{surah}:{v}: an honorific sits inside direct speech — fine if "
+                f"the speaker is honouring someone else, wrong if hostile or "
+                f"self-referential")
     return out
 
 
@@ -317,6 +331,7 @@ def main() -> int:
 
         done_verses += len(ur)
         problems.extend(grammar_findings(n, ur))
+        advisories.extend(honorific_speech_advisories(n, ur))
         addr_fail, addr_advise = prophet_address_findings(n, ur)
         problems.extend(addr_fail)
         advisories.extend(addr_advise)
