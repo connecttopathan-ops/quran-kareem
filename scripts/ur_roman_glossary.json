@@ -66,7 +66,7 @@
     "momin":     {"count": 86,  "avoid": ["mumin", "momeen"], "gloss": "believer"},
     "namaz":     {"count": 86,  "avoid": ["namaaz", "salat", "salah"], "gloss": "prayer"},
     "sabr":      {"count": 81,  "avoid": ["sabar"], "gloss": "patience"},
-    "deen":      {"count": 77,  "avoid": ["dein"], "gloss": "religion — NOT 'din', which is the separate word for 'day' and appears 271 times in the source"},
+    "deen":      {"count": 77,  "avoid": [], "gloss": "religion. Two separate words are NOT misspellings of it and must not be listed as variants: 'din' (day, 271 occurrences) and 'dein' (the respectful imperative of dena, to give — 'bhej dein')"},
     "maut":      {"count": 68,  "avoid": ["mout"], "gloss": "death"},
     "jannat":    {"count": 66,  "avoid": ["jannah"], "gloss": "Paradise"},
     "iman":      {"count": 471, "avoid": ["imaan", "eman", "eemaan"], "gloss": "faith"},

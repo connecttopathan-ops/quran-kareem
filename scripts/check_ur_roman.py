@@ -140,9 +140,13 @@ def words(text: str) -> list[str]:
 # Familiar (tu) forms. Correct when the worshipper addresses Allah, wrong when
 # aimed at the Prophet, where Urdu wants the respectful aap form. The glossary's
 # "address" section has the rule.
+#
+# "dekhe" is only a familiar form when "tu" governs it: in "gyarah sitare
+# dekhe" it is the past tense, "saw eleven stars". Matching it bare flagged a
+# correct verse, so the pronoun is required.
 FAMILIAR = re.compile(
-    r"\b(keh de|keh do|jaan le|jaan lo|tujhe|tujh\b|tere\b|tera\b|teri\b|"
-    r"tu\b|dekhe\b|maang\b|sun le)\b"
+    r"\b(keh de|keh do|jaan le|jaan lo|sun le|tujhe|tujh\b|tere\b|tera\b|"
+    r"teri\b|tu\b|tu [a-z]+ dekhe|tu dekhe)\b"
 )
 # Marks a verse as addressing the Prophet.
 ADDRESSES_PROPHET = re.compile(r"Aey (Rasool|Nabi|Muhammad)")
@@ -154,30 +158,47 @@ ADDRESSES_ALLAH = re.compile(
 )
 
 
-def prophet_address_findings(surah: int, verses: dict[str, str]) -> list[str]:
-    """Flag familiar verb forms in verses that address the Prophet.
+def prophet_address_findings(
+    surah: int, verses: dict[str, str]
+) -> tuple[list[str], list[str]]:
+    """Flag familiar verb forms where the verse addresses the Prophet.
 
-    An address can carry over from the previous verse without being repeated
-    (110:2 and 110:3 continue 110:1), so this tracks it forwards until a verse
-    clearly addresses Allah instead.
+    Returns (failures, advisories).
+
+    Only a verse carrying the vocative itself is a failure. Carrying the
+    address forward until a verse addressed Allah was tried and is wrong for
+    narrative surahs: surah 12 says "Aey Rasool" at 12:3 and then tells a
+    story for 108 verses in which Ya'qub addresses Yusuf, Yusuf addresses the
+    minister's wife, and Yusuf addresses Allah. Every one of those familiar
+    forms is correct, and the carry-forward flagged 16 of them.
+
+    A continuation does exist — 110:2 and 110:3 carry on from 110:1 — so the
+    two verses after a vocative are reported as advisory instead, where a
+    false positive costs nothing.
     """
-    out: list[str] = []
-    addressing = False
-    for v in sorted(verses, key=int):
+    failures: list[str] = []
+    advisories: list[str] = []
+    numbers = sorted(verses, key=int)
+    vocative_at = {v for v in numbers if ADDRESSES_PROPHET.search(verses[v])}
+
+    for i, v in enumerate(numbers):
         text = verses[v]
-        if ADDRESSES_PROPHET.search(text):
-            addressing = True
-        elif ADDRESSES_ALLAH.search(text):
-            addressing = False
-        if not addressing:
+        forms = {m if isinstance(m, str) else m[0] for m in FAMILIAR.findall(text)}
+        if not forms:
             continue
-        for m in set(FAMILIAR.findall(text)):
-            form = m if isinstance(m, str) else m[0]
-            out.append(
-                f"{surah}:{v}: '{form}' is the familiar tu form in a verse "
-                f"addressing the Prophet — use the respectful aap form"
-            )
-    return out
+        if v in vocative_at:
+            for form in sorted(forms):
+                failures.append(
+                    f"{surah}:{v}: '{form}' is the familiar tu form in a verse "
+                    f"addressing the Prophet — use the respectful aap form"
+                )
+        elif any(numbers[j] in vocative_at for j in range(max(0, i - 2), i)):
+            if not ADDRESSES_ALLAH.search(text):
+                advisories.append(
+                    f"{surah}:{v}: familiar forms {sorted(forms)} shortly after a "
+                    f"vocative — check whether this still addresses the Prophet"
+                )
+    return failures, advisories
 
 
 def main() -> int:
@@ -235,7 +256,9 @@ def main() -> int:
             problems.append(f"surah {n}: {len(missing)} verses not yet translated")
 
         done_verses += len(ur)
-        problems.extend(prophet_address_findings(n, ur))
+        addr_fail, addr_advise = prophet_address_findings(n, ur)
+        problems.extend(addr_fail)
+        advisories.extend(addr_advise)
         for v, text in ur.items():
             total += 1
             vref = f"{n}:{v}"
