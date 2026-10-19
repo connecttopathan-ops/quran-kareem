@@ -109,7 +109,34 @@
     "risalat":   {"count": 4,   "avoid": ["risalah"], "gloss": "prophethood, message"},
     "jinn":      {"count": 3,   "avoid": ["jinnat"], "gloss": "jinn"},
     "gunah":     {"count": 3,   "avoid": ["gunaah"], "gloss": "sin"},
-    "shukr":     {"count": 1,   "avoid": ["shukar"], "gloss": "gratitude"}
+    "shukr":     {"count": 1,   "avoid": ["shukar"], "gloss": "gratitude"},
+
+    "_spelling_note": "Below: ordinary (non-religious) words where the first tranche used a spelling the reference does not. Each pair was verified by counting both forms in ur-roman.json. These are the class of error a 90-term glossary misses, so they are pinned explicitly rather than left to a fuzzy matcher.",
+    "makhlooq":   {"count": 20,  "avoid": ["makhluq", "makhlooqe"], "gloss": "creation"},
+    "meharban":   {"count": 17,  "avoid": ["meherbaan", "meherban"], "gloss": "kind"},
+    "meharbani":  {"count": 12,  "avoid": ["meherbani"], "gloss": "kindness"},
+    "panaah":     {"count": 42,  "avoid": ["panah"], "gloss": "refuge"},
+    "haath":      {"count": 128, "avoid": ["hath"], "gloss": "hand"},
+    "qabool":     {"count": 93,  "avoid": ["qubool"], "gloss": "accept"},
+    "pahunchana": {"count": 200, "avoid": ["pohanchana", "pohanchna"], "gloss": "to convey, to reach — stem pahunch-, never pohanch-"},
+    "gaafil":     {"count": 14,  "avoid": ["ghafil"], "gloss": "heedless"},
+    "gaflat":     {"count": 20,  "avoid": ["ghaflat"], "gloss": "heedlessness"},
+    "giroh":      {"count": 126, "avoid": ["guroh"], "gloss": "group"},
+    "qayam":      {"count": 199, "avoid": ["qaayam"], "gloss": "steadfast"},
+    "bakshne":    {"count": 14,  "avoid": ["bakhshne"], "gloss": "to forgive"},
+    "jaadugar":   {"count": 28,  "avoid": ["jadoogar"], "gloss": "sorcerer — jaadugarni feminine"},
+    "insaano":    {"count": 31,  "avoid": ["insanon"], "gloss": "people (oblique plural)"},
+    "saath":      {"count": 492, "avoid": ["sath"], "gloss": "with"},
+    "tamaam":     {"count": 53,  "avoid": [], "gloss": "all — the reference uses both tamaam (53) and tamam (4); either is acceptable"},
+    "daaman":     {"count": 14,  "avoid": ["daman"], "gloss": "fold, skirt"},
+    "izhar":      {"count": 6,   "avoid": ["izhaar"], "gloss": "expression — izhar karna, to express"},
+    "bhadakna":   {"count": 19,  "avoid": ["bharakna", "bharakti"], "gloss": "to blaze — bharakna means to flare up in anger, a different word"},
+    "yakta":      {"count": 3,   "avoid": ["akela"], "gloss": "unique, one — NOT akela, which means lonely and is doctrinally wrong of Allah"},
+    "maabood":    {"count": 15,  "avoid": ["ilah"], "gloss": "object of worship, deity — 'ilah' as a standalone noun appears 0 times in the reference"},
+    "humsar":     {"count": 9,   "avoid": [], "gloss": "equal, peer — the reference's word at 112:4"},
+    "shar":       {"count": 163, "avoid": [], "gloss": "evil — preferred over buraai in surahs 113-114, where the reference uses it"},
+    "rehzan":     {"count": 0,   "avoid": ["daaku"], "gloss": "bandit — daaku is Hindi-register and absent from the reference"},
+    "paida":      {"count": 238, "avoid": ["janam dena", "janam diya"], "gloss": "to create — 'janam dena' is Hindi-register, said of mothers, and reads crudely of Allah"}
   },
 
   "address": {
@@ -142,9 +169,46 @@
   "register": {
     "_note": "The source's grammatical habits, for matching its voice.",
     "particles": ["ke", "hai", "aur", "se", "ki", "mein", "hain", "woh", "ko", "jo", "to", "ho", "yeh", "ka", "na", "ne", "nahin", "tum", "liye", "par", "kar"],
-    "vocative": "Aey (437 occurrences) — 'O ...', as in 'Aey Rasool'",
+    "vocative": "Aey (437 occurrences). The reference's own vocatives for the Prophet are 'Aey Nabi' (186) and 'Aey Muhammad' (112); 'Aey Rasool' appears 0 times, though 'Rasool' as a noun appears 284 times. We use 'Aey Rasool ﷺ' because the Mukhtasar says 'O Messenger' rather than 'O Prophet' — a deliberate divergence, not an oversight.",
     "common": ["zameen (earth)", "paida (create)", "shaks (person)", "siwa (except)", "baat (matter)", "cheez (thing)", "waqt (time)", "taraf (towards)"],
     "khuda": "appears 323 times alongside Allah; use Allah unless rendering 'god/deity' generically"
+  },
+
+  "no_calque": {
+    "_note": [
+      "THE FAULT NO GLOSSARY OR CHECKER CATCHES. The glossary pins words;",
+      "nothing pins sentence construction, so construction defaults to the",
+      "English and the result is individually parseable but cumulatively",
+      "foreign — and reads as machine-made sitting next to Maududi's human",
+      "transliteration one line above it.",
+      "",
+      "Translate the sentence, not the clause order. Every example below was",
+      "produced by translating word-for-word, and every one was caught by a",
+      "native speaker or an audit, not by a tool."
+    ],
+    "examples": [
+      {"wrong": "ilah hone mein akela hai", "right": "maabood hone mein yakta hai",
+       "why": "'alone in being a deity' word-for-word; 'akela' means lonely, which is doctrinally wrong of Allah"},
+      {"wrong": "apne hasad par amal kare", "right": "apne hasad ka izhar kare",
+       "why": "'acts out his jealousy' calqued; no Urdu speaker says 'hasad par amal karna'"},
+      {"wrong": "gaanthon par phoonkti hain", "right": "girhon mein phoonkti hain",
+       "why": "one blows INTO knots, not onto them; the reference has the exact idiom at 113:4"},
+      {"wrong": "us ki zaat ke sath, us ki sifaat ke sath aur us ke kaamon ke sath", "right": "us ki zaat, us ki sifaat aur us ke kaamon ke lihaz se",
+       "why": "'with regards to' repeated three times"},
+      {"wrong": "jis mein tamam kaamil sifaat hain", "right": "jo husn o kamaal ki tamam sifaat ka maalik hai",
+       "why": "locative calque; attributes are possessed, not contained"},
+      {"wrong": "nuqsan aur buraiyon se", "right": "us ke shar se jo nuqsan pahunchati hai",
+       "why": "collapses an English genitive chain into coordination, and mismatches singular with plural oblique"},
+      {"wrong": "woh khaas logon ko niyamat deta hai", "right": "woh baaz bandon ko khusoosi tor par niyamat deta hai",
+       "why": "'khaas log' means the elite in Urdu, importing a class distinction the English does not have"},
+      {"wrong": "aap logon ko dekhein", "right": "aap dekhein ke log ...",
+       "why": "'aap log' is a fixed phrase ('you people'), so the reader parses it as a vocative before backtracking"},
+      {"wrong": "Yeh log kaise achhe saathi hain!", "right": "Kaise achhe hain yeh rafeeq!",
+       "why": "'yeh log' is flat-to-dismissive, and the referents are prophets and martyrs; the reference has the settled form at 4:69"}
+    ],
+    "agreement": "Check gender and number across clauses. A compound subject of mixed gender ('maal' m. + 'aulad' f.) must agree consistently: 'us ke kis kaam aa sakte hain', not 'aa sakti hai' followed by 'sakte hain' one clause later.",
+    "tense": "Keep the English's tense. 'who knew the truth and did not follow it' is past: 'jinhon ne haqq ko jaan kar bhi us ki pairwi na ki', not the present 'nahin karte'.",
+    "fixed_phrases": "Where the reference already has a liturgical or idiomatic phrase, use its wording verbatim rather than inventing one: 'ambiya, siddiqeen, shuhada aur saliheen' (4:69), 'girhon mein phoonkne walon' (113:4), 'koi uska humsar nahin' (112:4), 'woh Allah hai, Yakta' (112:1)."
   },
 
   "honorifics": {

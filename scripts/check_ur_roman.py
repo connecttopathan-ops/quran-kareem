@@ -38,6 +38,70 @@ ENGLISH_LEAKS = {
 }
 
 
+REFERENCE = os.path.join(REPO, "assets", "translations", "ur-roman.json")
+
+# Words that are legitimately absent from the reference translation: proper
+# nouns the tafsir introduces, and bracketed source citations.
+VOCAB_EXEMPT = {
+    "lahab", "muttalib", "jameel", "umm", "abu", "bin", "ghafir", "surah",
+    "arabi", "lafz", "ar", "rehman", "raheem", "makkah", "islam",
+}
+
+
+def reference_vocab() -> Counter[str]:
+    """Every word of the Roman Urdu Quran translation, with its frequency."""
+    doc = json.load(open(REFERENCE, encoding="utf-8"))
+    counts: Counter[str] = Counter()
+    for verses in doc.values():
+        for text in verses.values():
+            counts.update(w.lower() for w in words(text))
+    return counts
+
+
+def skeletons(word: str) -> set[str]:
+    """Spelling-variant keys for a word.
+
+    Roman Urdu's variation is almost entirely vowel length and aspiration:
+    makhluq/makhlooq, panah/panaah, hath/haath, qubool/qabool,
+    pohanch/pahunch, guroh/giroh, bakhshne/bakshne. Collapsing long vowels
+    (and, separately, stripping 'h') maps the variants onto one key, so a
+    spelling with no support in the reference can be matched to the one that
+    has it without hard-coding the pairs.
+    """
+    w = re.sub(r"[^a-z]", "", word.lower())
+    bare = re.sub(r"[aeiou]", "", w)              # guroh / giroh  -> grh
+    no_h = re.sub(r"[aeiou]", "", w.replace("h", ""))  # bakhshne / bakshne -> bksn
+    # Keys must be long enough not to collide: a 3-letter consonant
+    # skeleton matches unrelated words ("achhe"/"chahe" are both "chh").
+    return {k for k in (bare, no_h) if len(k) >= 4}
+
+
+def vocab_findings(text: str, ref: Counter[str], ref_keys: dict[str, tuple[str, int]],
+                   ref_min: int) -> list[tuple[str, str, int]]:
+    """Words absent from the reference that a well-supported variant matches."""
+    out = []
+    for w in set(words(text)):
+        lw = w.lower()
+        if lw in VOCAB_EXEMPT or len(lw) < 4:
+            continue
+        mine = ref[lw]
+        for key in skeletons(lw):
+            hit = ref_keys.get(key)
+            if not hit or hit[0] == lw or hit[1] < ref_min:
+                continue
+            # Same opening letter, similar length — without this the
+            # skeleton matches different words outright.
+            if hit[0][0] != lw[0] or abs(len(hit[0]) - len(lw)) > 2:
+                continue
+            # Flag an unattested spelling, and also a barely-attested one
+            # against a much better supported variant: "panah" has 1
+            # occurrence against "panaah"'s 42, so a zero test misses it.
+            if mine * 8 < hit[1]:
+                out.append((w, hit[0], hit[1]))
+                break
+    return out
+
+
 def load_glossary() -> tuple[dict[str, str], dict[str, str]]:
     """Return (avoid_spelling -> correct_spelling, correct -> gloss)."""
     with open(GLOSSARY, encoding="utf-8") as fh:
@@ -120,6 +184,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--surah", type=int)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--ref-min", type=int, default=5, dest="ref_min",
+                    help="how much support a reference spelling needs before "
+                         "an unattested variant is flagged against it")
     args = ap.parse_args()
 
     if not os.path.isdir(UR):
@@ -127,6 +194,16 @@ def main() -> int:
         return 1
 
     avoid, _gloss = load_glossary()
+
+    ref = reference_vocab()
+    # One key per spelling-variant family, held by its best-supported member.
+    ref_keys: dict[str, tuple[str, int]] = {}
+    for word, n in ref.most_common():
+        for key in skeletons(word):
+            if key not in ref_keys:
+                ref_keys[key] = (word, n)
+    off_register: Counter[str] = Counter()
+    advisories: list[str] = []
     counts = {
         s["number"]: s["verses"]
         for s in json.load(open(os.path.join(REPO, "assets", "surahs.json"), encoding="utf-8"))
@@ -161,18 +238,24 @@ def main() -> int:
         problems.extend(prophet_address_findings(n, ur))
         for v, text in ur.items():
             total += 1
-            ref = f"{n}:{v}"
+            vref = f"{n}:{v}"
             if not text.strip():
-                problems.append(f"{ref}: empty")
+                problems.append(f"{vref}: empty")
                 continue
 
             for w in words(text):
                 if w in avoid:
                     off_glossary[f"{w} -> {avoid[w]}"] += 1
-                    problems.append(f"{ref}: '{w}' should be '{avoid[w]}'")
+                    problems.append(f"{vref}: '{w}' should be '{avoid[w]}'")
                 if w.lower() in ENGLISH_LEAKS:
                     leaks[w.lower()] += 1
-                    problems.append(f"{ref}: English left in: '{w}'")
+                    problems.append(f"{vref}: English left in: '{w}'")
+
+            for bad, good, cnt in vocab_findings(text, ref, ref_keys, args.ref_min):
+                off_register[f"{bad} -> {good}"] += 1
+                advisories.append(
+                    f"{vref}: '{bad}' is rare in the Roman Urdu translation, "
+                    f"which mostly spells this '{good}' ({cnt}x) — check")
 
             # Roman Urdu runs a little longer than English; well outside
             # 0.6-2.0x usually means a truncated or padded verse.
@@ -181,10 +264,10 @@ def main() -> int:
                 ratio = len(text) / len(src)
                 if ratio < 0.6:
                     short += 1
-                    problems.append(f"{ref}: {ratio:.2f}x the English — truncated?")
+                    problems.append(f"{vref}: {ratio:.2f}x the English — truncated?")
                 elif ratio > 2.0:
                     long += 1
-                    problems.append(f"{ref}: {ratio:.2f}x the English — padded?")
+                    problems.append(f"{vref}: {ratio:.2f}x the English — padded?")
 
     expected = sum(counts.values())
     print(f"translated: {done_verses} verses across {len(surahs)} surah(s)"
@@ -194,6 +277,12 @@ def main() -> int:
           + (f"  {dict(off_glossary.most_common(8))}" if off_glossary else ""))
     print(f"English left in: {sum(leaks.values())}"
           + (f"  {dict(leaks.most_common(8))}" if leaks else ""))
+    print(f"spelling advisories (not failures): {len(advisories)}")
+
+    if advisories and args.verbose:
+        print(f"\nadvisory — fuzzy spelling matches, many are false positives:")
+        for a in advisories[:60]:
+            print("  " + a)
 
     if problems:
         print(f"\n{len(problems)} finding(s):")
