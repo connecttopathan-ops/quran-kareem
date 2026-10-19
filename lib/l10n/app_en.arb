@@ -2501,5 +2501,9 @@
   "tafsirLoading": "Loading tafsir…",
   "@tafsirLoading": {
     "description": "Shown briefly while the tafsir file for the current surah is being read."
+  },
+  "tafsirShownInEnglish": "Not translated yet — shown in English",
+  "@tafsirShownInEnglish": {
+    "description": "Shown in the tafsir panel when the chosen tafsir language has no entry for this verse yet and the English is being shown instead. The Roman Urdu edition is being translated surah by surah, so its coverage is incomplete."
   }
 }

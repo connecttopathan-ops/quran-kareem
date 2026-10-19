@@ -70,7 +70,9 @@ class _TafsirSheetState extends State<TafsirSheet> {
 
   void _load() {
     final state = context.read<AppState>();
-    context.read<TafsirService>().loadSurah(state.tafsirLang, widget.surah.number);
+    context
+        .read<TafsirService>()
+        .loadForReading(state.tafsirLang, widget.surah.number);
   }
 
   void _step(int delta) {
@@ -104,8 +106,11 @@ class _TafsirSheetState extends State<TafsirSheet> {
     final lang = state.tafsirLang;
     final surah = widget.surah;
 
-    final loaded = tafsir.isLoaded(lang, surah.number);
-    final text = tafsir.getText(lang, surah.number, _verse);
+    final loaded = tafsir.isLoaded(lang, surah.number) &&
+        (lang == 'en' || tafsir.isLoaded('en', surah.number));
+    final entry = tafsir.lookup(lang, surah.number, _verse);
+    final text = entry?.text;
+    final viaEnglish = entry != null && entry.lang != lang;
     final langName = kLanguages
         .firstWhere((x) => x.code == lang, orElse: () => kLanguages.first)
         .nativeName;
@@ -227,7 +232,12 @@ class _TafsirSheetState extends State<TafsirSheet> {
               if (!loaded)
                 Text(l.tafsirLoading,
                     style: TextStyle(fontSize: 13, color: context.textDim))
-              else
+              else ...[
+                if (viaEnglish) ...[
+                  Text(l.tafsirShownInEnglish,
+                      style: TextStyle(fontSize: 11, color: context.textDim)),
+                  const SizedBox(height: 9),
+                ],
                 Text(
                   text ?? l.tafsirUnavailable,
                   style: TextStyle(
@@ -237,6 +247,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
                     height: 1.75,
                   ),
                 ),
+              ],
             ]),
           ),
         ),

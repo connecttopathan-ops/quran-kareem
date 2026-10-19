@@ -63,6 +63,7 @@ flutter:
     - assets/audio/adhan_makkah_fajr.mp3
     - assets/books/
     - assets/tafsir/en/
+    - assets/tafsir/ur-roman/
     - assets/tafsir/fr/
     - assets/tafsir/es/
     - assets/tafsir/it/

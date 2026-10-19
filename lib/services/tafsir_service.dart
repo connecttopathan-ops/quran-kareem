@@ -8,7 +8,14 @@ import 'package:flutter/services.dart';
 /// Al-Mukhtasar in 31 languages but no tafsir of any kind exists in German or
 /// Portuguese, so those locales fall back to English. See
 /// [resolveTafsirLang].
-const kTafsirLangs = {'en', 'fr', 'es', 'it'};
+const kTafsirLangs = {'en', 'ur-roman', 'fr', 'es', 'it'};
+
+/// Editions that do not yet cover all 6236 verses.
+///
+/// The Roman Urdu edition is being translated surah by surah from the English,
+/// so a verse may have no entry yet. Those fall back to English per verse
+/// rather than per language — see [TafsirService.lookup].
+const kTafsirPartialLangs = {'ur-roman'};
 
 /// Stored value meaning "use whatever the Quran translation language is".
 const kTafsirFollowTranslation = 'auto';
@@ -22,6 +29,9 @@ String resolveTafsirLang(String setting, String translationLang) {
   if (setting != kTafsirFollowTranslation && kTafsirLangs.contains(setting)) {
     return setting;
   }
+  // Full code first: 'ur-roman' is itself a tafsir language, and must not be
+  // reduced to 'ur', which is not.
+  if (kTafsirLangs.contains(translationLang)) return translationLang;
   final base = translationLang.split('-').first;
   return kTafsirLangs.contains(base) ? base : 'en';
 }
@@ -50,6 +60,30 @@ class TafsirService extends ChangeNotifier {
 
   bool isLoading(String langCode, int surahNumber) =>
       _loading.contains('${langCode}_$surahNumber');
+
+  /// The tafsir to show for a verse, and which language it actually came from.
+  ///
+  /// Returns null only while the assets are still loading, or when neither the
+  /// chosen language nor English has an entry. `lang` differs from [langCode]
+  /// when a partial edition has no entry for this verse, so the caller can say
+  /// so rather than silently showing English under a Roman Urdu heading.
+  ({String text, String lang})? lookup(
+      String langCode, int surahNumber, int verseNumber) {
+    final own = getText(langCode, surahNumber, verseNumber);
+    if (own != null) return (text: own, lang: langCode);
+    if (langCode == 'en') return null;
+    final fallback = getText('en', surahNumber, verseNumber);
+    return fallback == null ? null : (text: fallback, lang: 'en');
+  }
+
+  /// Load the chosen language and, for a partial edition, English alongside it
+  /// so a verse with no translation yet can fall back without a second wait.
+  Future<void> loadForReading(String langCode, int surahNumber) async {
+    await Future.wait([
+      loadSurah(langCode, surahNumber),
+      if (langCode != 'en') loadSurah('en', surahNumber),
+    ]);
+  }
 
   /// Parse `assets/tafsir/<langCode>/<surahNumber>.json` once.
   Future<void> loadSurah(String langCode, int surahNumber) async {

@@ -481,5 +481,6 @@
   "tafsirLanguageTitle": "Langue du tafsir",
   "tafsirFollowTranslation": "Comme la traduction",
   "tafsirUnavailable": "Pas de tafsir pour ce verset",
-  "tafsirLoading": "Chargement du tafsir…"
+  "tafsirLoading": "Chargement du tafsir…",
+  "tafsirShownInEnglish": "Pas encore traduit — affiché en anglais"
 }
