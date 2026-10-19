@@ -2463,5 +2463,43 @@
   "widgetTitleLarge": "Prayer Times (Large)",
   "@widgetTitleLarge": {
     "description": "Name of the large prayer-times widget in the iOS gallery."
+  },
+  "tafsirTitle": "Tafsir",
+  "@tafsirTitle": {
+    "description": "Heading of the panel that shows the scholarly explanation of a single verse. 'Tafsir' is the established Arabic term for Qur'anic exegesis and is normally kept untranslated."
+  },
+  "tafsirOpenVerse": "Open tafsir for verse {verse}",
+  "@tafsirOpenVerse": {
+    "description": "Screen-reader label for the button on a verse that opens its tafsir. Never shown visually.",
+    "placeholders": {
+      "verse": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "tafsirClose": "Close tafsir",
+  "@tafsirClose": {
+    "description": "Screen-reader label for the button that closes the tafsir panel."
+  },
+  "tafsirSource": "Al-Mukhtasar fi Tafsir al-Qur’an al-Karim · Tafsir Center for Quranic Studies",
+  "@tafsirSource": {
+    "description": "Attribution line at the foot of the tafsir panel. 'Al-Mukhtasar fi Tafsir al-Qur'an al-Karim' is the work's title and must not be translated; the publisher's name after the separator may be."
+  },
+  "tafsirLanguageTitle": "Tafsir language",
+  "@tafsirLanguageTitle": {
+    "description": "Title of the picker for which language tafsir is shown in. Separate from both the interface language and the Qur'an translation language, because tafsir exists in far fewer languages."
+  },
+  "tafsirFollowTranslation": "Same as translation",
+  "@tafsirFollowTranslation": {
+    "description": "Option in the tafsir-language picker meaning 'use whichever language the Qur'an translation is set to'. Keep short — it sits in a list of language names."
+  },
+  "tafsirUnavailable": "No tafsir for this verse",
+  "@tafsirUnavailable": {
+    "description": "Shown in the tafsir panel when this edition has no entry for the verse."
+  },
+  "tafsirLoading": "Loading tafsir…",
+  "@tafsirLoading": {
+    "description": "Shown briefly while the tafsir file for the current surah is being read."
   }
 }

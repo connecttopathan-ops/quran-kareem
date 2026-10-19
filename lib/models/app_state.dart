@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/ui_locales.dart';
 import '../models/language.dart';
+import '../services/tafsir_service.dart';
 
 // Reading themes
 enum ReaderTheme { warm, paper, dark }
@@ -19,6 +20,12 @@ class AppState extends ChangeNotifier {
   /// normal thing to want. Holds either [kSystemUiLocale] or a code from
   /// `kUiLocales`.
   String _uiLangCode = kSystemUiLocale;
+
+  /// Which language *tafsir* is shown in. A third independent choice, because
+  /// tafsir exists in far fewer languages than the translations do — there is
+  /// no German or Portuguese tafsir at all. Holds either
+  /// [kTafsirFollowTranslation] or a code from `kTafsirLangs`.
+  String _tafsirLangCode = kTafsirFollowTranslation;
 
   // ── Display ─────────────────────────────────────────────────────
   bool _isDarkMode = false;        // app-level dark mode
@@ -68,6 +75,15 @@ class AppState extends ChangeNotifier {
   Locale get uiLocale => Locale(
         _uiLangCode == kSystemUiLocale ? detectUiLocale() : _uiLangCode,
       );
+  /// The stored tafsir-language choice: [kTafsirFollowTranslation] or a code
+  /// from `kTafsirLangs`. The picker binds to this; [tafsirLang] is what is
+  /// actually shown.
+  String get tafsirLangCode     => _tafsirLangCode;
+
+  /// The language tafsir is shown in, with [kTafsirFollowTranslation] resolved
+  /// against [langCode] and anything without a tafsir falling back to English.
+  String get tafsirLang => resolveTafsirLang(_tafsirLangCode, _langCode);
+
   bool   get isDarkMode         => _isDarkMode;
   ReaderTheme get readerTheme   => _readerTheme;
   double get arabicFontSize     => _arabicFontSize;
@@ -109,6 +125,10 @@ class AppState extends ChangeNotifier {
             isSupportedUiLocale(storedUiLang))
         ? storedUiLang
         : kSystemUiLocale;
+    final storedTafsir   = p.getString('tafsirLangCode') ?? kTafsirFollowTranslation;
+    _tafsirLangCode = kTafsirLangs.contains(storedTafsir)
+        ? storedTafsir
+        : kTafsirFollowTranslation;
     _isDarkMode          = p.getBool('isDarkMode')     ?? false;
     _readerTheme         = ReaderTheme.values[p.getInt('readerTheme') ?? 0];
     _arabicFontSize      = p.getDouble('arabicSize')   ?? 24.0;
@@ -152,6 +172,20 @@ class AppState extends ChangeNotifier {
     _uiLangCode = code;
     final p = await SharedPreferences.getInstance();
     await p.setString('uiLangCode', code);
+    notifyListeners();
+  }
+
+  /// Sets the tafsir language. Pass [kTafsirFollowTranslation] to follow the
+  /// Quran translation language.
+  ///
+  /// Like [setUiLanguage], deliberately independent of [setLanguage]: a reader
+  /// on the German translation needs a tafsir language that exists, and must
+  /// not have their translation changed out from under them to get one.
+  Future<void> setTafsirLanguage(String code) async {
+    if (code != kTafsirFollowTranslation && !kTafsirLangs.contains(code)) return;
+    _tafsirLangCode = code;
+    final p = await SharedPreferences.getInstance();
+    await p.setString('tafsirLangCode', code);
     notifyListeners();
   }
 

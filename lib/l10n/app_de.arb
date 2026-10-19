@@ -473,5 +473,13 @@
   "widgetDescAll": "Zeigt alle 5 Gebetszeiten.",
   "widgetDescLarge": "Zeigt alle 5 Gebetszeiten, das nächste hervorgehoben.",
   "widgetDescQibla": "Zeigt die Richtung zur Kaaba.",
-  "widgetTitleLarge": "Gebetszeiten (groß)"
+  "widgetTitleLarge": "Gebetszeiten (groß)",
+  "tafsirTitle": "Tafsir",
+  "tafsirOpenVerse": "Tafsir zu Vers {verse} öffnen",
+  "tafsirClose": "Tafsir schließen",
+  "tafsirSource": "Al-Mukhtasar fi Tafsir al-Qur’an al-Karim · Tafsir-Zentrum für Koranstudien",
+  "tafsirLanguageTitle": "Sprache des Tafsir",
+  "tafsirFollowTranslation": "Wie die Übersetzung",
+  "tafsirUnavailable": "Kein Tafsir zu diesem Vers",
+  "tafsirLoading": "Tafsir wird geladen…"
 }

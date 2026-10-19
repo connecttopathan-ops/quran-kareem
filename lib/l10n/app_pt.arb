@@ -473,5 +473,13 @@
   "widgetDescAll": "Mostra as 5 orações diárias.",
   "widgetDescLarge": "Mostra as 5 orações, destacando a próxima.",
   "widgetDescQibla": "Indica a direção da Caaba.",
-  "widgetTitleLarge": "Horários de oração (grande)"
+  "widgetTitleLarge": "Horários de oração (grande)",
+  "tafsirTitle": "Tafsir",
+  "tafsirOpenVerse": "Abrir o tafsir do versículo {verse}",
+  "tafsirClose": "Fechar o tafsir",
+  "tafsirSource": "Al-Mukhtasar fi Tafsir al-Qur’an al-Karim · Centro de Tafsir para Estudos Corânicos",
+  "tafsirLanguageTitle": "Idioma do tafsir",
+  "tafsirFollowTranslation": "Igual à tradução",
+  "tafsirUnavailable": "Sem tafsir para este versículo",
+  "tafsirLoading": "A carregar o tafsir…"
 }

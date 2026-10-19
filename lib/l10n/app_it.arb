@@ -473,5 +473,13 @@
   "widgetDescAll": "Mostra le 5 preghiere del giorno.",
   "widgetDescLarge": "Mostra le 5 preghiere, evidenziando la prossima.",
   "widgetDescQibla": "Indica la direzione della Kaaba.",
-  "widgetTitleLarge": "Orari di preghiera (grande)"
+  "widgetTitleLarge": "Orari di preghiera (grande)",
+  "tafsirTitle": "Tafsir",
+  "tafsirOpenVerse": "Apri il tafsir del versetto {verse}",
+  "tafsirClose": "Chiudi il tafsir",
+  "tafsirSource": "Al-Mukhtasar fi Tafsir al-Qur’an al-Karim · Centro di Tafsir per gli Studi Coranici",
+  "tafsirLanguageTitle": "Lingua del tafsir",
+  "tafsirFollowTranslation": "Come la traduzione",
+  "tafsirUnavailable": "Nessun tafsir per questo versetto",
+  "tafsirLoading": "Caricamento del tafsir…"
 }

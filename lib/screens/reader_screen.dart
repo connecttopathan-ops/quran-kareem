@@ -11,6 +11,7 @@ import '../services/audio_service.dart';
 import '../services/quran_service.dart';
 import '../services/translation_service.dart';
 import '../widgets/q_icons.dart';
+import '../widgets/tafsir_sheet.dart';
 import '../theme/app_theme.dart';
 import 'reading_mode_picker_screen.dart';
 import 'text_settings_screen.dart';
@@ -878,6 +879,35 @@ class _VerseCardState extends State<_VerseCard> {
                 _NowPlayingDots(),
               ],
               const Spacer(),
+
+              // Tafsir — opens the explanation for this verse in a sheet.
+              // Sits left of play so the two audio controls stay adjacent.
+              Semantics(
+                button: true,
+                label: L.of(context).tafsirOpenVerse(verse.number),
+                child: GestureDetector(
+                  onTap: () => showTafsirSheet(
+                    context,
+                    surah: surah,
+                    verseNumber: verse.number,
+                    arabic: verse.arabic,
+                  ),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.goldFaint.withOpacity(
+                          _RC.isDark(state.readerTheme) ? 0.15 : 0.5),
+                      border: Border.all(color: AppColors.gold),
+                    ),
+                    child: Center(
+                      child: QIcon.book(size: 13, color: AppColors.gold),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
 
               // Play/pause button
               GestureDetector(

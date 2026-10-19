@@ -12,6 +12,7 @@ import 'services/location_service.dart';
 import 'services/audio_service.dart';
 import 'services/audio_handler.dart';
 import 'services/quran_service.dart';
+import 'services/tafsir_service.dart';
 import 'services/translation_service.dart';
 import 'services/notification_service.dart';
 import 'services/book_download_service.dart';
@@ -62,6 +63,7 @@ class QuranApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AudioService(handler)),
         ChangeNotifierProvider(create: (_) => QuranService()),
         ChangeNotifierProvider(create: (_) => TranslationService()),
+        ChangeNotifierProvider(create: (_) => TafsirService()),
         ChangeNotifierProvider(create: (_) => BookDownloadService()),
         ChangeNotifierProvider(create: (_) => AudioDownloadService()),
       ],

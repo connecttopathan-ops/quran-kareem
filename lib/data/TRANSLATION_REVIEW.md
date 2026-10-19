@@ -223,3 +223,79 @@ Each name's renderings sit together on its `AsmaEntry` in
 `asma_ul_husna.dart`, so a correction is a one-line edit next to the Arabic it
 translates — no cross-referencing by key. `'en'` is the fallback, so removing a
 language's line shows English rather than an empty card.
+
+---
+
+# Tafsir (Al-Mukhtasar) — what the build script changes
+
+`assets/tafsir/<lang>/<surah>.json` is Al-Mukhtasar fi Tafsir al-Qur'an
+al-Karim (Tafsir Center for Quranic Studies), reproduced from the upstream
+editions. Unlike the other religious content in this repo it is **not a
+machine translation** — the wording is the Tafsir Center's own published text
+in each of the four languages.
+
+What `scripts/build_tafsir.py` does change, and so what a reviewer should
+check, is limited to four passes. Re-running the script reproduces the assets
+exactly, so any correction belongs in the script rather than in the JSON.
+
+## 1. Encoding repair
+
+- **Italian** arrived with mojibake in two names — `Ya'qǭùb` for Ya'qūb and
+  `Is'ħāǭ` for Is'ħāq — and with Arabic glyphs glued onto the end of Latin
+  words (`Torāhالت`, `Allāhالله`, `Al-Shāmالش`, ~22 places).
+- **Spanish** carried zero-width spaces and non-breaking hyphens.
+
+## 2. Honorific glyphs converted to text
+
+The **Spanish** edition encodes honorifics as bare Latin letters from an
+Arabic-honorifics font: a lone `u` after a prophet's name, a lone `r` after
+Mujámmad / Profeta / Mensajero / Al-lah. In an ordinary font these render as
+stray letters — *"albricias para José u."* About 700 occurrences, now
+`(la paz sea con él)` and `ﷺ`.
+
+**Check:** whether `r` after *Al-lah* (17 places) is really the Prophet's
+honorific or something else. It is treated as ﷺ.
+
+## 3. Prophet names normalised to their Arabic forms
+
+English, French and Spanish used localised names; Italian already used Arabic
+forms but in its own transliteration. All four now read Yusuf, Ya'qub, Musa,
+Ibrahim, Nuh, Isa, Maryam, Sulayman, Dawud, Harun, Lut, Isma'il, Ishaq, Yunus,
+Zakariya, Yahya, Ayyub, Idris, Hud, Salih, Shu'ayb, Ilyas, Alyasa, Dhul-Kifl.
+
+Name spellings were extracted from the corpus, not assumed — the Italian
+edition uses `Muħammed` 237 times and `Muħammad` never.
+
+**Checks:**
+- *Pharaoh*, *Satan* and *Iblis* are deliberately left in each language's own
+  form; *Talut* (Saul) and *Jalut* (Goliath) are mapped but take no honorific.
+- English 21:85 lists "Ishmael, Enoch and Ezekiel"; the third is read as
+  **Dhul-Kifl**, which is the usual identification but not the only one.
+- *Eve* → **Hawwa**, and the angels *Gabriel* → **Jibril**, *Michael* →
+  **Mika'il**. Mapping angel names was a judgement call.
+- Italian keeps `Allāh`, `Torāh`, `Islām`, `Isrāīl` with macrons, so it is
+  internally consistent but differs from the other three editions.
+
+## 4. Honorifics added where the source supplies none
+
+French and Spanish had effectively no honorifics in running text; English had
+about 500 and Italian about 200. The script adds one **per name per verse**,
+never where the source already honours that name anywhere in the same verse.
+Per occurrence would be unreadable: *Moses* alone appears 371 times.
+
+A verse naming **three or more** prophets takes a single collective honorific
+after the last name — the convention the English edition itself uses at 6:84.
+The Prophet Muhammad takes ﷺ; Maryam takes the feminine form.
+
+**Checks:**
+- Whether a spelled-out *(peace be upon him)* is preferred over *(PBUH)* or
+  ﷺ for prophets other than Muhammad. `HONORIFIC` in the script is the one
+  place to change it.
+- Spanish still honours each name individually in list verses such as 6:84,
+  because its own glyphs did; the other three use the collective form there.
+- Whether the three-or-more threshold is right.
+
+## Not covered
+
+German and Portuguese have **no tafsir in any of the 123 upstream editions**,
+not merely no Al-Mukhtasar. Those locales fall back to English.
