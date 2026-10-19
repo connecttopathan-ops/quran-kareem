@@ -161,6 +161,26 @@ ADDRESSES_ALLAH = re.compile(
 # Outright grammar errors, each verified against the reference translation
 # before being listed here. Every one of these was produced by a first draft
 # and missed by a checker that only looked at vocabulary.
+# The em-dash is the clearest signature of machine origin in this corpus: the
+# reference translation uses none in all 6236 verses, and the English source
+# uses none either, so any dash here was invented rather than carried over.
+# Every English appositive must become "yani X", a "jo ... hai" relative, or a
+# repeated noun.
+EM_DASH = re.compile(r"\u2014")
+
+# A nominative pronoun cannot govern a perfective transitive: "Woh aaye aur
+# bataya" needs "unhon ne bataya". Only flagged when the clause after "aur"
+# introduces no ergative of its own.
+ERGATIVE_GAP = re.compile(
+    r"(?<![a-z])(?:Woh|woh)\s+(?:[a-z\u2019'-]+\s+){0,6}?"
+    r"(?:aaye|aaya|hue|pahuncha|pahunche|raha|rahe|gaye)\b"
+    # No ergative may intervene anywhere before the target verb: in
+    # "Woh aaye, to Yusuf ne ... kaha" the subject of "kaha" is "Yusuf ne",
+    # so there is nothing wrong.
+    r"((?:(?!\bne\b)[^.\u201c\u201d]){0,60}?)"
+    r"\baur\b((?:(?!\bne\b)[^.\u201c\u201d]){0,40}?)"
+    r"\b(bataya|kaha|poocha|kar diya|de diya|daala|liya|churaya)\b")
+
 GRAMMAR = [
     (re.compile(r"(?<![a-z])un ne(?![a-z])", re.I), "un ne", "unhon ne",
      "the ergative of the honorific/plural 'woh' — the reference uses "
@@ -175,9 +195,30 @@ GRAMMAR = [
      "spelling"),
     (re.compile(r"(?<![a-z])mu (?=kar|phere|pher)", re.I), "mu", "munh",
      "'mu karna' is not a verb; the word is 'munh'"),
-    (re.compile(r"(?<![a-z])gharr (?=liye|li)", re.I), "gharr", "gharh",
+    (re.compile(r"(?<![a-z])gharr (?=liye|li)", re.I), "gharr", "ghadh",
      "spelling"),
+    # Spellings this surah walked through, each verified against the reference.
+    (re.compile(r"(?<![a-z])Aziz(?![a-z])"), "Aziz", "Azeez",
+     "the reference spells it Azeez (10) and Aziz twice"),
+    (re.compile(r"(?<![a-z])han(?![a-z])", re.I), "han", "haan",
+     "'han' collides with 'haan' (yes); the reference has haan 127 to han 13"),
+    (re.compile(r"(?<![a-z])bheriya(?![a-z])", re.I), "bheriya", "bhediya",
+     "the reference has bhediya; bheriya never appears"),
+    (re.compile(r"(?<![a-z])sooli(?![a-z])", re.I), "sooli", "suli", "spelling"),
+    (re.compile(r"(?<![a-z])eteraf(?![a-z])", re.I), "eteraf", "iqrar",
+     "the reference's word for confession"),
+    (re.compile(r"(?<![a-z])zaroortmand", re.I), "zaroortmand", "zaroorat-mand",
+     "missing vowel"),
 ]
+
+# "kaha ke" was too narrow: "kehta hai ke ... keh dijiye" and "kaha ke ... laad
+# dein" both slipped through. Any reporting verb, and any respectful
+# imperative, now count.
+REPORTED_IMPERATIVE = re.compile(
+    r"(kaha|kehta hai|kehte hain|bataya|poocha|farmaya|kehne lage) ke(?![a-z])"
+    r"([^.\u201c\u201d]{0,80})", re.I)
+RESPECTFUL_IMPERATIVE = re.compile(
+    r"(?<![a-z])([a-z\u2019']+(?:iye|ein))(?![a-z])", re.I)
 
 # "ke" opens a subordinate clause and cannot govern an imperative or a
 # second-person pronoun. "kaha ke jao" is an ungrammatical hybrid: either
@@ -204,13 +245,22 @@ def grammar_findings(surah: int, verses: dict[str, str]) -> list[str]:
         for rx, bad, good, why in GRAMMAR:
             for _ in rx.finditer(text):
                 out.append(f"{surah}:{v}: '{bad}' -> '{good}' ({why})")
-        for m in KAHA_KE.finditer(text):
-            hit = SECOND_PERSON.search(m.group(2))
+        for m in REPORTED_IMPERATIVE.finditer(text):
+            hit = SECOND_PERSON.search(m.group(2)) or RESPECTFUL_IMPERATIVE.search(m.group(2))
             if hit:
                 out.append(
                     f"{surah}:{v}: '{m.group(1)} ke ... {hit.group(1)}' — 'ke' cannot "
                     f"govern a second person or an imperative; quote it directly "
                     f"or use the subjunctive")
+        for _ in EM_DASH.finditer(text):
+            out.append(
+                f"{surah}:{v}: an em-dash — the reference uses none in 6236 verses "
+                f"and neither does the English; rebuild it as 'yani X', a "
+                f"'jo ... hai' relative, or a repeated noun")
+        for m in ERGATIVE_GAP.finditer(text):
+            out.append(
+                f"{surah}:{v}: '{m.group(0)[:60]}...' — a nominative pronoun cannot "
+                f"govern the perfective transitive '{m.group(3)}'; it needs 'unhon ne'")
     return out
 
 
