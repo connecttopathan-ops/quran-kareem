@@ -299,3 +299,76 @@ The Prophet Muhammad takes ﷺ; Maryam takes the feminine form.
 
 German and Portuguese have **no tafsir in any of the 123 upstream editions**,
 not merely no Al-Mukhtasar. Those locales fall back to English.
+
+---
+
+# Roman Urdu tafsir — status and what to review
+
+`assets/tafsir/ur-roman/` is a **machine translation of the English
+Al-Mukhtasar**, not a published work. Unlike the four bundled editions, no
+scholar has reviewed a word of it. It is labelled in the app, and a verse with
+no entry falls back to English per verse rather than per language.
+
+**Coverage: 682 of 6236 verses (10.9%)** — Al-Fatihah, Surah Yusuf, and all of
+Juz 30 (surahs 78–114). Everything else shows English.
+
+## How it was produced
+
+Three independent audits drove three rewrites. Their trajectory, because it
+says where the remaining risk is:
+
+| | word choice | sentence construction |
+|---|---|---|
+| audit 1 (30 short-surah verses) | ~85% | ~60% |
+| audit 2 (surah 12, first pass) | ~90% | ~65% |
+| audit 3 (surah 12, rewritten) | ~93% | ~79% |
+
+Construction was the hard part. Each audit found the previous fix had moved
+the fault rather than removed it: English clause order became English
+sentence boundaries, which became em-dashes, which became referent collapse
+under the honorific plural.
+
+## The four rules the text follows
+
+1. **No em-dash.** Every English appositive becomes `yani X`, a `jo … hai`
+   relative, or a repeated noun. The reference translation uses no em-dash in
+   6236 verses and neither does the English source, so a dash is invented
+   punctuation and the clearest signature of machine origin.
+2. **Two parties, two names.** Where two referents would both surface as
+   `un` / `unhon ne` / `unhein`, one is named outright.
+3. **Split only at coordinators.** An English `When X, Y` or `Just as X, Y`
+   stays one Urdu sentence (`Jab … to …`, `Jis tarah … usi tarah …`).
+4. **The quote ends where the speaker stops.** Closing theological formulas
+   belong inside it, in the speaker's person (`mera Rubb`, not `un ka Rubb`).
+   Nothing the English marks as thought becomes addressed speech.
+
+Plus the address rule: the Prophet takes the respectful `aap`, Allah takes
+`tu` in du'a, people in general take `tum`, and characters in a narrative take
+whatever suits their relationship.
+
+## What a reviewer should check first
+
+- **Doctrinal wording.** Four errors of this kind were caught and fixed; there
+  may be more. The pattern was rendering a divine attribute word-for-word:
+  `akela` (lonely) for al-Ahad, where the right word is `yakta`.
+- **Whether `aap` for the Prophet is right.** It diverges deliberately from
+  the reference, which uses `tum` for him in 186 verses and never `aap`. The
+  reasoning is that tafsir is editorial voice rather than scripture; it is
+  written down so nobody "corrects" it back.
+- **Honorific density.** 59 `(alaihis salaam)` in surah 12 against the
+  reference's zero in that surah. Narration only, never inside a quotation —
+  though a prophet honouring prophets inside his own speech was kept.
+- **12:52–53 and 12:110** diverge from the reference's reading of those
+  verses, following the English source instead. Both are deliberate.
+
+## Checking it mechanically
+
+`python3 scripts/check_ur_roman.py [--surah N] [--verbose]` covers glossary
+spellings, English left untranslated, length ratios against the source,
+familiar-vs-respectful forms for the Prophet, seven grammar forms, reported
+imperatives, em-dashes, ergative omission and over-long sentences. It reports
+clean on all 682 verses.
+
+It cannot see everything: two typos in this corpus were found by eye, not by
+it (`Tumhara tumhara deen hai`, and a doubled `ki`). `scripts/ur_roman_glossary.json`
+is the vocabulary and style contract it enforces.
