@@ -38,7 +38,7 @@ SPELLINGS = [
     ("kaun\u012b", "kauni"), ("Qur\u2019\u0101n", "Quran"),
     # Glossary spellings (scripts/ur_roman_glossary.json).
     ("halaal", "halal"), ("Shaitan", "Shaytan"), ("shaitan", "shaytan"),
-    ("Jibril", "Jibreel"), ("Loot", "Lut"), ("Iblees", "Iblis"),
+    ("Jibril", "Jibreel"), ("Loot", "Lut"), ("Iblees", "Iblis"), ("Rahman", "Rehman"),
     ("unhon ke", "un ke"), ("mu pher", "munh pher"), ("mu kar", "munh kar"),
 ]
 
