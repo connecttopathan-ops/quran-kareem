@@ -68,6 +68,8 @@ BANNED = [
     # Sanctuary, as in "Masjid-e-Haram", not the adjective "haraam".
     (re.compile(r"(?<![A-Za-z-])haram(?![a-z])"), "haraam"),
     (re.compile(r"(?<![A-Za-z-])([Zz])akat(?![a-z])"), r"\1akaat"),
+    (re.compile(r"(?<![A-Za-z-])Sa{1,2}lih(?![a-z])"), "Saleh"),
+    (re.compile(r"(?<![A-Za-z-])([Nn])emat"), r"\1iyamat"),
 ]
 
 
