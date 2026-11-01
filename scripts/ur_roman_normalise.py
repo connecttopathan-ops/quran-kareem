@@ -70,6 +70,10 @@ BANNED = [
     (re.compile(r"(?<![A-Za-z-])([Zz])akat(?![a-z])"), r"\1akaat"),
     (re.compile(r"(?<![A-Za-z-])Sa{1,2}lih(?![a-z])"), "Saleh"),
     (re.compile(r"(?<![A-Za-z-])([Nn])emat"), r"\1iyamat"),
+    # The reference writes the Urdu word for "limit" hadd 45 times and had
+    # once, and "had" is also on the checker's English-leak list.
+    (re.compile(r"(?<![A-Za-z-])([Hh])ad(?![a-z])"), r"\1add"),
+    (re.compile(r"(?<![A-Za-z-])([Bb])aghair(?![a-z])"), r"\1agair"),
 ]
 
 
