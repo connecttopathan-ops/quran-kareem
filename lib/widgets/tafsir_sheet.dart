@@ -91,6 +91,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
         current: state.tafsirLangCode,
         title: l.tafsirLanguageTitle,
         followLabel: l.tafsirFollowTranslation,
+        coverage: l.tafsirCoverage,
       ),
     );
     if (chosen == null) return;
@@ -233,9 +234,16 @@ class _TafsirSheetState extends State<TafsirSheet> {
                 Text(l.tafsirLoading,
                     style: TextStyle(fontSize: 13, color: context.textDim))
               else ...[
+                // A whole surah missing and one verse missing are different
+                // things to the reader: the first means "this edition stops
+                // short", the second "this verse is still to come".
                 if (viaEnglish) ...[
-                  Text(l.tafsirShownInEnglish,
-                      style: TextStyle(fontSize: 11, color: context.textDim)),
+                  Text(
+                    tafsirCovers(lang, surah.number)
+                        ? l.tafsirShownInEnglish
+                        : l.tafsirSurahUntranslated(langName),
+                    style: TextStyle(fontSize: 11, color: context.textDim),
+                  ),
                   const SizedBox(height: 9),
                 ],
                 Text(
@@ -267,9 +275,11 @@ class _TafsirSheetState extends State<TafsirSheet> {
                     color: context.textDim, fontFamily: 'sans-serif')),
             const SizedBox(height: 11),
             Row(children: [
+              // The label is empty at either end: showing "2:0" before the
+              // first verse names a verse that does not exist.
               Expanded(
                 child: _StepButton(
-                  label: '${surah.number}:${_verse - 1}',
+                  label: _verse > 1 ? '${surah.number}:${_verse - 1}' : '',
                   icon: QIcon.previousVerse(size: 15, color: context.textDim),
                   iconFirst: true,
                   enabled: _verse > 1,
@@ -279,7 +289,9 @@ class _TafsirSheetState extends State<TafsirSheet> {
               const SizedBox(width: 10),
               Expanded(
                 child: _StepButton(
-                  label: '${surah.number}:${_verse + 1}',
+                  label: _verse < surah.verses
+                      ? '${surah.number}:${_verse + 1}'
+                      : '',
                   icon: QIcon.nextVerse(size: 15, color: AppColors.gold),
                   iconFirst: false,
                   enabled: _verse < surah.verses,
@@ -316,13 +328,15 @@ class _StepButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = <Widget>[
       icon,
-      const SizedBox(width: 7),
-      Text(label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
-            color: highlight ? AppColors.gold : context.textDim,
-          )),
+      if (label.isNotEmpty) ...[
+        const SizedBox(width: 7),
+        Text(label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
+              color: highlight ? AppColors.gold : context.textDim,
+            )),
+      ],
     ];
     return Opacity(
       opacity: enabled ? 1 : 0.35,
@@ -356,22 +370,31 @@ class _TafsirLanguagePicker extends StatelessWidget {
     required this.current,
     required this.title,
     required this.followLabel,
+    required this.coverage,
   });
 
   final String current;
   final String title;
   final String followLabel;
 
+  /// Renders "39 of 114 surahs" for an edition that does not cover them all.
+  final String Function(int done, int total) coverage;
+
   @override
   Widget build(BuildContext context) {
-    final options = <(String, String)>[
-      (kTafsirFollowTranslation, followLabel),
+    // (code, name, subtitle). The subtitle is what stops a partial edition
+    // looking broken: without it "Roman Urdu" promises the whole Qur'an.
+    final options = <(String, String, String?)>[
+      (kTafsirFollowTranslation, followLabel, null),
       for (final code in kTafsirLangs)
         (
           code,
           kLanguages
               .firstWhere((x) => x.code == code, orElse: () => kLanguages.first)
-              .nativeName
+              .nativeName,
+          kTafsirCoverage.containsKey(code)
+              ? coverage(tafsirSurahCount(code), 114)
+              : null,
         ),
     ];
 
@@ -402,19 +425,32 @@ class _TafsirLanguagePicker extends StatelessWidget {
                       fontWeight: FontWeight.bold, color: context.text)),
             ),
           ),
-          for (final (code, name) in options)
+          for (final (code, name, subtitle) in options)
             InkWell(
               onTap: () => Navigator.pop(context, code),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 48),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: context.border)),
                 ),
                 child: Row(children: [
                   Expanded(
-                    child: Text(name,
-                        style: TextStyle(fontSize: 14.5, color: context.text)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(name,
+                            style: TextStyle(
+                                fontSize: 14.5, color: context.text)),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(subtitle,
+                              style: TextStyle(
+                                  fontSize: 11, color: context.textDim)),
+                        ],
+                      ],
+                    ),
                   ),
                   if (code == current)
                     QIcon.check(size: 17, color: AppColors.gold),

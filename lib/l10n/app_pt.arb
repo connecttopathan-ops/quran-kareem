@@ -482,5 +482,7 @@
   "tafsirFollowTranslation": "Igual à tradução",
   "tafsirUnavailable": "Sem tafsir para este versículo",
   "tafsirLoading": "A carregar o tafsir…",
-  "tafsirShownInEnglish": "Ainda não traduzido — apresentado em inglês"
+  "tafsirShownInEnglish": "Ainda não traduzido — apresentado em inglês",
+  "tafsirCoverage": "{done} de {total} suratas",
+  "tafsirSurahUntranslated": "O {language} ainda não abrange esta surata — apresentado em inglês"
 }

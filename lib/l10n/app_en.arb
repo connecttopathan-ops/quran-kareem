@@ -2505,5 +2505,29 @@
   "tafsirShownInEnglish": "Not translated yet — shown in English",
   "@tafsirShownInEnglish": {
     "description": "Shown in the tafsir panel when the chosen tafsir language has no entry for this verse yet and the English is being shown instead. The Roman Urdu edition is being translated surah by surah, so its coverage is incomplete."
+  },
+  "tafsirCoverage": "{done} of {total} surahs",
+  "@tafsirCoverage": {
+    "description": "Shown under a tafsir language in the picker when that edition does not cover the whole Qur'an, e.g. '39 of 114 surahs'. Keep it short: it is a subtitle on one line.",
+    "placeholders": {
+      "done": {
+        "type": "int",
+        "example": "39"
+      },
+      "total": {
+        "type": "int",
+        "example": "114"
+      }
+    }
+  },
+  "tafsirSurahUntranslated": "{language} does not cover this surah yet — shown in English",
+  "@tafsirSurahUntranslated": {
+    "description": "Shown in the tafsir panel when the chosen language has no tafsir for this whole surah, as opposed to a single missing verse. {language} is a language name such as 'Roman Urdu'.",
+    "placeholders": {
+      "language": {
+        "type": "String",
+        "example": "Roman Urdu"
+      }
+    }
   }
 }

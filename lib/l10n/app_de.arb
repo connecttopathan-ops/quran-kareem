@@ -482,5 +482,7 @@
   "tafsirFollowTranslation": "Wie die Übersetzung",
   "tafsirUnavailable": "Kein Tafsir zu diesem Vers",
   "tafsirLoading": "Tafsir wird geladen…",
-  "tafsirShownInEnglish": "Noch nicht übersetzt — auf Englisch angezeigt"
+  "tafsirShownInEnglish": "Noch nicht übersetzt — auf Englisch angezeigt",
+  "tafsirCoverage": "{done} von {total} Suren",
+  "tafsirSurahUntranslated": "{language} deckt diese Sure noch nicht ab — auf Englisch angezeigt"
 }

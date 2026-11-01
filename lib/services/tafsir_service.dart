@@ -17,6 +17,31 @@ const kTafsirLangs = {'en', 'ur-roman', 'fr', 'es', 'it'};
 /// rather than per language — see [TafsirService.lookup].
 const kTafsirPartialLangs = {'ur-roman'};
 
+/// Which surahs each partial edition actually covers.
+///
+/// Without this the app can only discover a gap by failing to load a file,
+/// which is indistinguishable from a fault: a reader opening Al-Baqarah saw
+/// "Roman Urdu" in the picker and English in the panel, with nothing to say
+/// that 86 of the 114 surahs are not translated yet.
+///
+/// Keep in step with `assets/tafsir/<lang>/`: Al-Fatihah, Yusuf and Juz 30.
+const kTafsirCoverage = <String, Set<int>>{
+  'ur-roman': {
+    1, 12,
+    78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,
+    96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+    111, 112, 113, 114,
+  },
+};
+
+/// How many surahs [langCode] covers, out of 114.
+int tafsirSurahCount(String langCode) =>
+    kTafsirCoverage[langCode]?.length ?? 114;
+
+/// Whether [langCode] has tafsir for [surahNumber] at all.
+bool tafsirCovers(String langCode, int surahNumber) =>
+    kTafsirCoverage[langCode]?.contains(surahNumber) ?? true;
+
 /// Stored value meaning "use whatever the Quran translation language is".
 const kTafsirFollowTranslation = 'auto';
 
