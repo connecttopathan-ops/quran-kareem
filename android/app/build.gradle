@@ -29,7 +29,7 @@ android {
     defaultConfig {
         applicationId "co.getquran.app"
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode flutter.versionCode
         versionName flutter.versionName
     }

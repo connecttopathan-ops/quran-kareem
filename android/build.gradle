@@ -13,8 +13,8 @@ subprojects {
     // from dev.flutter.flutter-gradle-plugin.
     if (project.name != "app") {
         project.ext.set("flutter", [
-            compileSdkVersion: 35,
-            targetSdkVersion : 35,
+            compileSdkVersion: 36,
+            targetSdkVersion : 36,
             ndkVersion       : "26.3.11579264",
             versionCode      : 1,
             versionName      : "1.0.0"

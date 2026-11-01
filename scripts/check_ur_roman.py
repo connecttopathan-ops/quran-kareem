@@ -27,8 +27,10 @@ GLOSSARY = os.path.join(REPO, "scripts", "ur_roman_glossary.json")
 # unambiguous, and absent from the Roman Urdu of ur-roman.json — "to", "par",
 # "in", "do", "ho" and "main" are all real Roman Urdu words, so they are not
 # listed here.
+# "the" is NOT listed: it is the Urdu past-tense plural copula ("woh log the"),
+# which the reference translation uses 58 times.
 ENGLISH_LEAKS = {
-    "the", "and", "that", "with", "from", "they", "their", "them", "which",
+    "and", "that", "with", "from", "they", "their", "them", "which",
     "when", "because", "about", "would", "there", "these", "those", "what",
     "who", "whom", "whose", "while", "after", "before", "upon", "shall",
     "will", "have", "has", "had", "been", "being", "were", "was", "are",
@@ -170,6 +172,15 @@ FAMILIAR = re.compile(
 )
 # Marks a verse as addressing the Prophet.
 ADDRESSES_PROPHET = re.compile(r"Aey (Rasool|Nabi|Muhammad)")
+# A vocative to someone else inside the same verse ends the Prophet's scope.
+# "Aey Nabi, ... keh dijiye: Aey Allah, ... teri hikmat" is a dua to Allah, where
+# "teri" is required; "... aey mominon, un se keh do" is addressed to the
+# believers, where "keh do" is right. Both open with "Aey Nabi", and both were
+# reported as failures until the scan stopped at the second vocative.
+ADDRESSEE_CHANGES = re.compile(
+    r"[Aa]ey (Allah|mere Rubb|hamare Rubb|momino|mominon|log|logo|Yahood|"
+    r"Nasara|Ahl-e-Kitab|Bani Israel|insaan|insaano|imandaro|imaan walo)\b"
+)
 # Marks a verse as addressing Allah, where familiar forms are correct.
 ADDRESSES_ALLAH = re.compile(
     r"\b(hum|humein|hamare)\b.{0,80}\b(tere|teri|tujh|tujhe|tu)\b|"
@@ -236,7 +247,7 @@ GRAMMAR = [
 # imperative, now count.
 REPORTED_IMPERATIVE = re.compile(
     r"(kaha|kehta hai|kehte hain|bataya|poocha|farmaya|kehne lage) ke(?![a-z])"
-    r"([^.,:;\u201c\u201d]{0,80})", re.I)
+    r"([^.,:;!?\u201c\u201d]{0,80})", re.I)
 # Only the "-iye" imperative. An "-ein" form after "ke" is the SUBJUNCTIVE,
 # which is the correct construction, not the fault — and "mein", "unhein",
 # "cheezein", "baatein" all end in -ein, so matching it flagged 20 correct
@@ -250,9 +261,8 @@ RESPECTFUL_IMPERATIVE = re.compile(
 
 # "ke" opens a subordinate clause and cannot govern an imperative or a
 # second-person pronoun. "kaha ke jao" is an ungrammatical hybrid: either
-# close the frame and quote, or use the subjunctive.
-KAHA_KE = re.compile(
-    r"(kaha|bataya|poocha|kehne lage|farmaya) ke(?![a-z])(.{0,70})", re.I)
+# close the frame and quote, or use the subjunctive. REPORTED_IMPERATIVE above
+# finds the frame; this finds what must not sit inside it.
 SECOND_PERSON = re.compile(
     r"(?<![a-z])(tum|tumhein|tumhare|tumhari|aap|jao|laao|batao|le jao|"
     r"daal do|laut do|sun lo|dekho)(?![a-z])", re.I)
@@ -341,6 +351,9 @@ def prophet_address_findings(
         # "Aey Nabi". Only the narration around the quotes addresses the
         # Prophet, so the quotes are removed before checking.
         outside = re.sub(r"\u201c[^\u201d]*\u201d", " ", text)
+        handover = ADDRESSEE_CHANGES.search(outside)
+        if handover:
+            outside = outside[: handover.start()]
         forms = {m if isinstance(m, str) else m[0] for m in FAMILIAR.findall(outside)}
         if not forms:
             continue
