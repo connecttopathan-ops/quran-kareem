@@ -133,6 +133,26 @@ def load_glossary() -> tuple[dict[str, str], dict[str, str]]:
     return avoid, gloss
 
 
+def source_repeats_itself(text: str) -> bool:
+    """True if the English verse contains a large duplicated passage.
+
+    Eight verses across the four bundled editions repeat a long passage
+    verbatim — 2:257 says the same thing twice, once with "God" and once with
+    "Allah". A faithful translation renders it once, so the length ratio
+    against the source is about half and looks like truncation.
+    """
+    s = re.sub(r"\s+", " ", text).strip()
+    if len(s) < 200:
+        return False
+    for cut in range(len(s) // 3, 2 * len(s) // 3):
+        probe = s[cut:cut + 70]
+        if len(probe) < 70:
+            break
+        if probe in s[:cut]:
+            return (len(s) - cut) / len(s) > 0.3
+    return False
+
+
 def words(text: str) -> list[str]:
     return re.findall(r"[A-Za-z][A-Za-z'’-]*", text)
 
@@ -216,9 +236,17 @@ GRAMMAR = [
 # imperative, now count.
 REPORTED_IMPERATIVE = re.compile(
     r"(kaha|kehta hai|kehte hain|bataya|poocha|farmaya|kehne lage) ke(?![a-z])"
-    r"([^.\u201c\u201d]{0,80})", re.I)
+    r"([^.,:;\u201c\u201d]{0,80})", re.I)
+# Only the "-iye" imperative. An "-ein" form after "ke" is the SUBJUNCTIVE,
+# which is the correct construction, not the fault — and "mein", "unhein",
+# "cheezein", "baatein" all end in -ein, so matching it flagged 20 correct
+# verses.
+# An explicit list, because "\w+iye" also matches "liye" (for), "kiye"
+# (done), "diye" (given) — all extremely common, and all correct after "ke".
 RESPECTFUL_IMPERATIVE = re.compile(
-    r"(?<![a-z])([a-z\u2019']+(?:iye|ein))(?![a-z])", re.I)
+    r"(?<![a-z])(dijiye|kijiye|lijiye|bataiye|suniye|dekhiye|farmaiye|"
+    r"maangiye|rakhiye|jaiye|aaiye|parhiye|poochiye|samjhiye|chaliye)"
+    r"(?![a-z])", re.I)
 
 # "ke" opens a subordinate clause and cannot govern an imperative or a
 # second-person pronoun. "kaha ke jao" is an ungrammatical hybrid: either
@@ -307,7 +335,13 @@ def prophet_address_findings(
 
     for i, v in enumerate(numbers):
         text = verses[v]
-        forms = {m if isinstance(m, str) else m[0] for m in FAMILIAR.findall(text)}
+        # A character's own speech carries that character's register: in 2:258
+        # the "tu" is Ibrahim addressing a tyrant, and in 2:260 it is Allah
+        # addressing Ibrahim, both inside quotations in a verse that opens
+        # "Aey Nabi". Only the narration around the quotes addresses the
+        # Prophet, so the quotes are removed before checking.
+        outside = re.sub(r"\u201c[^\u201d]*\u201d", " ", text)
+        forms = {m if isinstance(m, str) else m[0] for m in FAMILIAR.findall(outside)}
         if not forms:
             continue
         if v in vocative_at:
@@ -416,7 +450,7 @@ def main() -> int:
             # Roman Urdu runs a little longer than English; well outside
             # 0.6-2.0x usually means a truncated or padded verse.
             src = en.get(v, "")
-            if src:
+            if src and not source_repeats_itself(src):
                 ratio = len(text) / len(src)
                 if ratio < 0.6:
                     short += 1
