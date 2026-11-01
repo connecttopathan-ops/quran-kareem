@@ -56,6 +56,18 @@ BANNED = [
     (re.compile(r"(?<![a-z-])([Hh])aq(?![a-z-])"), r"\1aqq"),
     (re.compile(r"(?<![a-z-])([Hh])an(?![a-z-])"), r"\1aan"),
     (re.compile(r"(?<![a-z])(?<!y)ilah(?![a-z])"), "maabood"),
+    # Glossary spellings that the English source's own transliterations keep
+    # pulling the text back towards (scripts/ur_roman_glossary.json).
+    # Capitalised only: lowercase "rabb" is the common noun ("rabb bana
+    # liya"), which the shipped surahs write that way. The lookbehind must
+    # exclude capitals too, or "Arab" becomes "Arubb".
+    (re.compile(r"(?<![A-Za-z-])Rab{1,2}(?![a-z])"), "Rubb"),
+    (re.compile(r"(?<![A-Za-z-])([Aa])zab(?![a-z])"), r"\1zaab"),
+    (re.compile(r"(?<![A-Za-z-])([Ss])hukar(?![a-z])"), r"\1hukr"),
+    # Lowercase only, and never after a hyphen: capitalised "Haram" is the
+    # Sanctuary, as in "Masjid-e-Haram", not the adjective "haraam".
+    (re.compile(r"(?<![A-Za-z-])haram(?![a-z])"), "haraam"),
+    (re.compile(r"(?<![A-Za-z-])([Zz])akat(?![a-z])"), r"\1akaat"),
 ]
 
 
