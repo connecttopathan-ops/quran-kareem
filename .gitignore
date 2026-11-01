@@ -32,3 +32,8 @@ Thumbs.db
 # Generated localizations — produced by `flutter gen-l10n` from lib/l10n/*.arb
 # on every pub get and build. The .arb source files are tracked; these are not.
 lib/l10n/app_localizations*.dart
+
+# Python bytecode — regenerated whenever a script in scripts/ is imported, so
+# tracking it leaves the tree dirty after every edit to the sources.
+__pycache__/
+*.pyc
