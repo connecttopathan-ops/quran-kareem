@@ -357,7 +357,10 @@ def prophet_address_findings(
         forms = {m if isinstance(m, str) else m[0] for m in FAMILIAR.findall(outside)}
         if not forms:
             continue
-        if v in vocative_at:
+        # A dua to Allah needs the familiar forms even when the verse opens
+        # with a vocative to the Prophet and the dua carries no vocative of its
+        # own: "Aey Rasool, ... Yunus ne kaha: Tere siwa koi maabood nahin."
+        if v in vocative_at and not ADDRESSES_ALLAH.search(outside):
             for form in sorted(forms):
                 failures.append(
                     f"{surah}:{v}: '{form}' is the familiar tu form in a verse "
