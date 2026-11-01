@@ -177,10 +177,7 @@ ADDRESSES_PROPHET = re.compile(r"Aey (Rasool|Nabi|Muhammad)")
 # "teri" is required; "... aey mominon, un se keh do" is addressed to the
 # believers, where "keh do" is right. Both open with "Aey Nabi", and both were
 # reported as failures until the scan stopped at the second vocative.
-ADDRESSEE_CHANGES = re.compile(
-    r"[Aa]ey (Allah|mere Rubb|hamare Rubb|momino|mominon|log|logo|Yahood|"
-    r"Nasara|Ahl-e-Kitab|Bani Israel|insaan|insaano|imandaro|imaan walo)\b"
-)
+ADDRESSEE_CHANGES = re.compile(r"[Aa]ey (?!Rasool|Nabi|Muhammad)[\w'-]+")
 # Marks a verse as addressing Allah, where familiar forms are correct.
 ADDRESSES_ALLAH = re.compile(
     r"\b(hum|humein|hamare)\b.{0,80}\b(tere|teri|tujh|tujhe|tu)\b|"
