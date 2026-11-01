@@ -260,8 +260,11 @@ RESPECTFUL_IMPERATIVE = re.compile(
 # second-person pronoun. "kaha ke jao" is an ungrammatical hybrid: either
 # close the frame and quote, or use the subjunctive. REPORTED_IMPERATIVE above
 # finds the frame; this finds what must not sit inside it.
+# "aap" after "apne"/"apni"/"apna" is the reflexive "apne aap" (oneself), not
+# the respectful second person, so it is excluded.
 SECOND_PERSON = re.compile(
-    r"(?<![a-z])(tum|tumhein|tumhare|tumhari|aap|jao|laao|batao|le jao|"
+    r"(?<![a-z])(?<!apne )(?<!apni )(?<!apna )"
+    r"(tum|tumhein|tumhare|tumhari|aap|jao|laao|batao|le jao|"
     r"daal do|laut do|sun lo|dekho)(?![a-z])", re.I)
 
 # An honorific belongs in narration, never inside a character's own speech:
