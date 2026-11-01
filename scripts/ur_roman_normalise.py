@@ -36,6 +36,9 @@ SPELLINGS = [
     ("bharakti", "bhadakti"), ("bharakne", "bhadakne"),
     ("un ne ", "unhon ne "), ("Un ne ", "Unhon ne "),
     ("kaun\u012b", "kauni"), ("Qur\u2019\u0101n", "Quran"),
+    # Glossary spellings (scripts/ur_roman_glossary.json).
+    ("halaal", "halal"), ("Shaitan", "Shaytan"), ("shaitan", "shaytan"),
+    ("Jibril", "Jibreel"),
     ("unhon ke", "un ke"), ("mu pher", "munh pher"), ("mu kar", "munh kar"),
 ]
 
